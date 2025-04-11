@@ -23,6 +23,9 @@ import SectorialTable from './pages/dashboardPages/sectorial/SectorialTable';
 import FromURLTable from './pages/dashboardPages/fromURL/FromURLTable';
 import VideoUploadTable from './pages/dashboardPages/videoUpload/VideoUploadTable';
 import VideoDelivery from './pages/clientUI/video_delivery/VideoDelivery';
+import FromURLTable2 from './pages/dashboardPages/fromURL2/FromURLTable2';
+import ErrorPageComponent from './ErrorPageComponent ';
+import ErrorBoundary from './ErrorBoundary';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -71,7 +74,11 @@ function App() {
 
           {/* ADMIN DASHBOARD  */}
           <Route path='/login' element={<AdminLogin />} />
-          <Route path='/dashboard' element={<AdminLayout />} >
+          <Route path='/dashboard' element={
+            <ErrorBoundary>
+              <AdminLayout />
+            </ErrorBoundary>
+          } >
             <Route index={true} path="/dashboard" element={<DashboardPage />} />
             <Route path="fundamentals/banking" element={<BankingTable />} />
             <Route path="fundamentals/it" element={<ITTable />} />
@@ -81,10 +88,12 @@ function App() {
             <Route path="technical/banking" element={<TechnicalBankingTable />} />
             <Route path="delivery" element={<DeliveryTable />} />
             <Route path="sectorial" element={<SectorialTable />} />
-            <Route path="FromURL" element={<FromURLTable />} />
+            <Route path="fromdate" element={<FromURLTable />} />
             <Route path="upload-video" element={<VideoUploadTable />} />
-            <Route path="*" element={<div>Page not found</div>} />
+            <Route path="fromurl" element={<FromURLTable2 />} />
+            <Route path="*" element={<ErrorPageComponent />} />
           </Route>
+          <Route path="*" element={<ErrorPageComponent />} />
         </Routes>
       </Router>
       {/* </Suspense> */}

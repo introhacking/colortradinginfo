@@ -1,5 +1,5 @@
 const express = require('express');
-const upload = require('../../../middleware/fileUpload');
+const { upload } = require('../../../middleware/fileUpload');
 const { getAllTechnicalBankData_NPG, deleteTechnicalBankById_NPG, techicalBankDataToCreateTable_NPG, deleteOrTruncateTable } = require('../../../controller/techicalController/banking/technical.Banking.NPG.Controller');
 const technicalBankingNPGRouter = express.Router();
 

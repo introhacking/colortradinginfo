@@ -1,9 +1,9 @@
 const { deleteLargeCapStockById } = require('../../controller/sentimentalController/largeCapController')
 const { insertMidCapStocksInBulk, getMidCapStock, deleteOrTruncateTable, updatingMidCapStockById, deleteMidCapStockById } = require('../../controller/sentimentalController/midCapController')
-const upload = require('../../middleware/fileUpload')
+const { upload } = require('../../middleware/fileUpload')
 
 
-const MidCapRouter = require('express').Router() 
+const MidCapRouter = require('express').Router()
 // POST
 // MidCapRouter.post('/excelRead', upload.single('excelSheet'), getAllQuotation)
 MidCapRouter.post('/mid_excelRead', upload.single('mid_ExcelSheet'), insertMidCapStocksInBulk)

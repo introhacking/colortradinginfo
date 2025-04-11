@@ -1,6 +1,6 @@
 const express = require('express');
 const { createBankingDetails, getBankingDetails, updatingBankDetails, getDescriptionByBankAndManagement, postBankData } = require('../../controller/fundamentals/banking.controller');
-const upload = require('../../middleware/fileUpload');
+const { upload } = require('../../middleware/fileUpload');
 
 const router = express.Router();
 

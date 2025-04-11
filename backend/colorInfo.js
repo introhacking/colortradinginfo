@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const app = express()
+const fs = require('fs');
 const cors = require('cors')
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
@@ -69,9 +70,24 @@ app.use('/api/v1', sectorRoute);
 // Use URL Routes
 app.use('/api/v1/csv', csvRoutes);
 
+const getDataFromURL2 = require('./router/fromURL/fromURLrouter')
+// Use URL2 Routes
+app.use('/api/v1/csv/fetch-url-data', getDataFromURL2);
+
 // Use Video router
 const videoRoute = require('./router/videoUploadRouter/videoUpload.router')
 app.use('/api/v1', videoRoute);
+
+
+app.get('/api/v1/csv-files', (req, res) => {
+    const folderPath = path.join(__dirname, 'uploads/csvfilefolder');
+    fs.readdir(folderPath, (err, files) => {
+        if (err) return res.status(500).json({ error: 'Cannot read directory' });
+        const csvFiles = files.filter(f => f.endsWith('.csv'));
+        
+        res.json({ files: csvFiles });
+    });
+});
 
 // Start the Express server
 const PORT = process.env.PORT || 3000;

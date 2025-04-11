@@ -7,4 +7,7 @@ const uploadMultiImg = multer({ storage: storage });
 const upload = multer({ dest: 'uploads/' })
 
 // module.exports =  upload.single('excelSheet');
-module.exports = upload, uploadMultiImg;
+module.exports = {
+    upload,
+    uploadMultiImg
+}

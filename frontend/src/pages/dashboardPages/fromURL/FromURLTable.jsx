@@ -271,7 +271,7 @@ const FromURLTable = () => {
                     </div>
                     <Button
                         onClick={() => setIsModalOpen(true)}
-                        children='Get Data From URL'
+                        children='Get Data From Date'
                         className='button hover:bg-green-400 bg-green-500 text-white'
                     />
                 </div>
@@ -293,7 +293,7 @@ const FromURLTable = () => {
                     </div>
                 )} */}
 
-                <div className="overflow-auto h-[65vh] w-[187vh] bg-gray-50 p-4 shadow-lg rounded-xl my-4">
+                <div className="overflow-auto h-[65vh] w-[190vh] bg-gray-50 p-4 shadow-lg rounded-xl my-4">
                     {activeTab === 'latest' && oldData?.length > 0 && (
                         <div className="relative overflow-x-auto rounded-lg">
                             {oldData.map((entry, index) => {

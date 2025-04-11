@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const FileReader = require('filereader')
 const csv = require('csv-parser');
+const fastCSV = require('fast-csv');
 const createTechicalBankingSchema = require('../model/technical/banking/technical.banking.model');
 const createTechicalBankingSchemaOPG = require('../model/technical/banking/technical.banking.OPG.model');
 const createTechicalBankingSchemaNPG = require('../model/technical/banking/technical.banking.NPG.model');
@@ -283,57 +284,80 @@ const readerFileService = {
                 });
         });
 
+    },
 
 
+    fetchDataFromCSV: async (url) => {
+        if (!url) return console.error("❌ URL is required!");
 
-        // return new Promise((resolve, reject) => {
-        //     const results = [];
-        //     let updatedHeader = [];
-        //     let headerProcessed = false;
+        // Extract date from URL (if you need it)
+        const dateMatch = url.match(/(\d{8})\.csv/);
+        // console.log(dateMatch)
+        // const dateMatch = url.match(/(\d{8})/);
 
-        //     // Create a readable stream from the data
-        //     const stream = Readable.from(data);
+        if (dateMatch) {
+            try {
+                // 1. Create Directory
+                const folderPath = path.join(__dirname, '../uploads/csvfilefolder');
+                if (!fs.existsSync(folderPath)) {
+                    fs.mkdirSync(folderPath, { recursive: true });
+                }
 
-        //     stream
-        //         .pipe(csv())
-        //         .on('headers', (headers) => {
-        //             if (!headerProcessed) {
-        //                 const targetLine =
-        //                     'Participant wise Open Interest (no. of contracts) in Equity Derivatives as on May 11,2023';
+                // 2. Fetch CSV content
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch CSV. Status: ${response.status}`);
+                }
 
-        //                 if (headers[0].includes(targetLine)) {
-        //                     console.log('Original Header:', headers);
+                const csvData = await response.text();
 
-        //                     // Replace empty columns with 1, 2, 3, ...
-        //                     updatedHeader = headers.map((header, index) => {
-        //                         header = header.trim();
-        //                         return header === '' ? `${index + 1}` : header;
-        //                     });
+                // 3. Save CSV to file
+                const fileName = `data_${dateMatch[0]}`;
+                const filePath = path.join(folderPath, fileName);
 
-        //                     console.log('Updated Header:', updatedHeader);
-        //                     headerProcessed = true;
-        //                 }
-        //             }
-        //         })
-        //         .on('data', (row) => {
-        //             if (headerProcessed) {
-        //                 const updatedRow = {};
-        //                 Object.keys(row).forEach((key, index) => {
-        //                     updatedRow[updatedHeader[index]] = row[key];
-        //                 });
-        //                 results.push(updatedRow);
-        //             }
-        //         })
-        //         .on('end', () => {
-        //             console.log('Final Results:', results);
-        //             resolve(results);
-        //         })
-        //         .on('error', (error) => {
-        //             console.error('Error parsing CSV:', error);
-        //             reject(error);
-        //         });
-        // });
+                fs.writeFileSync(filePath, csvData);
+                // console.log(`✅ CSV saved at: ${filePath}`);
 
+                // 🟢 Return a Promise with parsed data
+
+                // return new Promise((resolve, reject) => {
+                //     const results = [];
+                //     let headers = [];
+
+                //     fs.createReadStream(filePath)
+                //         .pipe(csv())
+                //         .on('headers', (headerList) => {
+                //             headers = headerList;
+                //         })
+                //         .on('data', (row) => {
+                //             results.push(row);
+                //         })
+                //         .on('end', () => {
+                //             resolve(results);
+                //         })
+                //         .on('error', (err) => {
+                //             reject(err);
+                //         });
+                // });
+
+
+                
+                // 4. Read and parse CSV
+                // fs.createReadStream(filePath)
+                //     .pipe(csv())
+                //     .on('data', (row) => {
+                //         console.log('🟢 Row:', row); // Parsed row
+                //     })
+                //     .on('end', () => {
+                //         console.log('✅ CSV parsing complete!');
+                //     });
+
+            } catch (error) {
+                console.error('❌ Error fetching or processing CSV:', error.message);
+            }
+        } else {
+            console.error("❌ CSV filename doesn't match expected pattern.");
+        }
 
     }
 

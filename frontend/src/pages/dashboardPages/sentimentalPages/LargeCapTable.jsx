@@ -26,14 +26,14 @@ const LargeCapTable = () => {
     const [isParamsData, setIsParamsData] = useState({})
 
     const updateBankInfo = (paramData) => {
-         
+
         setIsParamsData(paramData)
         setIsEditModalOpen(true)
     }
 
-    const deleteConfirmationModal = (paramData)=>{
+    const deleteConfirmationModal = (paramData) => {
         const deletingPath = 'large-cap'
-        setIsDeletingId({...paramData, deletingPath})
+        setIsDeletingId({ ...paramData, deletingPath })
         setIsDeleteModalOpen(true)
     }
 
@@ -50,32 +50,32 @@ const LargeCapTable = () => {
                         >
                             {/* <BiIcons.BiEdit className="text-2xl" /> */}
                             {/* Edit */}
-                            <Button children={<BiIcons.BiEdit className="text-2xl"/>} className={'button ag_table_edit_button'} type={'button'}/>
+                            <Button children={<BiIcons.BiEdit className="text-2xl" />} className={'button ag_table_edit_button'} type={'button'} />
                         </div>
                         <div
                             onClick={() => {
-                              deleteConfirmationModal(params.data);
+                                deleteConfirmationModal(params.data);
                             }}
                             className="py-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded"
                         >
                             {/* <RiIcons.RiDeleteBin3Line className="text-2xl" /> */}
-                            <Button children={<RiIcons.RiDeleteBin3Line className="text-2xl" />} className={'button button_cancel'} type={'button'}/>
+                            <Button children={<RiIcons.RiDeleteBin3Line className="text-2xl" />} className={'button button_cancel'} type={'button'} />
                         </div>
                     </div>
                 );
             },
         },
         {
-            headerName: "Stock Name", field: 'stockName',filter: true ,flex: 1,maxWidth:350
+            headerName: "Stock Name", field: 'stockName', filter: true, flex: 1, maxWidth: 350
         },
         {
-            headerName: "Monthly Data", field: 'monthlyData',flex: 1
+            headerName: "Monthly Data", field: 'monthlyData', flex: 1
         },
     ]);
     const defaultColDef = useMemo(() => ({
         sortable: true
     }), []);
-    const fetchingApi = async () => {
+    const fetchData = async () => {
         try {
             const getBankData = await bankingService.getInfoFromServer('/large-cap');
             setRowData(getBankData)
@@ -84,7 +84,7 @@ const LargeCapTable = () => {
         }
     }
     useEffect(() => {
-        fetchingApi();
+        fetchData();
     }, [])
     return (
         <>
@@ -93,7 +93,7 @@ const LargeCapTable = () => {
                     LargeCap Page
                 </div> */}
                 <div className='flex justify-between gap-2 items-center'>
-                    <Button onClick={()=>setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData.length > 0 ? false : true} />
+                    <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData.length > 0 ? false : true} />
                     <Button onClick={() => setIsModalOpen(true)} children={'Add LargeCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
                     {/* <button onClick={() => setIsModalOpen(true)} className='px-2 py-1 hover:bg-green-400 bg-green-500 font-medium rounded text-white'>Bank form</button> */}
                 </div>
@@ -103,7 +103,7 @@ const LargeCapTable = () => {
             </div>
 
             <LargeCap_Info_Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-            <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} deletingRoute={'large_cap'} />
+            <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} deletingRoute={'large_cap'} callFunction={fetchData} />
             <DeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} deletingPath={'large-cap'} />
             <LargeCap_Edit_Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} isParamsData={isParamsData} />
         </>

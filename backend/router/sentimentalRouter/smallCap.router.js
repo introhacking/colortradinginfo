@@ -1,8 +1,8 @@
 const { insertSmallCapStocksInBulk, getSmallCapStock, deleteOrTruncateTable, updatingSmallCapStockById, deleteSmallCapStockById } = require('../../controller/sentimentalController/smallCapController')
-const upload = require('../../middleware/fileUpload')
+const { upload } = require('../../middleware/fileUpload')
 
 
-const sentimentRouter = require('express').Router() 
+const sentimentRouter = require('express').Router()
 // POST
 // sentimentRouter.post('/excelRead', upload.single('excelSheet'), getAllQuotation)
 sentimentRouter.post('/small_excelRead', upload.single('small_ExcelSheet'), insertSmallCapStocksInBulk)

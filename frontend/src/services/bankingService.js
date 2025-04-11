@@ -110,9 +110,10 @@ export const bankingService = {
 
     },
 
-    fetchCSV: async (url) => {
+    fetchCSV: async (url, endpoint) => {
         try {
-            const response = await axios.get(`${BASE_URL}/csv/fetch-url`, {
+            // console.log(`${BASE_URL}${endpoint}`)
+            const response = await axios.get(`${BASE_URL}${endpoint}`, {
                 params: { url }
             });
             return response.data;
