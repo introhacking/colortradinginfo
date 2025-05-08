@@ -1,0 +1,101 @@
+td,
+th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.jodit-status-bar {
+  display: none !important;
+}
+
+/* SCROLLBAR STYLE */
+
+/* width */
+::-webkit-scrollbar {
+  width: 1px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #0f8bad;
+
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(165, 229, 241, 0.597);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #176b82;
+}
+
+canvas {
+  width: 100% !important;
+}
+
+.custom-cell-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  /* Adjust top and bottom padding */
+  height: 100%;
+}
+
+.ag-header-cell-label {
+  justify-content: center;
+  width: '100%';
+}
+
+/* DELIVERY Cell Style */
+.custom-cell-style {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  width: 100px;
+  height: 10px;
+  margin-top: 10px;
+  margin-right: auto;
+  margin-left: auto;
+
+}
+
+.custom-cell-style-color-v {
+  color: white;
+  background-color: rgb(224, 122, 122);
+}
+
+.custom-cell-style-color-d {
+  color: white;
+  background-color: rgb(57, 44, 44);
+}
+
+/* PROGRESS BAR */
+.progress-bar-container {
+  width: 90%;
+  background-color: #f3f3f3;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #4caf50;
+  width: 0;
+  transition: width 0.4s ease;
+  text-align: center;
+  color: white;
+  line-height: 10px;
+  /* same as height to center text */
+}
+
+
+/*  TEXT STYLE FOR WRITE MODE */
+.vertical-rl {
+  writing-mode: vertical-rl;
+}

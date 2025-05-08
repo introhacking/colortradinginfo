@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer utilities {
+    /* Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
+}
+
+input,
+textarea,
+select {
+    @apply w-full rounded px-3 py-1.5 border outline-none focus:ring-1
+}
+
+.button {
+    @apply px-2 py-1 rounded font-medium
+}
+
+.button_ac {
+    @apply bg-green-500 hover:bg-green-400 text-white
+}
+
+.button_cancel {
+    @apply bg-red-600 hover:bg-red-500 text-white
+}
+.button_video {
+    @apply bg-yellow-600 hover:bg-yellow-500 text-white
+}
+
+.ag_table_edit_button {
+    @apply bg-blue-500 text-white
+}
+
+.ag_table_delete {}
+
+
+/* Custom styles */
+.background-gradient {
+    background: linear-gradient(to right, #00B4D8, #90E0EF);
+}
+
+/* FLOATING STYLE FOR INPUT TEXT */
+.for_input{   /* In input you add peer and relative also because peer can't use here (in input field)*/
+    @apply bg-transparent appearance-none
+}
+.for_label{
+    @apply absolute text-sm duration-300 transform -translate-y-4 scale-75 z-10 top-2 origin-[0] bg-white px-3 peer-focus:px-3 text-gray-500 peer-focus:text-gray-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1
+
+}

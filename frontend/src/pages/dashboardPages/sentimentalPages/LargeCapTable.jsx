@@ -1,0 +1,329 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { bankingService } from '../../../services/bankingService';
+import Button from '../../../components/componentLists/Button';
+// import IT_Info_Form from '../../../components/dashboardPageModal/itModal/IT_Info_Form';
+// import IT_Edit_Form from '../../../components/dashboardPageModal/itModal/IT_Edit_Form';
+import LargeCap_Info_Modal from '../../../components/dashboardPageModal/largeCapModal/LargeCap_Info_Modal';
+// import { toast } from 'sonner';
+import AlertModal from '../../../components/dashboardPageModal/alertModal/AlertModal';
+import * as BiIcons from 'react-icons/bi'
+import * as RiIcons from 'react-icons/ri'
+import * as ImIcons from 'react-icons/im'
+import LargeCap_Edit_Modal from '../../../components/dashboardPageModal/largeCapModal/LargeCap_Edit_Modal';
+import DeleteModal from '../../../components/dashboardPageModal/alertModal/DeleteModal';
+import { toast } from 'sonner';
+import Loading from '../../../Loading';
+
+const LargeCapTable = () => {
+    const [rowData, setRowData] = useState([{}]);
+    // const [columnDefs, setColumnDefs] = useState([]);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeletingId, setIsDeletingId] = useState({});
+    const [isParamsData, setIsParamsData] = useState({})
+    const [scrubbingButtonStatus, setScrubbingButtonStatus] = useState(false);
+    const [activeTab, setActiveTab] = useState('show_LargeCap');
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [noDataFoundMsg, setNoDataFoundMsg] = useState('');
+    const [rowData1, setRowData1] = useState([]);
+    const [columnDefs1, setColumnDefs1] = useState([]);
+    const [switchToTable, setSwitchToTable] = useState(false)
+
+
+    const updateBankInfo = (paramData) => {
+
+        setIsParamsData(paramData)
+        setIsEditModalOpen(true)
+    }
+
+    const deleteConfirmationModal = (paramData) => {
+        const deletingPath = 'large-cap'
+        setIsDeletingId({ ...paramData, deletingPath })
+        setIsDeleteModalOpen(true)
+    }
+
+    const [columnDefs] = useState([
+        {
+            headerName: "Action", field: 'action', flex: 1, maxWidth: 140, pinned: 'left',
+            // checkboxSelection: true,
+            cellRenderer: (params) => {
+                return (
+                    <div className="flex justify-between">
+                        <div
+                            onClick={() => updateBankInfo(params.data)}
+                            className="py-1 px-2 text-sm text-center cursor-pointer rounded"
+                        >
+                            {/* <BiIcons.BiEdit className="text-2xl" /> */}
+                            {/* Edit */}
+                            <Button children={<BiIcons.BiEdit className="text-2xl" />} className={'button ag_table_edit_button'} type={'button'} />
+                        </div>
+                        <div
+                            onClick={() => {
+                                deleteConfirmationModal(params.data);
+                            }}
+                            className="py-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded"
+                        >
+                            {/* <RiIcons.RiDeleteBin3Line className="text-2xl" /> */}
+                            <Button children={<RiIcons.RiDeleteBin3Line className="text-2xl" />} className={'button button_cancel'} type={'button'} />
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            headerName: "Stock Name", field: 'stockName', filter: true, flex: 1, maxWidth: 350
+        },
+        {
+            headerName: "Monthly Data", field: 'monthlyData', flex: 1
+        },
+    ]);
+
+    const defaultColDef = useMemo(() => ({
+        sortable: true
+    }), []);
+
+    // Handle Tab Switch
+    const switchTab = (tab) => {
+        if (tab === 'show_LargeCap') {
+            setActiveTab(tab);
+            setSwitchToTable(false)
+        }
+        if (tab === 'show_scrubLargeCap') {
+            setActiveTab(tab);
+            setSwitchToTable(true)
+        }
+    };
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        setError('');
+        setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.getInfoFromServer('/large-cap');
+            if (serverResponse.length > 0) {
+                setRowData(serverResponse)
+            }
+            else {
+                setNoDataFoundMsg('No data found for the LARGE CAP option.');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    // const fetchData = async () => {
+    //     try {
+    //         const getBankData = await bankingService.getInfoFromServer('/large-cap');
+    //         setRowData(getBankData);
+
+    //         if (getBankData.length > 0) {
+    //             const dynamicColumns = Object.keys(getBankData[0]).map(key => ({
+    //                 headerName: key,
+    //                 field: key,
+    //                 sortable: true,
+    //                 filter: true,
+    //                 resizable: true,
+    //             }));
+
+    //             const actionColumn = {
+    //                 headerName: "Action",
+    //                 field: 'action',
+    //                 maxWidth: 140,
+    //                 pinned: 'left',
+    //                 cellRenderer: (params) => (
+    //                     <div className="flex justify-between">
+    //                         <div
+    //                             onClick={() => updateBankInfo(params.data)}
+    //                             className="py-1 px-2 cursor-pointer rounded"
+    //                         >
+    //                             <Button
+    //                                 children={<BiIcons.BiEdit className="text-2xl" />}
+    //                                 className="button ag_table_edit_button"
+    //                                 type="button"
+    //                             />
+    //                         </div>
+    //                         <div
+    //                             onClick={() => deleteConfirmationModal(params.data)}
+    //                             className="py-1 px-2 cursor-pointer rounded"
+    //                         >
+    //                             <Button
+    //                                 children={<RiIcons.RiDeleteBin3Line className="text-2xl" />}
+    //                                 className="button button_cancel"
+    //                                 type="button"
+    //                             />
+    //                         </div>
+    //                     </div>
+    //                 )
+    //             };
+
+    //             setColumnDefs([actionColumn, ...dynamicColumns]);
+    //         }
+    //     } catch (err) {
+    //         console.log(err);
+    //     }
+    // };
+
+    const exportDataFromLargeCapUrl = async () => {
+        setScrubbingButtonStatus(true)
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'LARGECAP' })
+            if (serverResponse.status) {
+                toast.success(serverResponse.message)
+                newFetchingAPI()
+            }
+        } catch (err) {
+
+        } finally {
+            setScrubbingButtonStatus(false)
+        }
+    }
+
+    const newFetchingAPI = async () => {
+        setIsLoading(true);
+        setError('');
+        setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'LARGECAP' })
+            if (serverResponse.success && serverResponse.length > 0) {
+                setRowData1(serverResponse.data);
+                const dynamicColumns = Object.keys(serverResponse.data[0]).map(key => ({
+                    headerName: key,
+                    field: key,
+                    sortable: true,
+                    filter: true,
+                    resizable: true,
+                }));
+
+                const actionColumn = {
+                    headerName: "Action",
+                    field: 'action',
+                    maxWidth: 140,
+                    pinned: 'left',
+                    cellRenderer: (params) => (
+                        <div className="flex justify-between">
+                            <div
+                                onClick={() => updateBankInfo(params.data)}
+                                className="py-1 px-2 cursor-pointer rounded"
+                            >
+                                <Button
+                                    children={<BiIcons.BiEdit className="text-2xl" />}
+                                    className="button ag_table_edit_button"
+                                    type="button"
+                                />
+                            </div>
+                            <div
+                                onClick={() => deleteConfirmationModal(params.data)}
+                                className="py-1 px-2 cursor-pointer rounded"
+                            >
+                                <Button
+                                    children={<RiIcons.RiDeleteBin3Line className="text-2xl" />}
+                                    className="button button_cancel"
+                                    type="button"
+                                />
+                            </div>
+                        </div>
+                    )
+                };
+
+                // setColumnDefs1([actionColumn, ...dynamicColumns]);
+                setColumnDefs1([...dynamicColumns]);
+            } else {
+                setNoDataFoundMsg('No data found for the selected option.');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        if (activeTab === 'show_LargeCap') {
+            fetchData();
+        }
+        if (activeTab === 'show_scrubLargeCap') {
+            newFetchingAPI();
+        }
+    }, [activeTab])
+    return (
+        <>
+            <div className='flex justify-between flex-col gap-3'> {/* h-full */}
+                <div className='flex justify-between gap-2 items-center'>
+                    <div className='flex items-center gap-2'>
+                        <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData1.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData1.length > 0 ? false : true} />
+                        <div className="flex ml-3">
+                            <Button
+                                className={`px-3 py-1 text-sm font-semibold ${activeTab === 'show_LargeCap' ? 'bg-purple-600 text-white' : 'bg-purple-300'
+                                    } rounded-l`}
+                                onClick={() => switchTab('show_LargeCap')}
+                                children={'Show LargeCap Data'}
+                            />
+                            <Button
+                                className={`px-3 py-1 text-sm font-semibold ${activeTab === 'show_scrubLargeCap' ? 'bg-purple-600 text-white' : 'bg-purple-300'
+                                    } rounded-r`}
+                                onClick={() => switchTab('show_scrubLargeCap')}
+                                children={'Show Scrub Data'}
+                            />
+                        </div>
+                    </div>
+                    <div className='flex justify-between gap-2'>
+                        <Button
+                            onClick={exportDataFromLargeCapUrl}
+                            disabled={scrubbingButtonStatus}
+                            className={`${scrubbingButtonStatus ? 'button cursor-not-allowed opacity-50' : ''}  button button_video text-white`}
+                        >
+                            {scrubbingButtonStatus ? (
+                                <div className="flex items-center">
+                                    <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
+                                    Scrubbing Please wait...
+                                </div>
+                            ) : (
+                                'Scrubbing LargeCap Data'
+                            )}
+                        </Button>
+                        <Button onClick={() => setIsModalOpen(true)} children={'Add LargeCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
+                    </div>
+                    {/* <button onClick={() => setIsModalOpen(true)} className='px-2 py-1 hover:bg-green-400 bg-green-500 font-medium rounded text-white'>Bank form</button> */}
+                </div>
+                {isLoading && <Loading msg='Loading... please wait' />}
+                {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}
+                {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
+                {!isLoading && !error && !noDataFoundMsg && (
+                    <div className='ag-theme-alpine overflow-y-auto h-[70vh] w-full'>
+                        {!switchToTable && (
+                            < AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
+                        )}
+
+                        {switchToTable && (
+                            <AgGridReact
+                                rowData={rowData1}
+                                columnDefs={columnDefs1}
+                                defaultColDef={defaultColDef}
+                                animateRows={true}
+                                pagination={true}
+                                paginationPageSize={100}
+                            />
+                        )}
+
+                    </div>
+                )}
+            </div>
+            <LargeCap_Info_Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} deletingRoute={'large_cap'} callFunction={fetchData} />
+            <DeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} deletingPath={'large-cap'} />
+            <LargeCap_Edit_Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} isParamsData={isParamsData} />
+        </>
+    );
+};
+
+export default LargeCapTable;
