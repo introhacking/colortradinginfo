@@ -136,7 +136,8 @@ export const bankingService = {
         }
     },
     fetchCSVDataFromDateRequest: async (endpoint, requestDate) => {
-        const { from_date, to_date } = requestDate
+        // const { from_date, to_date } = requestDate
+        // const {to_date } = requestDate
         try {
             const response = await axios.get(`${BASE_URL}${endpoint}`, {
                 params: requestDate,

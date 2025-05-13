@@ -951,7 +951,8 @@ exports.getDataBasedUponDateRequest_modified = async (req, res) => {
                 const per = group.to_date_row.DELIV_PER;
                 const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
 
-                const percentChangeValue = qty ? ((qty - avgQty) / qty) * 100 : 0;
+                // const percentChangeValue = qty ? ((qty - avgQty) / qty) * 100 : 0;
+                const percentChangeValue = qty ? ((qty - avgQty) / avgQty) * 100 : 0;
                 const percentChangePer = per ? ((per - avgPer) / per) * 100 : 0;
                 const percentChangeQtyTraded = qtyTraded ? ((qtyTraded - avgQtyTraded) / qtyTraded) * 100 : 0;
 
@@ -998,7 +999,7 @@ exports.getDataBasedUponDateRequest_modified = async (req, res) => {
 };
 
 // [ COMPARE LAST 10 DAYS RECORDS ]
-exports.getDataBasedUponDateRequest = async (req, res) => {
+exports.getDataBasedUponDateRequest_10days = async (req, res) => {
     try {
         const { from_date, to_date } = req.query;
 
@@ -1114,9 +1115,9 @@ exports.getDataBasedUponDateRequest = async (req, res) => {
                 const per = group.to_date_row.DELIV_PER;
                 const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
 
-                const percentChangeValue = qty ? ((qty - avgQty) / qty) * 100 : 0;
+                const percentChangeValue = qty ? ((qty - avgQty) / qty) * 100 : 0; //qty -> avgQty
                 const percentChangePer = per ? ((per - avgPer) / per) * 100 : 0;
-                const percentChangeQtyTraded = qtyTraded ? ((qtyTraded - avgQtyTraded) / qtyTraded) * 100 : 0;
+                const percentChangeQtyTraded = qtyTraded ? ((qtyTraded - avgQtyTraded) / qtyTraded) * 100 : 0; // qtyTraded -> avgQtyTraded
 
                 group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
                 group.DELIV_PER_percentage = percentChangePer.toFixed(2) + '%';
@@ -1160,93 +1161,377 @@ exports.getDataBasedUponDateRequest = async (req, res) => {
     }
 };
 
+//  [ COMPARE LAST 3 DAYS RECORDS FROM TO_DAYS ]
+exports.getDataBasedUponDateRequest_3days = async (req, res) => {
+    try {
+        const { to_date } = req.query;
 
+        if (!to_date) {
+            return res.status(400).json({ error: 'to_date is required' });
+        }
 
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
 
+        // Convert YYYY-MM-DD → YYYYMMDD
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
 
+        // Convert YYYY-MM-DD → DDMMYYYY for filename lookup
+        const getDDMMYYYY = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${day}${month}${year}`;
+        };
 
+        const toDateFormatted = formatDate(to_date); // e.g. "20250508"
+        const toDateFile = `date_${getDDMMYYYY(to_date)}.csv`; // e.g. "date_08052025.csv"
 
+        // STEP 1: Read all CSV filenames
+        const files = await fsp.readdir(folderPath);
 
+        // STEP 2: Extract valid CSV files and normalize their dates to YYYYMMDD
+        const fileDateMap = files
+            .filter(file => /^date_(\d{8})\.csv$/.test(file)) // Ensure format
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1]; // e.g. "08052025"
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`; // "20250508"
+                return { file, rawDate, formatted }; // Keep both
+            });
 
+        // STEP 3: Sort dates descending
+        const sortedFormattedDates = fileDateMap
+            .map(entry => entry.formatted)
+            .sort((a, b) => b.localeCompare(a));
 
+        // STEP 4: Get the 3 most recent files before `to_date`
+        const priorDates = sortedFormattedDates
+            .filter(d => d < toDateFormatted)
+            .slice(0, 3);
 
+        // Include the target date file if it exists
+        if (sortedFormattedDates.includes(toDateFormatted)) {
+            priorDates.unshift(toDateFormatted);
+        }
 
+        // STEP 5: Filter files that match selected dates
+        const filteredCsvFiles = fileDateMap.filter(entry =>
+            priorDates.includes(entry.formatted)
+        );
 
+        if (filteredCsvFiles.length === 0) {
+            return res.status(404).json({ message: 'No CSV files found for the target and previous 3 days.' });
+        }
 
+        // STEP 6: Read & parse relevant CSVs
+        const allRows = [];
+        const groupedByDate = {};
 
+        for (const { file, rawDate } of filteredCsvFiles) {
+            const content = await fsp.readFile(path.join(folderPath, file), 'utf8');
+            const parsed = Papa.parse(content.trim(), {
+                header: true,
+                skipEmptyLines: true
+            });
 
+            // Convert back to YYYY-MM-DD for grouping
+            const year = rawDate.slice(4, 8);
+            const month = rawDate.slice(2, 4);
+            const day = rawDate.slice(0, 2);
+            const recordDate = `${year}-${month}-${day}`;
 
+            const cleanedRows = parsed.data.map(row => {
+                const cleaned = {};
+                Object.keys(row).forEach(key => {
+                    cleaned[key.trim()] = row[key];
+                });
+                cleaned.SOURCE_FILE = file;
+                cleaned.RECORD_DATE = recordDate;
+                return cleaned;
+            });
 
+            allRows.push(...cleanedRows);
+            groupedByDate[recordDate] = (groupedByDate[recordDate] || []).concat(cleanedRows);
+        }
 
+        // STEP 7: Group by SYMBOL & calculate metrics
+        const symbolGroups = {};
 
+        allRows.forEach(row => {
+            const symbol = row.SYMBOL?.trim();
+            if (!symbol) return;
 
+            if (!symbolGroups[symbol]) {
+                symbolGroups[symbol] = {
+                    DELIV_QTY_total: 0,
+                    DELIV_PER_total: 0,
+                    TTL_TRD_QNTY_total: 0,
+                    count: 0,
+                    to_date_row: null
+                };
+            }
 
+            if (row.SOURCE_FILE === toDateFile) {
+                symbolGroups[symbol].to_date_row = {
+                    DELIV_QTY: +(row.DELIV_QTY || 0),
+                    DELIV_PER: +(row.DELIV_PER || 0),
+                    TTL_TRD_QNTY: +(row.TTL_TRD_QNTY || 0)
+                };
+            } else {
+                symbolGroups[symbol].DELIV_QTY_total += +(row.DELIV_QTY || 0);
+                symbolGroups[symbol].DELIV_PER_total += +(row.DELIV_PER || 0);
+                symbolGroups[symbol].TTL_TRD_QNTY_total += +(row.TTL_TRD_QNTY || 0);
+                symbolGroups[symbol].count += 1;
+            }
+        });
 
+        // STEP 8: Compare to average and generate alerts
+        const messages = [];
+        const alerts = [];
 
+        for (const symbol in symbolGroups) {
+            const group = symbolGroups[symbol];
 
+            const avgQty = group.count > 0 ? group.DELIV_QTY_total / group.count : 0;
+            const avgPer = group.count > 0 ? group.DELIV_PER_total / group.count : 0;
+            const avgQtyTraded = group.count > 0 ? group.TTL_TRD_QNTY_total / group.count : 0;
 
+            group.DELIV_QTY_avg = avgQty.toFixed(2);
+            group.DELIV_PER_avg = avgPer.toFixed(2);
+            group.TTL_TRD_QNTY_avg = avgQtyTraded.toFixed(2);
 
+            if (group.to_date_row) {
+                const qty = group.to_date_row.DELIV_QTY;
+                const per = group.to_date_row.DELIV_PER;
+                const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
 
+                const percentChangeValue = qty ? ((qty - avgQty) / avgQty) * 100 : 0; // change to /avgQty -> /qty (divided by option)
+                const percentChangePer = per ? ((per - avgPer) / per) * 100 : 0;
+                const percentChangeQtyTraded = qtyTraded ? ((qtyTraded - avgQtyTraded) / avgQtyTraded) * 100 : 0; // change to /qtyTraded -> /avgQtyTraded (divided by option)
 
+                group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
+                group.DELIV_PER_percentage = percentChangePer.toFixed(2) + '%';
+                group.TTL_TRD_QNTY_percentage = percentChangeQtyTraded.toFixed(2) + '%';
 
-// const RATE_LIMIT_DELAY = 1000; // 1 second between requests
-// const MAX_RETRIES = 3;         // Retry up to 3 times on failure
+                const diff = (qty - avgQty).toFixed(2);
+                const direction = diff > 0 ? 'higher' : 'lower';
 
+                messages.push(
+                    `On ${to_date}, ${symbol} had a delivery quantity ${group.DELIV_QTY_percentage} ${direction} than its average from previous 3 available days.`
+                );
 
-// const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                if (percentChangeValue >= 100) {
+                    const alertMsg = `🚀 ${symbol} had a delivery quantity over 100% higher than average on ${to_date} — significant spike detected!`;
+                    messages.push(alertMsg);
+                    alerts.push({
+                        symbol,
+                        message: alertMsg,
+                        percentChange: group.DELIV_QTY_percentage
+                    });
+                }
+            } else {
+                group.DELIV_QTY_percentage = 'N/A';
+                group.DELIV_PER_percentage = 'N/A';
+                group.TTL_TRD_QNTY_percentage = 'N/A';
+                messages.push(`No data for ${symbol} on ${to_date}.`);
+            }
+        }
 
-// const fetchWithRetry = async (url, retries = MAX_RETRIES) => {
-//     for (let attempt = 1; attempt <= retries; attempt++) {
-//         try {
-//             const data = await readerFileService.fetchDataFromCSV(url);
-//             return { success: true, data };
-//         } catch (error) {
-//             if (attempt === retries) {
-//                 return { success: false, error: error.message };
-//             }
-//             console.warn(`Retry ${attempt} failed for ${url}. Retrying...`);
-//             await delay(500); // optional small delay before retry
-//         }
-//     }
-// };
+        // STEP 9: Respond with data
+        return res.status(200).json({
+            status: true,
+            overallAverage: symbolGroups,
+            messages,
+            alerts,
+            mergedData: allRows,
+            groupedByDate
+        });
 
-// exports.getDataFromURL2 = async (req, res) => {
-//     const dates = req.query.dates;
-//     console.log("Received dates:", dates);
+    } catch (error) {
+        console.error('Error processing request', error);
+        return res.status(500).json({ error: 'Oops! Error processing request.' });
+    }
+};
 
-//     if (!dates || dates.length === 0) {
-//         return res.status(400).json({ error: 'No dates provided' });
-//     }
+//  [ COMPARE LAST 5 DAYS RECORDS FROM TO_DAYS ]
+exports.getDataBasedUponDateRequest = async (req, res) => {
+    try {
+        const { to_date } = req.query;
 
-//     const successData = [];
-//     const failedDates = [];
+        if (!to_date) {
+            return res.status(400).json({ error: 'to_date is required' });
+        }
 
-//     try {
-//         for (let date of dates) {
-//             const url = `https://archives.nseindia.com/products/content/sec_bhavdata_full_${date}.csv`;
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
 
-//             const result = await fetchWithRetry(url);
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
 
-//             if (result.success) {
-//                 successData.push({ date, data: result.data });
-//             } else {
-//                 failedDates.push({ date, error: result.error });
-//             }
+        const toDateFormatted = formatDate(to_date);
 
-//             await delay(RATE_LIMIT_DELAY); // rate limiting
-//         }
+        const files = await fsp.readdir(folderPath);
 
-//         res.json({
-//             success: true,
-//             fetchedCount: successData.length,
-//             failedCount: failedDates.length,
-//             data: successData,
-//             errors: failedDates,
-//         });
+        const fileDateMap = files
+            .filter(file => /^date_(\d{8})\.csv$/.test(file))
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1];
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`;
+                return { file, rawDate, formatted };
+            })
+            .sort((a, b) => b.formatted.localeCompare(a.formatted));
 
-//     } catch (error) {
-//         console.error("Unexpected error:", error);
-//         res.status(500).json({ error: 'Unexpected server error' });
-//     }
-// };
+        const allDates = fileDateMap.map(entry => entry.formatted);
+
+        const mainDates = allDates.filter(d => d <= toDateFormatted).slice(0, 5);
+
+        const dateAverages = {};
+        const includedFilesByDate = {};
+        let allRows = [];
+        let symbolGroups = {};
+        let messages = [];
+        let alerts = [];
+
+        for (const mainDate of mainDates) {
+            const priorDates = allDates.filter(d => d < mainDate).slice(0, 5);
+            const mainFile = fileDateMap.find(e => e.formatted === mainDate)?.file;
+            const priorFiles = fileDateMap.filter(e => priorDates.includes(e.formatted));
+
+            if (!mainFile || priorFiles.length < 5) continue;
+
+            const rowsThisCycle = [];
+
+            // Load main file
+            const mainContent = await fsp.readFile(path.join(folderPath, mainFile), 'utf8');
+            const mainParsed = Papa.parse(mainContent.trim(), { header: true, skipEmptyLines: true });
+            const mainDateISO = `${mainDate.slice(0, 4)}-${mainDate.slice(4, 6)}-${mainDate.slice(6)}`;
+
+            const mainRows = mainParsed.data.map(row => {
+                const cleaned = {};
+                Object.keys(row).forEach(key => {
+                    cleaned[key.trim()] = row[key];
+                });
+                cleaned.SOURCE_FILE = mainFile;
+                cleaned.RECORD_DATE = mainDateISO;
+                return cleaned;
+            });
+            rowsThisCycle.push(...mainRows);
+
+            // Load prior 5 days' files
+            for (const { file, formatted } of priorFiles) {
+                const content = await fsp.readFile(path.join(folderPath, file), 'utf8');
+                const parsed = Papa.parse(content.trim(), { header: true, skipEmptyLines: true });
+                const dateISO = `${formatted.slice(0, 4)}-${formatted.slice(4, 6)}-${formatted.slice(6)}`;
+                const rows = parsed.data.map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => {
+                        cleaned[key.trim()] = row[key];
+                    });
+                    cleaned.SOURCE_FILE = file;
+                    cleaned.RECORD_DATE = dateISO;
+                    return cleaned;
+                });
+                rowsThisCycle.push(...rows);
+            }
+
+            // Merge into global allRows
+            allRows.push(...rowsThisCycle);
+
+            // Process symbol data
+            const tempSymbolGroups = {};
+
+            // List of symbols to exclude
+            const excludedSymbols = ['1018GS2026', '20MICRONS','360ONE', '515GS2025','3IINFOLTD','68GS2060','AERON'];
+
+            rowsThisCycle.forEach(row => {
+                const symbol = row.SYMBOL?.trim();
+
+                if (!symbol || excludedSymbols.includes(symbol)) return; // Skip excluded symbols
+
+                if (!tempSymbolGroups[symbol]) {
+                    tempSymbolGroups[symbol] = {
+                        DELIV_QTY_total: 0,
+                        TTL_TRD_QNTY_total: 0,
+                        count: 0,
+                        to_date_row: null
+                    };
+                }
+                if (row.RECORD_DATE === mainDateISO) {
+                    tempSymbolGroups[symbol].to_date_row = {
+                        DELIV_QTY: +(row.DELIV_QTY || 0),
+                        TTL_TRD_QNTY: +(row.TTL_TRD_QNTY || 0)
+                    };
+                } else {
+                    tempSymbolGroups[symbol].DELIV_QTY_total += +(row.DELIV_QTY || 0);
+                    tempSymbolGroups[symbol].TTL_TRD_QNTY_total += +(row.TTL_TRD_QNTY || 0);
+                    tempSymbolGroups[symbol].count += 1;
+                }
+            });
+
+            // Calculate averages and messages
+            for (const symbol in tempSymbolGroups) {
+                const group = tempSymbolGroups[symbol];
+                const avgQty = group.count > 0 ? group.DELIV_QTY_total / group.count : 0;
+                const avgQtyTraded = group.count > 0 ? group.TTL_TRD_QNTY_total / group.count : 0;
+                group.DELIV_QTY_avg = avgQty.toFixed(2);
+                group.TTL_TRD_QNTY_avg = avgQtyTraded.toFixed(2);
+
+                if (group.to_date_row) {
+                    const qty = group.to_date_row.DELIV_QTY;
+                    const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
+                    const percentChangeValue = avgQty > 0 ? ((qty - avgQty) / avgQty) * 100 : 0;
+                    const percentChangeQtyTraded = avgQtyTraded > 0 ? ((qtyTraded - avgQtyTraded) / avgQtyTraded) * 100 : 0;
+                    group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
+                    group.TTL_TRD_QNTY_percentage = percentChangeQtyTraded.toFixed(2) + '%';
+
+                    const diff = (qty - avgQty).toFixed(2);
+                    const direction = diff > 0 ? 'higher' : 'lower';
+                    messages.push(
+                        `On ${mainDateISO}, ${symbol} had a delivery quantity ${group.DELIV_QTY_percentage} ${direction} than its 3-day average.`
+                    );
+
+                    if (percentChangeValue >= 250) {
+                        const alertMsg = `🚀 ${symbol} had a delivery quantity over 100% higher than average on ${mainDateISO}!`;
+                        alerts.push({ symbol, message: alertMsg, percentChange: group.DELIV_QTY_percentage });
+                    }
+                }
+            }
+
+            // Save to response parts
+            symbolGroups = tempSymbolGroups;
+            dateAverages[`${mainDateISO}`] = tempSymbolGroups;
+            includedFilesByDate[mainDateISO] = [mainFile, ...priorFiles.map(e => e.file)];
+        }
+
+        // const customiseDateFormat = []
+        // const customiseDate = mainDates
+        // for (let formateDateChange of customiseDate) {
+        //     const mainDateISO = `${formateDateChange.slice(0, 4)}-${formateDateChange.slice(4, 6)}-${formateDateChange.slice(6)}`;
+        //     customiseDateFormat.push(mainDateISO)
+        // }
+
+        return res.status(200).json({
+            status: true,
+            overallAverage: symbolGroups,
+            messages,
+            alerts,
+            dateAverages,
+            includedFilesByDate,
+            // mainDateISO: customiseDateFormat,
+            mergedData: allRows
+        });
+
+    } catch (error) {
+        console.error('Error in rolling comparison', error);
+        return res.status(500).json({ error: 'Server error' });
+    }
+};
+
 

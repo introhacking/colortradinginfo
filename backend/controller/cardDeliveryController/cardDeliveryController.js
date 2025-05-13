@@ -169,7 +169,7 @@ exports.getDeliveryStats = async (req, res) => {
         }
 
         const todayFile = fileList[0];
-        const previousFiles = fileList.slice(1, 11);
+        const previousFiles = fileList.slice(1, 6);
 
         const todayData = await readCSVFile(path.join(folderPath, todayFile.filename));
 
@@ -201,7 +201,7 @@ exports.getDeliveryStats = async (req, res) => {
                 message: `${symbol}: ${Math.abs(percentChange).toFixed(2)}% ${status} than average`
             };
             if (!isNaN(percentChange)) {
-                if (percentChange > 0) {
+                if (percentChange > 400) {
                     higher.push(data);
                 } else if (percentChange < 0) {
                     lower.push(data);

@@ -143,14 +143,14 @@ const FromURL_Info_Modal2 = ({ isOpen, onClose, fetchFileLists }) => {
 
     return (
         <div className='absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
-            <div className='w-3/5 mx-auto bg-white rounded'>
+            <div className='w-1/3 mx-auto bg-white rounded'>
                 <div className='flex w-full justify-between items-center font-medium text-xl text-white p-2 shadow'>
                     <p className='text-xl text-black'>From URL</p>
                     <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
                 </div>
-                <div className='max-h-[60vh] overflow-y-auto no-scrollbar py-2 px-4'>
+                <div className='min-h-[15vh] overflow-y-auto no-scrollbar py-2 px-4'>
                     <form action="POST" className='space-y-4'>
-                        <div className='flex gap-2'>
+                        <div className='flex gap-2 flex-col'>
 
                             <div className='flex gap-2'>
                                 <DatePicker
