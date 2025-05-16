@@ -2,9 +2,9 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import JoditEditor from 'jodit-react';
 
 const JoditRichTextEditor = ({ paragraph , onChange}) => {
-    console.log(onChange)
+    // console.log(onChange)
     const editor = useRef(null);
-    console.log(paragraph)
+    // console.log(paragraph)
     const [content, setContent] = useState('');
     const config = {
         buttons: [

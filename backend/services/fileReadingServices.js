@@ -169,7 +169,6 @@ const readerFileService = {
 
 
     // OPTIMIZE CODE 
-
     sectorialImportImgTable: async (files) => {
         const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/tiff'];
 
@@ -386,11 +385,11 @@ const readerFileService = {
 
                 allRows = allRows.concat(cleanedRows);
             });
-            return { status: 200, length: allRows.length, success: true, data: allRows };
+            return { status: 200, length: allRows.length, success: true, data: allRows};
 
         } catch (err) {
-            console.error(err);
-            return { status: 500, success: false, message: 'Error processing CSV files' };
+            // console.error(err);
+            throw { status: 500, success: false, message: 'Error processing CSV files' };
         }
     }
 

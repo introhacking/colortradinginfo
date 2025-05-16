@@ -66,11 +66,11 @@ function App() {
             <Route index={true} path="/" element={<Home />} />
             <Route path="fundamentals" element={<Fundamentals />} />
             <Route path="sentimental" element={<Sentimental />} />
-            <Route path="technical" element={<TechnicalUI />} />
-            <Route path="delivery" element={<DeliveryMain />} />
-            <Route path="sectorial" element={<DeliveryMain />} />
-            <Route path="video" element={<VideoDelivery />} />
+            {/* <Route path="technical" element={<TechnicalUI />} /> */}
+            {/* <Route path="delivery" element={<DeliveryMain />} /> */}
+            {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
             <Route path="daily-io" element={<DailyIOMain />} />
+            <Route path="video" element={<VideoDelivery />} />
           </Route>
 
 
