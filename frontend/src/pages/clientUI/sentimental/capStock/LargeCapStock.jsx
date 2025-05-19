@@ -25,6 +25,12 @@ const LargeCapStock = () => {
 
     }
     const getCellStyle = params => {
+        const value = params.value;
+        console.log(value)
+
+        if (value === 'New') {
+            return { backgroundColor: '#d1e7dd', fontWeight: 'bold', ...customCellStyle }; // light green
+        }
         if (params.value < 0) {
             return { backgroundColor: 'red', ...customCellStyle };
         }
@@ -34,7 +40,7 @@ const LargeCapStock = () => {
     };
 
 
-    const [columnDefs] = useState([
+    const [columnDefss] = useState([
         { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 250 },
         //{ headerName: 'Apr-24', field: 'Apr24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
         { headerName: 'May-24', field: 'May24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
@@ -46,10 +52,13 @@ const LargeCapStock = () => {
         { headerName: 'Nov-24', field: 'Nov24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
         { headerName: 'Dec-24', field: 'Dec24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
     ]);
+
+    const [columnDefs, setColumnDefs] = useState([])
+
     const defaultColDef = useMemo(() => ({
         sortable: true
     }), []);
-    // console.log(largeCapStockLists)
+
     const fetchLargeStockLists = async () => {
         setIsLoading(true)
         try {
@@ -79,9 +88,71 @@ const LargeCapStock = () => {
 
         }
     }
+
+    const getCapMergeFile = async () => {
+        setIsLoading(true);
+        setErrorMsg('');
+        // setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
+            const serverResponseData = serverResponse.response
+
+            if (!serverResponseData?.newModifiedKeyRecord?.length) {
+                setLargeCapStockLists([]);
+                setColumnDefs([]);
+                setErrorMsgStatus(true);
+                setErrorMsg('No data found for the LARGE CAP option.');
+                return;
+            }
+
+            setLargeCapStockLists(serverResponseData.newModifiedKeyRecord)
+
+            const dynamicCols = []
+            if (serverResponseData.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
+                    headerName: month,
+                    field: month.replace(/-/g, ''),
+                    sortable: true,
+                    filter: true,
+                    maxWidth: 120,
+                    cellStyle: params => getCellStyle(params)
+                }));
+
+                dynamicCols.push({
+                    headerName: 'Monthly Data',
+                    marryChildren: true,
+                    children: monthlyChildren,
+                });
+            }
+            // Add 'Stock Name' column as the first column
+            const columnDefs = [
+                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                ...dynamicCols,
+            ];
+
+            setColumnDefs(columnDefs);
+            setErrorMsgStatus(false)
+            setErrorMsg('');
+            // else {
+            //     setNoDataFoundMsg('No data found for the LARGE CAP option.');
+            // }
+
+        } catch (err) {
+            setErrorMsgStatus(true)
+            setErrorMsg(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
+
+
     useEffect(() => {
-        fetchLargeStockLists()
+        // fetchLargeStockLists()
+        getCapMergeFile()
     }, [])
+
     if (isLoading) { return <div><Loading msg={'Loading... please wait'} /></div> }
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
@@ -116,7 +187,9 @@ const LargeCapStock = () => {
             </div> */}
 
             <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
-                <AgGridReact rowData={largeCapStockLists} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
+                <AgGridReact rowData={largeCapStockLists} columnDefs={columnDefs}
+                    defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100}
+                    groupDisplayType='groupRows' />
             </div>
         </>
     )

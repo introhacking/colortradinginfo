@@ -107,11 +107,9 @@ exports.mergeCSVFile_SmallCap = async (req, resp) => {
         if (!data.success) {
             return resp.status(data.status || 500).json(data);
         }
-
         return resp.status(200).json(data);
-
     } catch (err) {
-
+        throw err
     }
 
 }

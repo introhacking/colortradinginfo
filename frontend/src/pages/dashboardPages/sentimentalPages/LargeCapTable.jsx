@@ -18,8 +18,8 @@ import { toast } from 'sonner';
 import Loading from '../../../Loading';
 
 const LargeCapTable = () => {
-    const [rowData, setRowData] = useState([{}]);
-    // const [columnDefs, setColumnDefs] = useState([]);
+    const [rowData, setRowData] = useState([]);
+    const [columnDefs, setColumnDefs] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -39,7 +39,6 @@ const LargeCapTable = () => {
 
 
     const updateBankInfo = (paramData) => {
-
         setIsParamsData(paramData)
         setIsEditModalOpen(true)
     }
@@ -50,34 +49,34 @@ const LargeCapTable = () => {
         setIsDeleteModalOpen(true)
     }
 
-    const [columnDefs] = useState([
-        {
-            headerName: "Action", field: 'action', flex: 1, maxWidth: 140, pinned: 'left',
-            // checkboxSelection: true,
-            cellRenderer: (params) => {
-                return (
-                    <div className="flex justify-between">
-                        <div
-                            onClick={() => updateBankInfo(params.data)}
-                            className="py-1 px-2 text-sm text-center cursor-pointer rounded"
-                        >
-                            {/* <BiIcons.BiEdit className="text-2xl" /> */}
-                            {/* Edit */}
-                            <Button children={<BiIcons.BiEdit className="text-2xl" />} className={'button ag_table_edit_button'} type={'button'} />
-                        </div>
-                        <div
-                            onClick={() => {
-                                deleteConfirmationModal(params.data);
-                            }}
-                            className="py-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded"
-                        >
-                            {/* <RiIcons.RiDeleteBin3Line className="text-2xl" /> */}
-                            <Button children={<RiIcons.RiDeleteBin3Line className="text-2xl" />} className={'button button_cancel'} type={'button'} />
-                        </div>
-                    </div>
-                );
-            },
-        },
+    const [columnDefss] = useState([
+        // {
+        //     headerName: "Action", field: 'action', flex: 1, maxWidth: 140, pinned: 'left',
+        //     // checkboxSelection: true,
+        //     cellRenderer: (params) => {
+        //         return (
+        //             <div className="flex justify-between">
+        //                 <div
+        //                     onClick={() => updateBankInfo(params.data)}
+        //                     className="py-1 px-2 text-sm text-center cursor-pointer rounded"
+        //                 >
+        //                     {/* <BiIcons.BiEdit className="text-2xl" /> */}
+        //                     {/* Edit */}
+        //                     <Button children={<BiIcons.BiEdit className="text-2xl" />} className={'button ag_table_edit_button'} type={'button'} />
+        //                 </div>
+        //                 <div
+        //                     onClick={() => {
+        //                         deleteConfirmationModal(params.data);
+        //                     }}
+        //                     className="py-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded"
+        //                 >
+        //                     {/* <RiIcons.RiDeleteBin3Line className="text-2xl" /> */}
+        //                     <Button children={<RiIcons.RiDeleteBin3Line className="text-2xl" />} className={'button button_cancel'} type={'button'} />
+        //                 </div>
+        //             </div>
+        //         );
+        //     },
+        // },
         {
             headerName: "Stock Name", field: 'stockName', filter: true, flex: 1, maxWidth: 350
         },
@@ -185,6 +184,8 @@ const LargeCapTable = () => {
 
         } finally {
             setScrubbingButtonStatus(false)
+            setIsLoading(false);
+
         }
     }
 
@@ -237,9 +238,55 @@ const LargeCapTable = () => {
 
                 // setColumnDefs1([actionColumn, ...dynamicColumns]);
                 setColumnDefs1([...dynamicColumns]);
+
             } else {
                 setNoDataFoundMsg('No data found for the selected option.');
             }
+        } catch (err) {
+            console.log(err)
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const getCapMergeFile = async () => {
+        setIsLoading(true);
+        setError('');
+        setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
+            const serverResponseData = serverResponse.response
+            if (serverResponseData?.newModifiedKeyRecord.length > 0) {
+                setRowData(serverResponseData.newModifiedKeyRecord)
+            }
+            const dynamicCols = []
+            if (serverResponseData.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
+                    headerName: month,
+                    field: month.replace(/-/g, ''),
+                    sortable: true,
+                    filter: true,
+                    maxWidth: 120,
+                }));
+
+                dynamicCols.push({
+                    headerName: 'Monthly Data',
+                    marryChildren: true,
+                    children: monthlyChildren,
+                });
+            } else {
+                setNoDataFoundMsg('No data found for the LARGE CAP option.');
+            }
+            // Add 'Stock Name' column as the first column
+            const columnDefs = [
+                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                ...dynamicCols,
+            ];
+
+            setColumnDefs(columnDefs)
+
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -247,9 +294,15 @@ const LargeCapTable = () => {
         }
     }
 
+    // useEffect(() => {
+    //     getCapMergeFile()
+    // }, [])
+
+
     useEffect(() => {
         if (activeTab === 'show_LargeCap') {
-            fetchData();
+            // fetchData();/
+            getCapMergeFile()
         }
         if (activeTab === 'show_scrubLargeCap') {
             newFetchingAPI();
@@ -260,8 +313,8 @@ const LargeCapTable = () => {
             <div className='flex justify-between flex-col gap-3'> {/* h-full */}
                 <div className='flex justify-between gap-2 items-center'>
                     <div className='flex items-center gap-2'>
-                        <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData1.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData1.length > 0 ? false : true} />
-                        <div className="flex ml-3">
+                        {/* <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData1.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData1.length > 0 ? false : true} /> */}
+                        <div className="flex">
                             <Button
                                 className={`px-3 py-1 text-sm font-semibold ${activeTab === 'show_LargeCap' ? 'bg-purple-600 text-white' : 'bg-purple-300'
                                     } rounded-l`}
@@ -272,7 +325,7 @@ const LargeCapTable = () => {
                                 className={`px-3 py-1 text-sm font-semibold ${activeTab === 'show_scrubLargeCap' ? 'bg-purple-600 text-white' : 'bg-purple-300'
                                     } rounded-r`}
                                 onClick={() => switchTab('show_scrubLargeCap')}
-                                children={'Show Scrub Data'}
+                                children={'Show Scrap Data'}
                             />
                         </div>
                     </div>
@@ -285,15 +338,14 @@ const LargeCapTable = () => {
                             {scrubbingButtonStatus ? (
                                 <div className="flex items-center">
                                     <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
-                                    Scrubbing Please wait...
+                                    Scrapping Please wait...
                                 </div>
                             ) : (
                                 'Scrubbing LargeCap Data'
                             )}
                         </Button>
-                        <Button onClick={() => setIsModalOpen(true)} children={'Add LargeCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
+                        {/* <Button onClick={() => setIsModalOpen(true)} children={'Add LargeCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} /> */}
                     </div>
-                    {/* <button onClick={() => setIsModalOpen(true)} className='px-2 py-1 hover:bg-green-400 bg-green-500 font-medium rounded text-white'>Bank form</button> */}
                 </div>
                 {isLoading && <Loading msg='Loading... please wait' />}
                 {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}

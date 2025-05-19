@@ -385,7 +385,7 @@ const readerFileService = {
 
                 allRows = allRows.concat(cleanedRows);
             });
-            return { status: 200, length: allRows.length, success: true, data: allRows};
+            return { status: 200, length: allRows.length, success: true, data: allRows };
 
         } catch (err) {
             // console.error(err);

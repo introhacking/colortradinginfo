@@ -30,7 +30,6 @@ exports.insertLargeCapStocksInBulk = async (req, resp) => {
 exports.getLargeCapStock = async (req, resp) => {
     try {
         const stocks = await largeCapSchema.find();
-        console.log(stocks)
         resp.status(200).json(stocks);
     } catch (error) {
         console.error('Error fetching stocks:', error);
@@ -73,9 +72,8 @@ exports.deleteLargeCapStockById = async (req, resp) => {
     }
 }
 
-const getMergeCSVFileBasedUponCaps = async (req, resp) => {
-    // const { cap } = req.query
-    const cap = 'largecap'
+exports.getMergeCSVFileBasedUponCapsss = async (req, resp) => {
+    const { cap } = req.query;
     const capKey = cap?.toUpperCase()
     if (!capKey) {
         return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
@@ -83,46 +81,47 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
 
     try {
         const data = await readerFileService.mergeCSVFile(capKey)
-        // function cleanKeyDynamic(key) {
-        //     return key
-        //         .replace(/<[^>]*>/g, '')        // Remove <br>, <span>, etc.
-        //         .replace(/%/g, 'Percent')       // Replace % with Percent
-        //         .replace(/[^a-zA-Z0-9 ]/g, '')  // Remove special chars except spaces
-        //         .trim()                         // Trim leading/trailing spaces
-        //         .split(' ')                     // Split by spaces
-        //         .map((word, index) =>
-        //             index === 0
-        //                 ? word.toLowerCase()
-        //                 : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        //         )
-        //         .join('');
-        // }
+        function cleanKeyDynamic(key) {
+            return key
+                .replace(/<[^>]*>/g, '')        // Remove <br>, <span>, etc.
+                .replace(/%/g, 'Percent')       // Replace % with Percent
+                .replace(/[^a-zA-Z0-9 ]/g, '')  // Remove special chars except spaces
+                .trim()                         // Trim leading/trailing spaces
+                .split(' ')                     // Split by spaces
+                .map((word, index) =>
+                    index === 0
+                        ? word.toLowerCase()
+                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join('');
+        }
 
         function cleanKeys(record) {
-            const keyMap = {
-                'Invested In': 'investedIn',
-                'NSE Code': 'nseCode',
-                'BSE Code': 'bseCode',
-                'Sector': 'sector',
-                'Market Value Latest Price': 'marketValueLatestPrice',
-                'Value as of <br> 31 Mar, 2025': 'valueAsOfMar2025',
-                '% of Total Holding': 'percentOfTotalHolding',
-                'Quantity': 'quantity',
-                'Month Change <br> in Shares': 'monthChangeInShares',
-                'Month Change <br> in Shares %': 'monthChangeInSharesPercent',
-                'History': 'history'
-            };
+            // const keyMap = {
+            //     'Invested In': 'investedIn',
+            //     'NSE Code': 'nseCode',
+            //     'BSE Code': 'bseCode',
+            //     'Sector': 'sector',
+            //     'Market Value Latest Price': 'marketValueLatestPrice',
+            //     'Value as of <br> 31 Mar, 2025': 'valueAsOfMar2025',
+            //     '% of Total Holding': 'percentOfTotalHolding',
+            //     'Quantity': 'quantity',
+            //     'Month Change <br> in Shares': 'monthChangeInShares',
+            //     'Month Change <br> in Shares %': 'monthChangeInSharesPercent',
+            //     'History': 'history'
+            // };
 
             const cleaned = {};
             for (const key in record) {
 
-                cleaned[keyMap[key] || key] = record[key];
+                // cleaned[keyMap[key] || key] = record[key];
 
-                // const newKey = cleanKeyDynamic(key)
-                // cleaned[newKey || key] = record[key];
+                const newKey = cleanKeyDynamic(key)
+                cleaned[newKey || key] = record[key];
             }
             return cleaned;
         }
+
 
         const modifiedKeyRecord = []
 
@@ -131,8 +130,8 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
             const percent = parseFloat(percentageStr);
             if (isNaN(percent)) return 0;
 
-            if (percent < 0) return '-ve';  // Correct way to check for negative
-            if (percent === 0) return 'zero';
+            if (percent < 0) return ' - ';  // Correct way to check for negative
+            if (percent === 0) return '-';
 
             if (percent > 80) return 4;
             if (percent > 60) return 3;
@@ -142,9 +141,8 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
         }
 
 
-        const monthsHeaderSet = []; // Use Set to keep values unique
+        const monthsHeaderSet = new Set(); // Use Set to keep values unique
         const newModifiedKeyRecord = [];
-        let totalWeightage = 0;
 
         data.data?.forEach((item, index) => {
             const modifiedKey = cleanKeys(item)
@@ -153,12 +151,13 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
             // Extract all 'valueAsOf' type keys
             if (index == 0) {
                 Object.keys(modifiedKey).forEach((key) => {
-                    const match = key.match(/^valueAsOf([A-Za-z]+)(\d{4})$/);
+                    // const match = key.match(/^valueAsOf([A-Za-z]+)(\d{4})$/);
+                    const match = key.match(/^valueAsOf\d*([A-Za-z]+)(\d{4})$/);
                     if (match) {
                         const month = match[1];
                         const year = match[2].slice(2);
                         const label = `${month}-${year}`; // e.g., Mar-25
-                        monthsHeaderSet.push(label); // store in Set to keep unique
+                        monthsHeaderSet.add(label); // store in Set to keep unique
                     }
                 });
             }
@@ -185,12 +184,10 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
         const response = {
             modifiedKeyRecord,
             newModifiedKeyRecord,
-            monthsHeader: monthsHeaderSet
+            monthsHeader: Array.from(monthsHeaderSet)
         };
 
-        console.log(response);
-
-        // return resp.json({ success: true, data: response });
+        return resp.json({ success: true, response });
 
         // modifiedKeyRecord.map((item, index) => {
         //     if (index == 0) {
@@ -212,17 +209,156 @@ const getMergeCSVFileBasedUponCaps = async (req, resp) => {
         //     totalWeightage += weight;
         // })
 
-
-
-
-
     } catch (err) {
         console.log(err)
     }
 
 }
 
-getMergeCSVFileBasedUponCaps()
+
+exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
+    const { cap } = req.query;
+    const capKey = cap?.toUpperCase();
+
+    if (!capKey) {
+        return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
+    }
+
+    try {
+        const data = await readerFileService.mergeCSVFile(capKey);
+
+        function cleanKeyDynamic(key) {
+            return key
+                .replace(/<[^>]*>/g, '')        // Remove <br>, <span>, etc.
+                .replace(/%/g, 'Percent')       // Replace % with Percent
+                .replace(/[^a-zA-Z0-9 ]/g, '')  // Remove special chars except spaces
+                .trim()
+                .split(' ')
+                .map((word, index) =>
+                    index === 0
+                        ? word.toLowerCase()
+                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join('');
+        }
+
+        function cleanKeys(record) {
+            const cleaned = {};
+            for (const key in record) {
+                const newKey = cleanKeyDynamic(key);
+                cleaned[newKey || key] = record[key];
+            }
+            return cleaned;
+        }
+
+        const modifiedKeyRecord = [];
+
+        function getWeight(percentageStr) {
+            if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
+                return 'New';
+            }
+        
+            const percent = parseFloat(percentageStr);
+        
+            if (isNaN(percent) || percent <= 0) return 0;
+        
+            if (percent > 80) return 4;
+            if (percent > 60) return 3;
+            if (percent > 40) return 2;
+            if (percent > 20) return 1;
+        
+            return 0; // For 0 < percent <= 20
+        }
+        
+
+        const monthsHeaderSet = new Set();
+        const stockMap = new Map();
+
+        data.data?.forEach((item, index) => {
+            const modifiedKey = cleanKeys(item);
+            modifiedKeyRecord.push(modifiedKey);
+
+            // Extract month-year keys
+            Object.keys(modifiedKey).forEach((key) => {
+                const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                if (match) {
+                    const month = match[2];
+                    const year = match[3].slice(2);
+                    const label = `${month}-${year}`;
+                    monthsHeaderSet.add(label);
+                }
+            });
+
+
+            // Object.keys(modifiedKey).forEach((key) => {
+            //     const match = key.match(/^valueAsOf\d*([A-Za-z]+)(\d{4})$/);
+            //     if (match) {
+            //         const month = match[1];
+            //         const year = match[2].slice(2);
+            //         const label = `${month}-${year}`;
+            //         monthsHeaderSet.add(label);
+            //     }
+            // });
+
+            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+            const keyName = modifiedKey.investedIn?.trim();
+
+            if (keyName) {
+                const stockKey = keyName.toLowerCase();
+                const existing = stockMap.get(stockKey) || { stockName: keyName };
+                console.log(existing)
+
+                // Go through all keys and find `valueAsOf...` keys
+                Object.keys(modifiedKey).forEach((key) => {
+                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                    if (match) {
+                        const month = match[2];
+                        const year = match[3].slice(2);
+                        const formattedMonth = `${month}${year}`;
+
+                        const numericWeight = typeof weight === 'number' ? weight : 0;
+
+                        existing[formattedMonth] = (existing[formattedMonth] || 0) + numericWeight;
+                    }
+                });
+
+                stockMap.set(stockKey, existing);
+            }
+
+
+            // if (keyName) {
+            //     const stockKey = keyName.toLowerCase();
+            //     if (!stockMap.has(stockKey)) {
+            //         stockMap.set(stockKey, {
+            //             stockName: keyName,
+            //             monthlyData: 0,
+            //         });
+            //     }
+
+            //     const existing = stockMap.get(stockKey);
+            //     const numericWeight = typeof weight === 'number' ? weight : 0;
+            //     existing.monthlyData += numericWeight;
+            //     stockMap.set(stockKey, existing);
+            // }
+        });
+
+        const newModifiedKeyRecord = Array.from(stockMap.values());
+
+        const response = {
+            modifiedKeyRecord,
+            newModifiedKeyRecord,
+            monthsHeader: Array.from(monthsHeaderSet),
+        };
+        // console.log(response)
+        return resp.json({ success: true, response });
+
+    } catch (err) {
+        console.error(err);
+        return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
+    }
+};
+
+
 
 
 
