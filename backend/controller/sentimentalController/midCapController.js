@@ -58,7 +58,7 @@ exports.updatingMidCapStockById = async (req, resp) => {
     }
 }
 
-exports.deleteMidCapStockById = async (req , resp)=>{
+exports.deleteMidCapStockById = async (req, resp) => {
     const id = req.params._id
     try {
         const document = await midCapSchema.findById(id);
@@ -72,6 +72,22 @@ exports.deleteMidCapStockById = async (req , resp)=>{
     }
 }
 
+
+exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
+    const { cap } = req.query;
+    const capKey = cap?.toUpperCase();
+
+    if (!capKey) {
+        return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
+    }
+    try {
+        const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
+        resp.json({ status: 200, success: true, response: data })
+
+    } catch (err) {
+       throw err
+    }
+}
 
 
 

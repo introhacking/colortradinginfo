@@ -72,6 +72,22 @@ exports.deleteSmallCapStockById = async (req, resp) => {
     }
 }
 
+exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
+    const { cap } = req.query;
+    const capKey = cap?.toUpperCase();
+
+    if (!capKey) {
+        return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
+    }
+
+    try {
+        const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
+        return resp.json({ status: 200, success: true, response: data })
+
+    } catch (err) {
+
+    }
+}
 
 
 // =-------------------------------------------------------------------------------------------------------------------------------- //
@@ -109,7 +125,7 @@ exports.mergeCSVFile_SmallCap = async (req, resp) => {
         }
         return resp.status(200).json(data);
     } catch (err) {
-        throw err
+        return resp.status(500).json(err)
     }
 
 }

@@ -352,6 +352,8 @@ const readerFileService = {
         }
     },
 
+
+
     mergeCSVFile: async (capName) => {
         try {
             const folderPath = path.join(__dirname, `../uploads/scrubbing/${capName}`);
@@ -390,6 +392,175 @@ const readerFileService = {
         } catch (err) {
             // console.error(err);
             throw { status: 500, success: false, message: 'Error processing CSV files' };
+        }
+    },
+
+
+    getMasterMergeCSVFileBasedUponCaps: async (cap) => {
+        const capKey = cap?.toUpperCase();
+        try {
+            const data = await readerFileService.mergeCSVFile(capKey);
+
+            function cleanKeyDynamic(key) {
+                return key
+                    .replace(/<[^>]*>/g, '')        // Remove <br>, <span>, etc.
+                    .replace(/%/g, 'Percent')       // Replace % with Percent
+                    .replace(/[^a-zA-Z0-9 ]/g, '')  // Remove special chars except spaces
+                    .trim()
+                    .split(' ')
+                    .map((word, index) =>
+                        index === 0
+                            ? word.toLowerCase()
+                            : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    )
+                    .join('');
+            }
+
+            function cleanKeys(record) {
+                const cleaned = {};
+                for (const key in record) {
+                    const newKey = cleanKeyDynamic(key);
+                    cleaned[newKey || key] = record[key];
+                }
+                return cleaned;
+            }
+
+            const modifiedKeyRecord = [];
+
+
+            // function getWeight(percentageStr) {
+            //     if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
+            //         return 1;
+            //     }
+
+            //     const percent = parseFloat(percentageStr);
+            //     if (isNaN(percent)) return 0;
+
+            //     // Handle negative values
+            //     if (percent < 0) {
+            //         const absPercent = Math.abs(percent);
+            //         if (absPercent > 100) return -6;
+            //         if (absPercent > 80) return -5;
+            //         if (absPercent > 60) return -4;
+            //         if (absPercent > 40) return -3;
+            //         if (absPercent > 20) return -2;
+            //         return -1; // absPercent <= 20
+            //     }
+
+            //     // Positive ranges
+            //     if (percent > 100) return 6;
+            //     if (percent > 80) return 5;
+            //     if (percent > 60) return 4;
+            //     if (percent > 40) return 3;
+            //     if (percent > 20) return 2;
+            //     if (percent > 0) return 1;
+
+            //     return 0; // 0 or invalid
+            // }
+
+
+            function getWeight(percentageStr) {
+                if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
+                    return 1;
+                }
+
+                const percent = parseFloat(percentageStr);
+
+                // Handle invalid or missing value
+                if (isNaN(percent)) return 0;
+
+                // Negative values
+                if (percent < 0) {
+                    if (percent <= -40) return -3;
+                    return -1;
+                }
+
+                // Positive ranges
+                if (percent <= 20) return 1;
+                if (percent <= 40) return 1;
+                if (percent <= 60) return 1;
+                if (percent <= 80) return 1;
+
+                return 1; // > 80%, including > 100%
+            }
+
+            const monthsHeaderSet = new Set();
+            const stockMap = new Map();
+
+            data.data?.forEach((item, index) => {
+                const modifiedKey = cleanKeys(item);
+                modifiedKeyRecord.push(modifiedKey);
+
+                // Extract month-year keys
+                Object.keys(modifiedKey).forEach((key) => {
+                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                    if (match) {
+                        const month = match[2];
+                        const year = match[3].slice(2);
+                        const label = `${month}-${year}`;
+                        monthsHeaderSet.add(label);
+                    }
+                });
+
+                const keyName = modifiedKey.investedIn?.trim();
+
+                if (keyName) {
+                    const stockKey = keyName.toLowerCase();
+                    const existing = stockMap.get(stockKey) || { stockName: keyName };
+
+                    // Go through all keys and find `valueAsOf...` keys
+                    Object.keys(modifiedKey).forEach((key) => {
+                        const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                        if (match) {
+                            const month = match[2];
+                            const year = match[3].slice(2);
+                            const formattedMonth = `${month}${year}`;
+
+                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+
+                            if (weight === 'New') {
+                                existing[formattedMonth] = 'New';
+                            } else {
+                                const numericWeight = typeof weight === 'number' ? weight : 0;
+                                const existingValue = existing[formattedMonth];
+                                if (existingValue === 'New') {
+                                    existing[formattedMonth] = 'New';
+                                } else {
+                                    // existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
+                                    existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 1);
+                                }
+                            }
+                        }
+                    });
+
+                    stockMap.set(stockKey, existing);
+                }
+
+            });
+
+
+            const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
+
+            for (const stock of stockMap.values()) {
+                for (const monthKey of allMonthKeys) {
+                    if (!(monthKey in stock)) {
+                        stock[monthKey] = '-';
+                    }
+                }
+            }
+
+            const newModifiedKeyRecord = Array.from(stockMap.values());
+
+            const response = {
+                modifiedKeyRecord,
+                newModifiedKeyRecord,
+                monthsHeader: Array.from(monthsHeaderSet),
+            };
+            return response;
+        } catch (err) {
+            // console.error(err);
+            // return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
+            return err
         }
     }
 

@@ -243,12 +243,21 @@ const LargeCapTable = () => {
                 setNoDataFoundMsg('No data found for the selected option.');
             }
         } catch (err) {
-            console.log(err)
             setError(err.message);
         } finally {
             setIsLoading(false);
         }
     }
+
+
+    function getCellStyle(params) {
+        const value = params.value;
+
+        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+            return { backgroundColor: '#4561a3', fontWeight: 'bold', color: 'white', textAlign:'center' }; // yellow highlight
+        }
+    }
+
 
     const getCapMergeFile = async () => {
         setIsLoading(true);
@@ -257,6 +266,7 @@ const LargeCapTable = () => {
         try {
             const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
             const serverResponseData = serverResponse.response
+            console.log(serverResponse)
             if (serverResponseData?.newModifiedKeyRecord.length > 0) {
                 setRowData(serverResponseData.newModifiedKeyRecord)
             }
@@ -268,6 +278,14 @@ const LargeCapTable = () => {
                     sortable: true,
                     filter: true,
                     maxWidth: 120,
+                    cellStyle: params => getCellStyle(params),
+                    valueFormatter: (params) => {
+                        const value = params.value;
+                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                            return 'New';
+                        }
+                        return value; // fallback
+                    }
                 }));
 
                 dynamicCols.push({
@@ -294,15 +312,10 @@ const LargeCapTable = () => {
         }
     }
 
-    // useEffect(() => {
-    //     getCapMergeFile()
-    // }, [])
-
-
     useEffect(() => {
         if (activeTab === 'show_LargeCap') {
             // fetchData();/
-            getCapMergeFile()
+            getCapMergeFile();
         }
         if (activeTab === 'show_scrubLargeCap') {
             newFetchingAPI();

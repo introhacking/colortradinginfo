@@ -26,7 +26,6 @@ const LargeCapStock = () => {
     }
     const getCellStyle = params => {
         const value = params.value;
-        console.log(value)
 
         if (value === 'New') {
             return { backgroundColor: '#d1e7dd', fontWeight: 'bold', ...customCellStyle }; // light green
@@ -115,7 +114,14 @@ const LargeCapStock = () => {
                     sortable: true,
                     filter: true,
                     maxWidth: 120,
-                    cellStyle: params => getCellStyle(params)
+                    cellStyle: params => getCellStyle(params),
+                    valueFormatter: (params) => {
+                        const value = params.value;
+                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                            return 'New';
+                        }
+                        return value; // fallback
+                    }
                 }));
 
                 dynamicCols.push({
@@ -145,9 +151,6 @@ const LargeCapStock = () => {
         }
     }
 
-
-
-
     useEffect(() => {
         // fetchLargeStockLists()
         getCapMergeFile()
@@ -157,35 +160,6 @@ const LargeCapStock = () => {
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
         <>
-            {/* <div>
-                <table>
-                    <tr className='sticky top-0 bg-white shadow-md'>
-                        <th>Stock Name : Large Caps</th>
-                        {
-                            largeCapsHeading.map((item) => {
-                                return <th className='text-sm font-normal' key={item.id}>{item.month}</th>
-                            })
-                        }
-                    </tr>
-
-                    <tbody>
-                        {
-                            largeCapStockLists.map((item, index) => (
-                                <tr key={index}>
-                                    <td className='text-sm'>{item.stockName}</td>
-                                    {
-                                        item.monthlyData.map((data, i) => (
-                                            <td className='text-sm' key={i}>{data}</td>
-                                        ))
-                                    }
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </table>
-
-            </div> */}
-
             <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
                 <AgGridReact rowData={largeCapStockLists} columnDefs={columnDefs}
                     defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100}

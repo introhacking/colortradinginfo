@@ -20,9 +20,9 @@ import { toast } from 'sonner';
 import Loading from '../../../Loading';
 
 const MidCapTable = () => {
-    const [rowData, setRowData] = useState([{
+    const [rowData, setRowData] = useState([]);
+    const [columnDefs, setColumnDefs] = useState([]);
 
-    }]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -50,7 +50,7 @@ const MidCapTable = () => {
         setIsDeleteModalOpen(true)
     }
 
-    const [columnDefs] = useState([
+    const [columnDefss] = useState([
         {
             headerName: "Action", field: 'action', flex: 1, maxWidth: 140, pinned: 'left',
             // checkboxSelection: true,
@@ -85,6 +85,7 @@ const MidCapTable = () => {
             headerName: "Monthly Data", field: 'monthlyData', flex: 1
         },
     ]);
+
     const defaultColDef = useMemo(() => ({
         sortable: true
     }), []);
@@ -107,7 +108,6 @@ const MidCapTable = () => {
         setNoDataFoundMsg('');
         try {
             const serverResponse = await bankingService.getInfoFromServer('/mid-cap');
-            console.log(serverResponse)
             if (serverResponse.length > 0) {
                 setRowData(serverResponse)
             }
@@ -184,9 +184,10 @@ const MidCapTable = () => {
                     )
                 };
 
-                setColumnDefs1([actionColumn, ...dynamicColumns]);
+                // setColumnDefs1([actionColumn, ...dynamicColumns]);
+                setColumnDefs1([...dynamicColumns]);
             } else {
-
+                setNoDataFoundMsg('No data found for the selected option.');
             }
         } catch (err) {
             setError(err.message);
@@ -195,9 +196,77 @@ const MidCapTable = () => {
         }
     }
 
+    function getCellStyle(params) {
+        const value = params.value;
+
+        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+            return { backgroundColor: '#4561a3', fontWeight: 'bold', color: 'white', textAlign: 'center' }; // yellow highlight
+        }
+    }
+
+    const getCapMergeFile = async () => {
+        setIsLoading(true);
+        setError('');
+        setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
+            // console.log(serverResponse)
+            const serverResponseData = serverResponse.response
+            if (serverResponseData?.status === 500) {
+                setError(serverResponseData.message);
+            }
+
+            if (serverResponseData?.newModifiedKeyRecord.length > 0) {
+                setRowData(serverResponseData.newModifiedKeyRecord)
+            }
+            const dynamicCols = []
+            if (serverResponseData.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
+                    headerName: month,
+                    field: month.replace(/-/g, ''),
+                    sortable: true,
+                    filter: true,
+                    maxWidth: 120,
+                    cellStyle: params => getCellStyle(params),
+                    valueFormatter: (params) => {
+                        const value = params.value;
+                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                            return 'New';
+                        }
+                        return value; // fallback
+                    }
+                }));
+
+                dynamicCols.push({
+                    headerName: 'Monthly Data',
+                    marryChildren: true,
+                    children: monthlyChildren,
+                });
+            } else {
+                setNoDataFoundMsg('No data found for the LARGE CAP option.');
+            }
+            // Add 'Stock Name' column as the first column
+            const columnDefs = [
+                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                ...dynamicCols,
+            ];
+
+            setColumnDefs(columnDefs)
+
+
+        } catch (err) {
+            // console.log(err)
+            // setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
     useEffect(() => {
         if (activeTab === 'show_MidCap') {
-            fetchData();
+            // fetchData();
+            getCapMergeFile();
         }
         if (activeTab === 'show_ScrubMidCap') {
             newFetchingAPI();
@@ -207,13 +276,10 @@ const MidCapTable = () => {
     return (
         <>
             <div className='flex justify-between flex-col gap-3'> {/* h-full */}
-                {/* <div>
-                    Mid Cap
-                </div> */}
                 <div className='flex justify-between gap-2 items-center'>
                     <div className='flex items-center gap-2'>
-                        <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData1.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData.length > 0 ? false : true} />
-                        <div className="flex ml-3">
+                        {/* <Button onClick={() => setIsAlertModalOpen(true)} children={'Delete All Table Data'} className={`${rowData1.length > 0 ? "button button_cancel" : "bg-red-200/40 button cursor-not-allowed"} `} disabled={rowData.length > 0 ? false : true} /> */}
+                        <div className="flex">
                             <Button
                                 className={`px-3 py-1 text-sm font-semibold ${activeTab === 'show_MidCap' ? 'bg-purple-600 text-white' : 'bg-purple-300'
                                     } rounded-l`}
@@ -243,15 +309,14 @@ const MidCapTable = () => {
                                 'Scrubbing MidCap Data'
                             )}
                         </Button>
-                        <Button onClick={() => setIsModalOpen(true)} children={'Add MidCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
+                        {/* <Button onClick={() => setIsModalOpen(true)} children={'Add MidCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} /> */}
                     </div>
-                    {/* <button onClick={() => setIsModalOpen(true)} className='px-2 py-1 hover:bg-green-400 bg-green-500 font-medium rounded text-white'>Bank form</button> */}
                 </div>
                 {isLoading && <Loading msg='Loading... please wait' />}
                 {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}
                 {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
                 {!isLoading && !error && !noDataFoundMsg && (
-                    <div className='ag-theme-alpine overflow-y-auto h-[75vh] w-full'>
+                    <div className='ag-theme-alpine overflow-y-auto h-[70vh] w-full'>
                         {/* <AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} /> */}
                         {/* <AgGridReact rowData={rowData1} columnDefs={columnDefs1} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} /> */}
 

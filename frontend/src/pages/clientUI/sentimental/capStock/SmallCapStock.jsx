@@ -9,6 +9,7 @@ import Loading from '../../../../Loading';
 
 const SmallCapStock = () => {
     const [smallCapStockLists, setSmallCapStockLists] = useState([])
+    const [columnDefs, setColumnDefs] = useState([])
 
     // ERROR HANDLING
     const [errorMsg, setErrorMsg] = useState('')
@@ -58,9 +59,9 @@ const SmallCapStock = () => {
     //     })));
     // }, [])
 
-    const [columnDefs] = useState([
+    const [columnDefss] = useState([
         { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 250 },
-       // { headerName: 'Apr-24', field: 'Apr24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+        // { headerName: 'Apr-24', field: 'Apr24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
         { headerName: 'May-24', field: 'May24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
         { headerName: 'Jun-24', field: 'Jun24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
         { headerName: 'Jul-24', field: 'Jul24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
@@ -104,74 +105,83 @@ const SmallCapStock = () => {
 
         }
     }
+
+    const getCapMergeFile = async () => {
+        setIsLoading(true);
+        setErrorMsg('');
+        // setNoDataFoundMsg('');
+        try {
+            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
+            const serverResponseData = serverResponse.response
+
+            if (!serverResponseData?.newModifiedKeyRecord?.length) {
+                setSmallCapStockLists([]);
+                setColumnDefs([]);
+                setErrorMsgStatus(true);
+                setErrorMsg('No data found for the MID CAP option.');
+                return;
+            }
+
+            setSmallCapStockLists(serverResponseData.newModifiedKeyRecord)
+
+            const dynamicCols = []
+            if (serverResponseData.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
+                    headerName: month,
+                    field: month.replace(/-/g, ''),
+                    sortable: true,
+                    filter: true,
+                    maxWidth: 120,
+                    cellStyle: params => getCellStyle(params),
+                    valueFormatter: (params) => {
+                        const value = params.value;
+                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                            return 'New';
+                        }
+                        return value; // fallback
+                    }
+                }));
+
+                dynamicCols.push({
+                    headerName: 'Monthly Data',
+                    marryChildren: true,
+                    children: monthlyChildren,
+                });
+            }
+            // Add 'Stock Name' column as the first column
+            const columnDefs = [
+                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                ...dynamicCols,
+            ];
+
+            setColumnDefs(columnDefs);
+            setErrorMsgStatus(false)
+            setErrorMsg('');
+            // else {
+            //     setNoDataFoundMsg('No data found for the LARGE CAP option.');
+            // }
+
+        } catch (err) {
+            setErrorMsgStatus(true)
+            setErrorMsg(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
+
+
     useEffect(() => {
-        fetchLargeStockLists()
+        // fetchLargeStockLists()
+        getCapMergeFile()
     }, [])
 
 
-
-    // const getCellStyle = params => {
-    //     const value = params.value;
-    //     const color = 'green'; 
-    //     const percentage = Math.max(0, Math.min(value, 1)) * 100; 
-
-    //     return {
-    //         background: `linear-gradient(to right, ${color} ${percentage}%, white ${percentage}%)`,
-    //         color: 'white'
-    //     };
-    // };
-
-
-    // // Define month headers
-    // const [monthHeaders] = useState(smallCapTableHeading);
-
-    // // Function to generate column definitions
-    // const generateColumnDefs = () => {
-    //     const baseColumns = [
-    //         { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 250 }
-    //     ];
-
-    //     const monthColumns = monthHeaders.map(month => ({
-    //         headerName: month,
-    //         field: month.replace('-', ''), // Remove '-' for field names
-    //         sortable: true,
-    //         filter: true,
-    //         maxWidth: 100,
-    //         cellStyle: params => getCellStyle(params)
-    //     }));
-
-    //     return [...baseColumns, ...monthColumns];
-    // };
-
-    // const [columnDefs] = useState(generateColumnDefs);
-
-    // const defaultColDef = useMemo(() => ({
-    //     sortable: true
-    // }), []);
     if (isLoading) { return <div><Loading msg={'Loading... please wait'} /></div> }
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
         <>
-            {/* <div>
-                <table>
-                    <tr className='sticky top-0 bg-white shadow-md'>
-                        <th>Stock Name : Small Caps</th>
-                    </tr>
-
-                    <tbody>
-                        {
-                            smallCapStockLists?.map((item, index) => {
-                                return <tr key={index}>
-                                    <td className='text-sm'>{item.stockName}</td>
-                                </tr>
-                            })
-                        }
-                    </tbody>
-                </table>
-
-            </div> */}
-
-
             <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
                 <AgGridReact rowData={smallCapStockLists} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
             </div>

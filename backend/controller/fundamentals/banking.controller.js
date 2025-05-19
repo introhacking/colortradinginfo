@@ -56,7 +56,7 @@ exports.createBankingDetails = async (req, res) => {
     }
 };
 exports.updatingBankDetails = async (req, res) => {
-    const { bank_name, management_type, description , color } = req.body;
+    const { bank_name, management_type, description, color } = req.body;
     try {
         // Find the bank by name
         const bank = await Bank.findOne({ bank_name });
