@@ -232,7 +232,7 @@ const SmallCapTable = () => {
                     children: monthlyChildren,
                 });
             } else {
-                setNoDataFoundMsg('No data found for the LARGE CAP option.');
+                setNoDataFoundMsg('No data found for the SMALL CAP option.');
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [

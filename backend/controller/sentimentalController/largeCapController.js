@@ -246,10 +246,10 @@ exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
 
     try {
         const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
-        return resp.json({ status: 200, success: true, response: data })
+        return resp.json({ response: data })
 
     } catch (err) {
-
+        console.log(err)
     }
 }
 

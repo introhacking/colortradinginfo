@@ -166,8 +166,6 @@ const readerFileService = {
 
     },
 
-
-
     // OPTIMIZE CODE 
     sectorialImportImgTable: async (files) => {
         const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/tiff'];
@@ -224,9 +222,6 @@ const readerFileService = {
             throw new Error('File processing error');
         }
     },
-
-
-
 
 
     // FROM URL
@@ -390,8 +385,8 @@ const readerFileService = {
             return { status: 200, length: allRows.length, success: true, data: allRows };
 
         } catch (err) {
-            // console.error(err);
-            throw { status: 500, success: false, message: 'Error processing CSV files' };
+            // console.error(`${err.code} : No such file or directory `);
+            return new Error({ status: 500, success: false, message: `${err.code} : No such file or directory ` });
         }
     },
 
@@ -552,15 +547,16 @@ const readerFileService = {
             const newModifiedKeyRecord = Array.from(stockMap.values());
 
             const response = {
+                status: 200, 
+                success: true,
                 modifiedKeyRecord,
                 newModifiedKeyRecord,
                 monthsHeader: Array.from(monthsHeaderSet),
             };
             return response;
         } catch (err) {
-            // console.error(err);
             // return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
-            return err
+           return err
         }
     }
 

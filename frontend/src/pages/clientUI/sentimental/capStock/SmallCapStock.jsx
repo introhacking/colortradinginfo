@@ -118,7 +118,7 @@ const SmallCapStock = () => {
                 setSmallCapStockLists([]);
                 setColumnDefs([]);
                 setErrorMsgStatus(true);
-                setErrorMsg('No data found for the MID CAP option.');
+                setErrorMsg('No data found for the SMALL CAP option.');
                 return;
             }
 

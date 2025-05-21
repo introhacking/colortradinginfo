@@ -103,6 +103,12 @@ app.get('/api/v1/csv-files', (req, res) => {
     });
 });
 
+// [ SCRUBBING CAPS ROUTER ]
+const loginRoute = require('./router/authRouter/authRoute');
+app.use('/api/v1', loginRoute)
+
+
+
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {
 //     const folderPath = path.join(__dirname, 'uploads/scrubbing/SMALLCAP');
 //     fs.readdir(folderPath, (err, files) => {

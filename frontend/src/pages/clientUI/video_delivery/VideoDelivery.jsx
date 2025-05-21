@@ -30,10 +30,10 @@ const VideoDelivery = () => {
     }, [])
     return (
         <>
-            <div className="w-[98%] mx-auto mt-6 bg-gray-50">
-                <div className='flex items-start bg-gray-300 px-4 py-2'>
+            <div className="w-[98%] mx-auto mt-6">
+                <div className='flex items-start px-4 py-2'>
                     {!isLoading && !error && !noDataFoundMsg && (
-                        <div className='flex flex-wrap justify-between items-center gap-4 w-full'>
+                        <div className='flex flex-wrap bg-gray-300 justify-between items-center gap-4 w-full'>
                             {rowData?.map((video) => {
                                 return (
                                     <div className='p-2 w-[32%] h-1/3 bg-white' >

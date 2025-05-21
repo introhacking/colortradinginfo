@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -18,9 +18,11 @@ import { toast } from 'sonner';
 import Loading from '../../../Loading';
 
 const LargeCapTable = () => {
+
+    const gridRef = useRef();
+
     const [rowData, setRowData] = useState([]);
     const [columnDefs, setColumnDefs] = useState([]);
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -254,7 +256,7 @@ const LargeCapTable = () => {
         const value = params.value;
 
         if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
-            return { backgroundColor: '#4561a3', fontWeight: 'bold', color: 'white', textAlign:'center' }; // yellow highlight
+            return { backgroundColor: '#4561a3', fontWeight: 'bold', color: 'white', textAlign: 'center' }; // yellow highlight
         }
     }
 
@@ -266,7 +268,7 @@ const LargeCapTable = () => {
         try {
             const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
             const serverResponseData = serverResponse.response
-            console.log(serverResponse)
+            // console.log(serverResponse)
             if (serverResponseData?.newModifiedKeyRecord.length > 0) {
                 setRowData(serverResponseData.newModifiedKeyRecord)
             }
@@ -312,6 +314,20 @@ const LargeCapTable = () => {
         }
     }
 
+    const handleExportToExcel = () => {
+        try {
+            const allVisibleColumns = gridRef.current.columnApi.getAllDisplayedColumns();
+            const columnKeys = allVisibleColumns.map(col => col.getColId());
+            gridRef.current.api.exportDataAsCsv({
+                fileName: 'LargeCapCSVData.csv',
+                columnKeys: columnKeys,
+            });
+        } catch (err) {
+            console.log(err)
+
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'show_LargeCap') {
             // fetchData();/
@@ -343,6 +359,7 @@ const LargeCapTable = () => {
                         </div>
                     </div>
                     <div className='flex justify-between gap-2'>
+                        <Button onClick={handleExportToExcel} children={'Export to CSV'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
                         <Button
                             onClick={exportDataFromLargeCapUrl}
                             disabled={scrubbingButtonStatus}
@@ -366,7 +383,7 @@ const LargeCapTable = () => {
                 {!isLoading && !error && !noDataFoundMsg && (
                     <div className='ag-theme-alpine overflow-y-auto h-[70vh] w-full'>
                         {!switchToTable && (
-                            < AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
+                            < AgGridReact ref={gridRef} rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
                         )}
 
                         {switchToTable && (

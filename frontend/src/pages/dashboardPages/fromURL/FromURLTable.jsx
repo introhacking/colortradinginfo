@@ -339,7 +339,7 @@ const FromURLTable = () => {
 
             </div >
 
-            <div className="overflow-auto h-[75vh] w-[175vh] bg-gray-50 p-4 shadow-lg rounded-xl my-4">
+            <div className="overflow-auto h-[68vh] w-[190vh] bg-gray-50 p-4 shadow-lg rounded-xl my-4">
                 {activeTab === 'latest' && oldData?.length > 0 && (
                     <div className="relative overflow-x-auto rounded-lg">
                         {oldData.map((entry, index) => {

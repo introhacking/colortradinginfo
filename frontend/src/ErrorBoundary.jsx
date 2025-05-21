@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <>
-          <div style={{ padding: 20, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: "100vh", border: '1px solid red', borderRadius: 5 }}>
+          <div style={{ padding: 20, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: "100%", borderRadius: 5 }}>
             <div>
               <h2>Something went wrong.</h2>
               <p>{this.state.error?.toString()}</p>

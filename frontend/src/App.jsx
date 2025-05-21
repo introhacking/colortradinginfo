@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
-import Header from "./components/Header"
+import Header from "./components/Header";
+import 'ag-grid-enterprise';
 import { BrowserRouter as Router, Route, Routes, Outlet } from 'react-router-dom'
 
 // WITHOUT LAZY, SUSPENCE AND LOADING  
@@ -28,6 +29,7 @@ import ErrorPageComponent from './ErrorPageComponent ';
 import ErrorBoundary from './ErrorBoundary';
 import DailyIOMain from './pages/clientUI/daily_IO/DailyIOMain';
 import { Toaster } from 'sonner';
+import ProtectedRoutes from './pages/dashboardPages/ProtectedRoutes';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -76,25 +78,50 @@ function App() {
 
           {/* ADMIN DASHBOARD  */}
           <Route path='/login' element={<AdminLogin />} />
-          <Route path='/dashboard' element={
+          {/* <Route path='/dashboard' element={
             <ErrorBoundary>
               <AdminLayout />
             </ErrorBoundary>
-          } >
-            <Route index={true} path="/dashboard" element={<DashboardPage />} />
-            <Route path="fundamentals/banking" element={<BankingTable />} />
-            <Route path="fundamentals/it" element={<ITTable />} />
-            <Route path="sentimental/large-cap" element={<LargeCapTable />} />
-            <Route path="sentimental/mid-cap" element={<MidCapTable />} />
-            <Route path="sentimental/small-cap" element={<SmallCapTable />} />
-            <Route path="technical/banking" element={<TechnicalBankingTable />} />
-            <Route path="delivery" element={<DeliveryTable />} />
-            <Route path="sectorial" element={<SectorialTable />} />
-            <Route path="fromdate" element={<FromURLTable />} />
-            <Route path="upload-video" element={<VideoUploadTable />} />
-            <Route path="fromurl" element={<FromURLTable2 />} />
-            <Route path="*" element={<ErrorPageComponent />} />
+          } > */}
+
+          {/* PROTECTED ROUTES */}
+          {/* <Route element={<ProtectedRoutes />}>
+              <Route index={true} element={<DashboardPage />} />
+              <Route path="fundamentals/banking" element={<BankingTable />} />
+              <Route path="fundamentals/it" element={<ITTable />} />
+              <Route path="sentimental/large-cap" element={<LargeCapTable />} />
+              <Route path="sentimental/mid-cap" element={<MidCapTable />} />
+              <Route path="sentimental/small-cap" element={<SmallCapTable />} />
+              <Route path="technical/banking" element={<TechnicalBankingTable />} />
+              <Route path="delivery" element={<DeliveryTable />} />
+              <Route path="sectorial" element={<SectorialTable />} />
+              <Route path="fromdate" element={<FromURLTable />} />
+              <Route path="upload-video" element={<VideoUploadTable />} />
+              <Route path="fromurl" element={<FromURLTable2 />} />
+              <Route path="*" element={<ErrorPageComponent />} />
+            </Route> */}
+
+
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/dashboard" element={<AdminLayout />}>
+              <Route index={true} element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
+              <Route path="fundamentals/banking" element={<ErrorBoundary><BankingTable /></ErrorBoundary>} />
+              <Route path="fundamentals/it" element={<ErrorBoundary><ITTable /></ErrorBoundary>} />
+              <Route path="sentimental/large-cap" element={<ErrorBoundary><LargeCapTable /></ErrorBoundary>} />
+              <Route path="sentimental/mid-cap" element={<ErrorBoundary><MidCapTable /></ErrorBoundary>} />
+              <Route path="sentimental/small-cap" element={<ErrorBoundary><SmallCapTable /></ErrorBoundary>} />
+              <Route path="technical/banking" element={<ErrorBoundary><TechnicalBankingTable /></ErrorBoundary>} />
+              <Route path="delivery" element={<ErrorBoundary><DeliveryTable /></ErrorBoundary>} />
+              <Route path="sectorial" element={<ErrorBoundary><SectorialTable /></ErrorBoundary>} />
+              <Route path="fromdate" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
+              <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
+              <Route path="fromurl" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
+              <Route path="*" element={<ErrorPageComponent />} />
+            </Route>
           </Route>
+
+
+          {/* </Route> */}
           <Route path="*" element={<ErrorPageComponent />} />
         </Routes>
       </Router>

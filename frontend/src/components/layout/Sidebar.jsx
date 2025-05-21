@@ -18,7 +18,7 @@ const Sidebar = () => {
       <div className="p-4">
         <h1 className="text-xl font-bold">Admin Dashboard</h1>
       </div>
-      <nav className='px-2'>
+      <nav className='px-2 h-[88vh] overflow-y-auto'>
         <ul>
           <li className="p-2 hover:bg-gray-700">
             <Link to="/dashboard" className={({ isActive }) =>
