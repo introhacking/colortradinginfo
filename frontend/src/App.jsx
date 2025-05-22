@@ -30,6 +30,7 @@ import ErrorBoundary from './ErrorBoundary';
 import DailyIOMain from './pages/clientUI/daily_IO/DailyIOMain';
 import { Toaster } from 'sonner';
 import ProtectedRoutes from './pages/dashboardPages/ProtectedRoutes';
+import DeliveryDashboard from './pages/dashboardPages/dashboardContent/DeliveryDashboard';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -66,12 +67,17 @@ function App() {
             </>
           }>
             <Route index={true} path="/" element={<Home />} />
+            <Route path="user-dashboard" element={
+              <div className='py-8 px-6 h-[85vh]'>
+              <DeliveryDashboard />
+              </div>
+              } />
             <Route path="fundamentals" element={<Fundamentals />} />
             <Route path="sentimental" element={<Sentimental />} />
             {/* <Route path="technical" element={<TechnicalUI />} /> */}
             {/* <Route path="delivery" element={<DeliveryMain />} /> */}
             {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
-            <Route path="daily-io" element={<DailyIOMain />} />
+            <Route path="daily-spurts" element={<DailyIOMain />} />
             <Route path="video" element={<VideoDelivery />} />
           </Route>
 

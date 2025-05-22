@@ -74,7 +74,8 @@ const DeliveryDashboard = () => {
                     setLower(data.lower);
                 }
                 // console.log(data.whichFile)
-                window.alert('FileCompared to ' + data.fileCompared)
+                
+                // window.alert('FileCompared to ' + data.fileCompared)
             } catch (err) {
                 console.error('Failed to fetch delivery data:', err);
             } finally {

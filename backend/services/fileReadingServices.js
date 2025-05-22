@@ -423,61 +423,61 @@ const readerFileService = {
             const modifiedKeyRecord = [];
 
 
-            // function getWeight(percentageStr) {
-            //     if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
-            //         return 1;
-            //     }
-
-            //     const percent = parseFloat(percentageStr);
-            //     if (isNaN(percent)) return 0;
-
-            //     // Handle negative values
-            //     if (percent < 0) {
-            //         const absPercent = Math.abs(percent);
-            //         if (absPercent > 100) return -6;
-            //         if (absPercent > 80) return -5;
-            //         if (absPercent > 60) return -4;
-            //         if (absPercent > 40) return -3;
-            //         if (absPercent > 20) return -2;
-            //         return -1; // absPercent <= 20
-            //     }
-
-            //     // Positive ranges
-            //     if (percent > 100) return 6;
-            //     if (percent > 80) return 5;
-            //     if (percent > 60) return 4;
-            //     if (percent > 40) return 3;
-            //     if (percent > 20) return 2;
-            //     if (percent > 0) return 1;
-
-            //     return 0; // 0 or invalid
-            // }
-
-
             function getWeight(percentageStr) {
                 if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
                     return 1;
                 }
 
                 const percent = parseFloat(percentageStr);
-
-                // Handle invalid or missing value
                 if (isNaN(percent)) return 0;
 
-                // Negative values
+                // Handle negative values
                 if (percent < 0) {
-                    if (percent <= -40) return -3;
-                    return -1;
+                    const absPercent = Math.abs(percent);
+                    if (absPercent > 100) return -6;
+                    if (absPercent > 80) return -5;
+                    if (absPercent > 60) return -4;
+                    if (absPercent > 40) return -3;
+                    if (absPercent > 20) return -2;
+                    return -1; // absPercent <= 20
                 }
 
                 // Positive ranges
-                if (percent <= 20) return 1;
-                if (percent <= 40) return 1;
-                if (percent <= 60) return 1;
-                if (percent <= 80) return 1;
+                if (percent > 100) return 6;
+                if (percent > 80) return 5;
+                if (percent > 60) return 4;
+                if (percent > 40) return 3;
+                if (percent > 20) return 2;
+                if (percent > 0) return 1;
 
-                return 1; // > 80%, including > 100%
+                return 0; // 0 or invalid
             }
+
+
+            // function getWeight(percentageStr) {
+            //     if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
+            //         return 1;
+            //     }
+
+            //     const percent = parseFloat(percentageStr);
+
+            //     // Handle invalid or missing value
+            //     if (isNaN(percent)) return 0;
+
+            //     // Negative values
+            //     if (percent < 0) {
+            //         if (percent <= -40) return -3;
+            //         return -1;
+            //     }
+
+            //     // Positive ranges
+            //     if (percent <= 20) return 1;
+            //     if (percent <= 40) return 1;
+            //     if (percent <= 60) return 1;
+            //     if (percent <= 80) return 1;
+
+            //     return 1; // > 80%, including > 100%
+            // }
 
             const monthsHeaderSet = new Set();
             const stockMap = new Map();
@@ -521,8 +521,8 @@ const readerFileService = {
                                 if (existingValue === 'New') {
                                     existing[formattedMonth] = 'New';
                                 } else {
-                                    // existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
-                                    existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 1);
+                                    existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
+                                    // existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 1);
                                 }
                             }
                         }
@@ -547,7 +547,7 @@ const readerFileService = {
             const newModifiedKeyRecord = Array.from(stockMap.values());
 
             const response = {
-                status: 200, 
+                status: 200,
                 success: true,
                 modifiedKeyRecord,
                 newModifiedKeyRecord,
@@ -556,7 +556,7 @@ const readerFileService = {
             return response;
         } catch (err) {
             // return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
-           return err
+            return err
         }
     }
 

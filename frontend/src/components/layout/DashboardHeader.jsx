@@ -6,6 +6,11 @@ import HeaderSetting from '../../pages/dashboardPages/headerSetting/HeaderSettin
 import LogoutModal from '../dashboardPageModal/alertModal/LogoutModal';
 
 const DashboardHeader = () => {
+
+  const isLogin = window.localStorage.getItem('loginInfo')
+  const parseIslogin = isLogin && JSON.parse(isLogin);
+  const { username, role } = parseIslogin?.user
+
   const [globalModalStatus, setGlobalModalStatus] = useState(false)
   const [logoutModalStatus, setLogoutModalStatus] = useState(false)
   const GlobalModalOpen = () => {
@@ -22,6 +27,7 @@ const DashboardHeader = () => {
           <div className='flex justify-between items-center w-full'>
             <h1 className="text-xl font-medium">Dashboard</h1>
             <div className='flex items-center gap-3'>
+              <a className="hover:text-gray-900 capitalize font-medium">Welcome, {role === 'admin' && username}</a>
               <Button onClick={GlobalModalOpen} children={<IoIcons.IoIosSettings fontSize={24} />} type={'button'} />
               <Button onClick={logoutHandler} children={<CgIcons.CgLogOff fontSize={24} />} type={'button'} className={'text-red-600'} />
             </div>
