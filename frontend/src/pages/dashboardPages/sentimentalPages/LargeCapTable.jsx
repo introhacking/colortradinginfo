@@ -368,10 +368,10 @@ const LargeCapTable = () => {
                             {scrubbingButtonStatus ? (
                                 <div className="flex items-center">
                                     <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
-                                    Scrapping Please wait...
+                                    Scraping Please wait...
                                 </div>
                             ) : (
-                                'Scrubbing LargeCap Data'
+                                'Scraping LargeCap Data'
                             )}
                         </Button>
                         {/* <Button onClick={() => setIsModalOpen(true)} children={'Add LargeCap Info'} className={'button hover:bg-green-400 bg-green-500 text-white '} /> */}

@@ -252,6 +252,21 @@ const SmallCapTable = () => {
     }
 
 
+    const handleExportToExcel = () => {
+        try {
+            const allVisibleColumns = gridRef.current.columnApi.getAllDisplayedColumns();
+            const columnKeys = allVisibleColumns.map(col => col.getColId());
+            gridRef.current.api.exportDataAsCsv({
+                fileName: 'SmallCapCSVData.csv',
+                columnKeys: columnKeys,
+            });
+        } catch (err) {
+            console.log(err)
+
+        }
+    };
+
+
     useEffect(() => {
         if (activeTab === 'show_SmallCap') {
             // fetchData();
@@ -287,6 +302,8 @@ const SmallCapTable = () => {
                         </div>
                     </div>
                     <div className='flex justify-between gap-2'>
+                        <Button onClick={handleExportToExcel} children={'Export to CSV'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
+
                         <Button
                             onClick={exportDataFromSmallCapUrl}
                             disabled={scrubbingButtonStatus}
@@ -295,10 +312,10 @@ const SmallCapTable = () => {
                             {scrubbingButtonStatus ? (
                                 <div className="flex items-center">
                                     <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
-                                    Scrubbing Please wait...
+                                    Scraping Please wait...
                                 </div>
                             ) : (
-                                'Scrubbing SmallCap Data'
+                                'Scraping SmallCap Data'
                             )}
                         </Button>
 

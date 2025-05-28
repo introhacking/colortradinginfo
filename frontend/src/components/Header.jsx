@@ -28,16 +28,19 @@ const Header = () => {
                     <nav className="md:ml-auto flex flex-wrap items-center text-base justify-center">
                         {/* <Link className="mr-5 hover:text-gray-900" to='/'>Home</Link> */}
                         {role === 'user' && (
-                            <Link className="mr-5 hover:text-gray-900" to='/user-dashboard'>Dashboard</Link>
-                        )}
-                        <Link className="mr-5 hover:text-gray-900" to='/fundamentals'>Fundamentals</Link>
-                        <Link className="mr-5 hover:text-gray-900" to='/sentimental'>Sentimental</Link>
-                        {/* <a className="mr-5 hover:text-gray-900">Sentimental</a> */}
-                        {/* <Link className="mr-5 hover:text-gray-900" to='/technical'>Technical</Link> */}
-                        {/* <Link className="mr-5 hover:text-gray-900" to='/delivery'>Delivery</Link> */}
-                        {/* <Link className="mr-5 hover:text-gray-900" to='/sectorial'>Sectorial</Link> */}
-                        <Link className="mr-5 hover:text-gray-900" to='/daily-spurts'>Daily Spurts</Link>
-                        <Link className="mr-5 hover:text-gray-900" to='/video'>Video</Link>
+                            <>
+                                <Link className="mr-5 hover:text-gray-900" to='/user-dashboard'>Dashboard</Link>
+                                <Link className="mr-5 hover:text-gray-900" to='/fundamentals'>Fundamentals</Link>
+                                <Link className="mr-5 hover:text-gray-900" to='/sentimental'>Sentimental</Link>
+                                {/* <a className="mr-5 hover:text-gray-900">Sentimental</a> */}
+                                {/* <Link className="mr-5 hover:text-gray-900" to='/technical'>Technical</Link> */}
+                                {/* <Link className="mr-5 hover:text-gray-900" to='/delivery'>Delivery</Link> */}
+                                {/* <Link className="mr-5 hover:text-gray-900" to='/sectorial'>Sectorial</Link> */}
+                                <Link className="mr-5 hover:text-gray-900" to='/daily-spurts'>Daily Spurts</Link>
+                                <Link className="mr-5 hover:text-gray-900" to='/video'>Video</Link>
+                            </>
+                        )
+                        }
                         <a className="mr-5 hover:text-gray-900">About Us</a>
                         <a className="mr-5 hover:text-gray-900 capitalize font-medium">{role === 'user' && username}</a>
                     </nav>

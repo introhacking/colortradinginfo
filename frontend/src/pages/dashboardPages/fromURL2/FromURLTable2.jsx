@@ -140,7 +140,7 @@ const FromURLTable2 = () => {
         try {
             const serverResponse = await bankingService.getInfoFromServer(`/csv/read-csv-data?file=${fileName}`);
             const data = serverResponse;
-            
+
             if (data.length > 0) {
                 // Define desired order
                 const preferredOrder = [
@@ -301,7 +301,33 @@ const FromURLTable2 = () => {
                                 children={'Difference'}
                             />
                         </div> */}
-                        <Button
+
+                        <div>
+                            <Button className="font-medium">
+                                <input
+                                    type="text"
+                                    id="file-input"
+                                    list="file-list"
+                                    placeholder="-- Select file --"
+                                    value={selectedFile}
+                                    onChange={(e) => {
+                                        setSelectedFile(e.target.value);
+                                        fetchFileListsData(e.target.value);
+                                    }}
+                                />
+                            </Button>
+
+                            <datalist id="file-list">
+                                {fileList?.map((file) => (
+                                    <option key={file} value={file}>
+                                        {file}
+                                    </option>
+                                ))}
+                            </datalist>
+                        </div>
+
+
+                        {/* <Button
                             children={
                                 <select className='py-1 px-3' onChange={(e) => {
                                     setSelectedFile(e.target.value);
@@ -317,7 +343,9 @@ const FromURLTable2 = () => {
                                 </select>
                             }
                             className={`font-medium`}
-                        />
+                        /> */}
+
+
                     </div>
                     <div className='flex gap-2'>
                         {/* <Button
