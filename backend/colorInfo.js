@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const http = require('http');
 const app = express()
 const fs = require('fs');
 const cors = require('cors')
@@ -7,16 +8,46 @@ const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const path = require('path');
 const csvRoutes = require('./router/fromURL/fromURLrouter');
-
+// WebSocket Setup
+const { Server } = require('socket.io');
+const server = http.createServer(app);
 
 
 // Connect to MongoDB
 connectDB();
 const cookieParser = require("cookie-parser");
+
+// WebSocket Setup
+const io = new Server(server, {
+    path: "/socket.io", // Default
+    cors: {
+        origin: process.env.FRONTEND_URL, // e.g., http://localhost:3000
+        // origin: 'http://localhost:5173', // e.g., http://localhost:3000
+        methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
+        credentials: true
+    }
+});
+
+// Export io to use in cron file
+
+// WebSocket Connection
+io.on('connection', (socket) => {
+    console.log('✅ Client connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('❌ Client disconnected:', socket.id);
+    });
+});
+
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH']
+    origin: process.env.FRONTEND_URL,
+    // origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
+    credentials: true
 }));
+module.exports.io = io;
+
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json({ limit: '50mb' }))
 app.use(bodyParser.json({ limit: '50mb' }))
@@ -85,15 +116,16 @@ app.use('/api/v1', videoRoute);
 const { exportData } = require('./controller/controller');
 app.use('/api/v1/export-data', exportData)
 
-// [ SCRUBBING CAPS ROUTER ]
-const scrubbingRoute = require('./router/capScrubbingRouter/capScrubbingRoute');
-app.use('/api/v1', scrubbingRoute)
+// [ SCRAPING CAPS ROUTER ]
+const scrapingRoute = require('./router/capScrubbingRouter/capScrubbingRoute');
+app.use('/api/v1', scrapingRoute)
 
 // [ CARD DELIVERY ]
 const cardDeliveryRoutes = require('./router/cardDeliveryRouter/cardDeliveryRouter');
 app.use('/api/v1', cardDeliveryRoutes)
 
 
+// [ GET ALL LISTS FOLDER ]
 app.get('/api/v1/csv-files', (req, res) => {
     const folderPath = path.join(__dirname, 'uploads/csvfilefolder');
     fs.readdir(folderPath, (err, files) => {
@@ -128,7 +160,7 @@ app.use('/api/v1', loginRoute)
 
 // Start the Express server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
     setTimeout(() => {
     }, 1500);

@@ -2,6 +2,8 @@ import axios from 'axios'
 
 const BASE_URL = '/api/v1'
 
+export const BACKEND_URI = 'http://localhost:4500'
+
 export const bankingService = {
     // GET
     getBankManagementTypesList: async (endpoint) => {

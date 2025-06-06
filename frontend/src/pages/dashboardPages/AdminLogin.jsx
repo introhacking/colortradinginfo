@@ -126,7 +126,7 @@ const AdminLogin = () => {
 
     return (
 
-        <div className='bg-slate-50 min-h-screen h-screen'>
+        <div className='bg-gradient-to-r from-amber-300/20 to-amber-100 min-h-screen h-screen'>
             <div className='flex justify-center items-center h-full'>
                 <div className='flex bg-white shadow-sm rounded px-8 py-10 w-2/3 mx-auto'>
                     <div className='overflow-y-auto space-y-4 w-1/2 py-2 px-3'>

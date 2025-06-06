@@ -31,6 +31,7 @@ import DailyIOMain from './pages/clientUI/daily_IO/DailyIOMain';
 import { Toaster } from 'sonner';
 import ProtectedRoutes from './pages/dashboardPages/ProtectedRoutes';
 import DeliveryDashboard from './pages/dashboardPages/dashboardContent/DeliveryDashboard';
+import FundDeliveryDashboard from './pages/dashboardPages/dashboardContent/FundDeliveryDashboard';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -69,7 +70,8 @@ function App() {
             <Route index={true} path="/" element={<Home />} />
             <Route path="user-dashboard" element={
               <div className='py-8 px-6 h-[85vh]'>
-              <DeliveryDashboard />
+              {/* <DeliveryDashboard /> */}
+              <FundDeliveryDashboard/>
               </div>
               } />
             <Route path="fundamentals" element={<Fundamentals />} />

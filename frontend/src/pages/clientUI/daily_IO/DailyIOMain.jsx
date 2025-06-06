@@ -249,7 +249,7 @@ const DailyIOMain = () => {
 
             // setDateTabs(serverResponse.mainDateISO)
 
-            console.log("Server Response:", serverResponse);
+            // console.log("Server Response:", serverResponse);
 
             if (data.length === 0) {
                 setNoDataFoundMsg('No data found for the selected date.');

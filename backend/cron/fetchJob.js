@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 // const axios = require('axios');
 const readerFileService = require('../services/fileReadingServices');
+const { io } = require('../colorInfo');
 
 
 cron.schedule('35 10 * * *', async () => {
@@ -34,6 +35,33 @@ cron.schedule('35 10 * * *', async () => {
 });
 
 
+// Schedule to run at 00:00 on the 16th of every month
+cron.schedule('10 10 16 * *', () => {
+    const previousMonth = new Date();
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+
+    let annoucement = `📢 Scraping all cap (Large, Mid, Small) of ${previousMonth.toLocaleString('default', { month: 'long' })}`;
+    // Call your scraping function here
+    io.emit('scrape-announcement', annoucement);
+    //   scrapeAllCaps(previousMonth);
+});
+
+// Temporarily add for testing
+// setTimeout(() => {
+//     console.log('hello...')
+//     io.emit('scrape-announcement', '📢 Test announcement from server');
+// }, 5000);
+
+// function scrapeAllCaps(month) {
+//   // Your scraping logic
+//   console.log(`Running scraping job for ${month.toISOString().slice(0, 7)}...`);
+// }
+
+
+
+
+
+
 // cron.schedule('38 10 * * *', async () => {
 //     const today = new Date();
 //     today.setDate(today.getDate() - 1);
@@ -51,4 +79,6 @@ cron.schedule('35 10 * * *', async () => {
 //         console.error(`❌ Cron error for ${dateStr}:`, error.message);
 //     }
 // });
+
+
 

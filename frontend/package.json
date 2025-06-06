@@ -13,14 +13,15 @@
     "ag-grid-enterprise": "^33.2.4",
     "ag-grid-react": "^31.3.2",
     "axios": "^1.7.2",
-    "chart.js": "^4.4.3",
+    "chart.js": "^4.4.9",
     "jodit-react": "^4.1.2",
     "react": "^18.2.0",
-    "react-chartjs-2": "^5.2.0",
+    "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.2.1",
     "react-dom": "^18.2.0",
     "react-icons": "^5.2.1",
     "react-router-dom": "^6.23.1",
+    "socket.io-client": "^4.8.1",
     "sonner": "^1.4.41"
   },
   "devDependencies": {
