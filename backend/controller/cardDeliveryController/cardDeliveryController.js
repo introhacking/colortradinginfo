@@ -366,7 +366,7 @@ exports.getDeliveryStats = async (req, res) => {
 
 
 
-const getDeliveryStats_DailySpurtsData = async (to_date) => {
+const getDeliveryStats_DailySpurtsData_first = async (to_date) => {
     try {
         if (!to_date) {
             return {};
@@ -512,6 +512,327 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
         return { status: 500, error: 'Server error' };
     }
 };
+
+const getDeliveryStats_DailySpurtsData_second = async (to_date) => {
+    try {
+        if (!to_date) return {};
+
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
+
+        const toDateFormatted = formatDate(to_date);
+        const files = await fsp.readdir(folderPath);
+
+        const fileDateMap = files
+            .filter(file => /^date_(\d{8})\.csv$/.test(file))
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1];
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`;
+                return { file, rawDate, formatted };
+            })
+            .sort((a, b) => b.formatted.localeCompare(a.formatted));
+
+        const allDates = fileDateMap.map(entry => entry.formatted);
+        const mainDates = allDates.filter(d => d <= toDateFormatted).slice(0, 5);
+
+        const dateAverages = {};
+
+        for (const mainDate of mainDates) {
+            const priorDates = allDates.filter(d => d < mainDate).slice(0, 5);
+            const mainFile = fileDateMap.find(e => e.formatted === mainDate)?.file;
+            const priorFiles = fileDateMap.filter(e => priorDates.includes(e.formatted));
+
+            if (!mainFile || priorFiles.length < 5) continue;
+
+            const rowsThisCycle = [];
+
+            const mainContent = await fsp.readFile(path.join(folderPath, mainFile), 'utf8');
+            const mainParsed = Papa.parse(mainContent.trim(), { header: true, skipEmptyLines: true });
+            const mainDateISO = `${mainDate.slice(0, 4)}-${mainDate.slice(4, 6)}-${mainDate.slice(6)}`;
+
+            const mainRows = mainParsed.data.map(row => {
+                const cleaned = {};
+                Object.keys(row).forEach(key => cleaned[key.trim()] = row[key]);
+                if (!cleaned.SYMBOL || cleaned.SERIES?.trim() !== 'EQ') return null;
+                cleaned.SOURCE_FILE = mainFile;
+                cleaned.RECORD_DATE = mainDateISO;
+                return cleaned;
+            }).filter(Boolean);
+
+            rowsThisCycle.push(...mainRows);
+
+            for (const { file, formatted } of priorFiles) {
+                const content = await fsp.readFile(path.join(folderPath, file), 'utf8');
+                const parsed = Papa.parse(content.trim(), { header: true, skipEmptyLines: true });
+                const dateISO = `${formatted.slice(0, 4)}-${formatted.slice(4, 6)}-${formatted.slice(6)}`;
+                const rows = parsed.data.map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => cleaned[key.trim()] = row[key]);
+                    cleaned.SOURCE_FILE = file;
+                    cleaned.RECORD_DATE = dateISO;
+                    return cleaned;
+                });
+                rowsThisCycle.push(...rows);
+            }
+
+            const tempSymbolGroups = {};
+
+            rowsThisCycle.forEach(row => {
+                const symbol = row.SYMBOL?.trim();
+                if (!symbol || row.SERIES?.trim() !== 'EQ') return;
+
+                if (!tempSymbolGroups[symbol]) {
+                    tempSymbolGroups[symbol] = {
+                        DELIV_QTY_total: 0,
+                        TTL_TRD_QNTY_total: 0,
+                        count: 0,
+                        to_date_row: null
+                    };
+                }
+
+                if (row.RECORD_DATE === mainDateISO) {
+                    tempSymbolGroups[symbol].to_date_row = {
+                        DELIV_QTY: +(row.DELIV_QTY || 0),
+                        TTL_TRD_QNTY: +(row.TTL_TRD_QNTY || 0),
+                        DELIV_PER: row.DELIV_PER || '0%'
+                    };
+                } else {
+                    tempSymbolGroups[symbol].DELIV_QTY_total += +(row.DELIV_QTY || 0);
+                    tempSymbolGroups[symbol].TTL_TRD_QNTY_total += +(row.TTL_TRD_QNTY || 0);
+                    tempSymbolGroups[symbol].count += 1;
+                }
+            });
+
+            const filteredSymbolGroups = {};
+            for (const symbol in tempSymbolGroups) {
+                const group = tempSymbolGroups[symbol];
+                const avgQty = group.count > 0 ? group.DELIV_QTY_total / group.count : 0;
+                const avgQtyTraded = group.count > 0 ? group.TTL_TRD_QNTY_total / group.count : 0;
+                group.DELIV_QTY_avg = avgQty.toFixed(2);
+                group.TTL_TRD_QNTY_avg = avgQtyTraded.toFixed(2);
+
+                if (group.to_date_row) {
+                    const qty = group.to_date_row.DELIV_QTY;
+                    const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
+                    // const delivPer = group.to_date_row.DELIV_PER;
+                    const percentChangeValue = avgQty > 0 ? ((qty - avgQty) / avgQty) * 100 : 0;
+                    const percentChangeQtyTraded = avgQtyTraded > 0 ? ((qtyTraded - avgQtyTraded) / avgQtyTraded) * 100 : 0;
+
+                    group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
+                    group.TTL_TRD_QNTY_percentage = percentChangeQtyTraded.toFixed(2) + '%';
+
+                    if (percentChangeValue > 500 && percentChangeQtyTraded > 500) {
+                        filteredSymbolGroups[symbol] = group;
+                        const dynamicKey = `date_${mainDateISO.replace(/-/g, '_')}`;
+                        // group[dynamicKey] = delivPer;
+                        group[dynamicKey] = qty;
+                    }
+                }
+            }
+
+            dateAverages[`${mainDateISO}`] = filteredSymbolGroups;
+        }
+
+        // 🔍 Filter symbols that appear in more than one date
+        const symbolAppearanceMap = {};
+
+        for (const date in dateAverages) {
+            for (const symbol in dateAverages[date]) {
+                symbolAppearanceMap[symbol] = (symbolAppearanceMap[symbol] || 0) + 1;
+            }
+        }
+
+        for (const date in dateAverages) {
+            for (const symbol of Object.keys(dateAverages[date])) {
+                if (symbolAppearanceMap[symbol] <= 1) {
+                    delete dateAverages[date][symbol];
+                }
+            }
+        }
+        // console.log(dateAverages)
+        return { status: true, dateAverages };
+    } catch (error) {
+        console.error('Error in rolling comparison', error);
+        return { status: 500, error: 'Server error' };
+    }
+};
+
+const getDeliveryStats_DailySpurtsData = async (to_date) => {
+    try {
+        if (!to_date) return {};
+
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
+
+        const toDateFormatted = formatDate(to_date);
+        const files = await fsp.readdir(folderPath);
+
+        const fileDateMap = files
+            .filter(file => /^date_(\d{8})\.csv$/.test(file))
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1];
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`;
+                return { file, rawDate, formatted };
+            })
+            .sort((a, b) => b.formatted.localeCompare(a.formatted));
+
+        const allDates = fileDateMap.map(entry => entry.formatted);
+        const mainDates = allDates.filter(d => d <= toDateFormatted).slice(0, 5);
+
+        const dateAverages = {};
+
+        for (const mainDate of mainDates) {
+            const priorDates = allDates.filter(d => d < mainDate).slice(0, 5);
+            const mainFile = fileDateMap.find(e => e.formatted === mainDate)?.file;
+            const priorFiles = fileDateMap.filter(e => priorDates.includes(e.formatted));
+
+            if (!mainFile || priorFiles.length < 5) continue;
+
+            const rowsThisCycle = [];
+
+            const mainContent = await fsp.readFile(path.join(folderPath, mainFile), 'utf8');
+            const mainParsed = Papa.parse(mainContent.trim(), { header: true, skipEmptyLines: true });
+            const mainDateISO = `${mainDate.slice(0, 4)}-${mainDate.slice(4, 6)}-${mainDate.slice(6)}`;
+
+            const mainRows = mainParsed.data.map(row => {
+                const cleaned = {};
+                Object.keys(row).forEach(key => cleaned[key.trim()] = row[key]);
+                if (!cleaned.SYMBOL || cleaned.SERIES?.trim() !== 'EQ') return null;
+                cleaned.SOURCE_FILE = mainFile;
+                cleaned.RECORD_DATE = mainDateISO;
+                return cleaned;
+            }).filter(Boolean);
+
+            rowsThisCycle.push(...mainRows);
+
+            for (const { file, formatted } of priorFiles) {
+                const content = await fsp.readFile(path.join(folderPath, file), 'utf8');
+                const parsed = Papa.parse(content.trim(), { header: true, skipEmptyLines: true });
+                const dateISO = `${formatted.slice(0, 4)}-${formatted.slice(4, 6)}-${formatted.slice(6)}`;
+                const rows = parsed.data.map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => cleaned[key.trim()] = row[key]);
+                    cleaned.SOURCE_FILE = file;
+                    cleaned.RECORD_DATE = dateISO;
+                    return cleaned;
+                });
+                rowsThisCycle.push(...rows);
+            }
+
+            const tempSymbolGroups = {};
+
+            rowsThisCycle.forEach(row => {
+                const symbol = row.SYMBOL?.trim();
+                if (!symbol || row.SERIES?.trim() !== 'EQ') return;
+
+                if (!tempSymbolGroups[symbol]) {
+                    tempSymbolGroups[symbol] = {
+                        DELIV_QTY_total: 0,
+                        TTL_TRD_QNTY_total: 0,
+                        count: 0,
+                        to_date_row: null,
+                        datewise: {} // NEW: holds delivery quantity by date
+                    };
+                }
+
+                const recordDate = row.RECORD_DATE;
+                const delivQty = +(row.DELIV_QTY || 0);
+                const ttlQty = +(row.TTL_TRD_QNTY || 0);
+                // const delivPer = row.DELIV_PER || '0%';
+
+                // Store delivery quantity for the date
+                tempSymbolGroups[symbol].datewise[recordDate] = delivQty;
+
+                if (recordDate === mainDateISO) {
+                    tempSymbolGroups[symbol].to_date_row = {
+                        DELIV_QTY: delivQty,
+                        TTL_TRD_QNTY: ttlQty,
+                        // DELIV_PER: delivPer
+                    };
+                } else {
+                    tempSymbolGroups[symbol].DELIV_QTY_total += delivQty;
+                    tempSymbolGroups[symbol].TTL_TRD_QNTY_total += ttlQty;
+                    tempSymbolGroups[symbol].count += 1;
+                }
+            });
+
+            const filteredSymbolGroups = {};
+
+            for (const symbol in tempSymbolGroups) {
+                const group = tempSymbolGroups[symbol];
+                const avgQty = group.count > 0 ? group.DELIV_QTY_total / group.count : 0;
+                const avgQtyTraded = group.count > 0 ? group.TTL_TRD_QNTY_total / group.count : 0;
+                group.DELIV_QTY_avg = avgQty.toFixed(2);
+                group.TTL_TRD_QNTY_avg = avgQtyTraded.toFixed(2);
+
+                if (group.to_date_row) {
+                    const qty = group.to_date_row.DELIV_QTY;
+                    const qtyTraded = group.to_date_row.TTL_TRD_QNTY;
+                    // const delivPer = group.to_date_row.DELIV_PER;
+
+                    const percentChangeValue = avgQty > 0 ? ((qty - avgQty) / avgQty) * 100 : 0;
+                    const percentChangeQtyTraded = avgQtyTraded > 0 ? ((qtyTraded - avgQtyTraded) / avgQtyTraded) * 100 : 0;
+
+                    group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
+                    group.TTL_TRD_QNTY_percentage = percentChangeQtyTraded.toFixed(2) + '%';
+
+                    if (percentChangeValue > 500 && percentChangeQtyTraded > 500) {
+                        // Final output per symbol
+                        filteredSymbolGroups[symbol] = group;
+
+                        // Add date-wise DELIV_QTY to group
+                        Object.entries(group.datewise || {}).forEach(([date, qty]) => {
+                            const dynamicKey = `date_${date.replace(/-/g, '_')}`;
+                            group[dynamicKey] = qty;
+                        });
+
+                        // Clean up
+                        delete group.datewise;
+                    }
+                }
+            }
+
+            dateAverages[`${mainDateISO}`] = filteredSymbolGroups;
+        }
+
+        // Filter symbols that appear in more than one date
+        const symbolAppearanceMap = {};
+        for (const date in dateAverages) {
+            for (const symbol in dateAverages[date]) {
+                symbolAppearanceMap[symbol] = (symbolAppearanceMap[symbol] || 0) + 1;
+            }
+        }
+
+        for (const date in dateAverages) {
+            for (const symbol of Object.keys(dateAverages[date])) {
+                if (symbolAppearanceMap[symbol] <= 1) {
+                    delete dateAverages[date][symbol];
+                }
+            }
+        }
+
+        return { status: true, dateAverages };
+
+    } catch (error) {
+        console.error('Error in rolling comparison', error);
+        return { status: 500, error: 'Server error' };
+    }
+};
+
 
 const getDeliveryStats_AllCap = async (cap) => {
     const capKey = cap?.toUpperCase();

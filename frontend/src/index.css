@@ -45,6 +45,10 @@ select {
 
 .ag_table_delete {}
 
+.button_daily {
+    @apply bg-gradient-to-r from-slate-300 to-slate-300 hover:bg-gradient-to-l from-blue-400 text-white
+}
+
 
 /* Custom styles */
 .background-gradient {

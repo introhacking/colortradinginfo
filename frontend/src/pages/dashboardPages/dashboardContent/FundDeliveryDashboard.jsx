@@ -109,6 +109,7 @@ const FundDeliveryDashboard = () => {
                         ...stats,
                     }))
                 );
+                console.log(transformedData)
 
                 const groupedBySymbol = transformedData.reduce((acc, curr) => {
                     const { symbol, date, DELIV_QTY_percentage } = curr;
@@ -119,39 +120,48 @@ const FundDeliveryDashboard = () => {
 
                 const dates = [...new Set(transformedData.map(item => item.date))].sort();
 
+                // ✅ Set row data immediately
                 setRowData(transformedData);
-                // setSymbols(transformedData);
 
-                // const datasets = Object.entries(groupedBySymbol).map(([symbol, dataByDate]) => ({
-                //     label: symbol,
-                //     data: dates.map(date => parseFloat(dataByDate[date] || 0)),
-                //     backgroundColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
-                //     fill: false,
-                // }));
+                // ✅ Extract dynamic columns from transformedData (not rowData)
+                const dynamicDateKeys = new Set();
+                transformedData.forEach(row => {
+                    Object.keys(row).forEach(key => {
+                        if (key.startsWith('date_')) {
+                            dynamicDateKeys.add(key);
+                        }
+                    });
+                });
 
-                // const datasets = symbols.map(symbol => (
-                //     {
-                //         label: symbol,
-                //         data: dates.map(date => parseFloat(data[date][symbol]?.DELIV_QTY_percentage || 0)),
-                //         borderColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
-                //         fill: false,
-                //     }
-                // ));
+                const dynamicDateColumns = Array.from(dynamicDateKeys).map(dateKey => ({
+                    field: dateKey,
+                    headerName: dateKey.replace('date_', 'Deliv qty on ').replace(/_/g, '-'),
+                    filter: true,
+                }));
 
-                // console.log(datasets)
+                const staticColumns = [
+                    { field: 'symbol', headerName: 'SYMBOLS', filter: true },
+                    { field: 'date', headerName: 'Date', filter: true },
+                    { field: 'DELIV_QTY_avg', headerName: 'DELIVERY QUANTITY AVG' },
+                    { field: 'DELIV_QTY_percentage', headerName: 'DELIVERY QUANTITY %', filter: true, cellStyle: params => getCellStyle(params) },
+                    { field: 'TTL_TRD_QNTY_avg', headerName: 'TTL TRD QNTY AVG' },
+                    { field: 'TTL_TRD_QNTY_percentage', headerName: 'TTL TRD QNTY %', filter: true },
+                ];
 
-                // setChartData({ labels: dates, datasets });
+                setColumnDefs([...staticColumns, ...dynamicDateColumns]);
 
 
+                // setColumnDefs([
+                //     { field: 'symbol', headerName: 'SYMBOLS', filter: true, flex: 1 },
+                //     { field: 'date', headerName: 'Date', filter: true, flex: 1 },
+                //     { field: 'DELIV_QTY_avg', headerName: 'DELIVERY QUANTITY AVG', flex: 1 },
+                //     { field: 'DELIV_QTY_percentage', headerName: 'DELIVERY QUANTITY %', filter: true, flex: 1, cellStyle: params => getCellStyle(params) },
+                //     { field: 'TTL_TRD_QNTY_avg', headerName: 'TTL TRD QNTY AVG', flex: 1 },
+                //     { field: 'TTL_TRD_QNTY_percentage', headerName: 'TTL TRD QNTY %', filter: true, flex: 1 },
+                //     { field: 'date', headerName: 'Date', filter: true, flex: 1 }
+                // ])
 
-                setColumnDefs([
-                    { field: 'symbol', headerName: 'SYMBOLS', filter: true, flex: 1 },
-                    { field: 'date', headerName: 'Date', filter: true, flex: 1 },
-                    { field: 'DELIV_QTY_avg', headerName: 'DELIVERY QUANTITY AVG', flex: 1 },
-                    { field: 'DELIV_QTY_percentage', headerName: 'DELIVERY QUANTITY %', filter: true, flex: 1, cellStyle: params => getCellStyle(params) },
-                    { field: 'TTL_TRD_QNTY_avg', headerName: 'TTL TRD QNTY AVG', flex: 1 },
-                    { field: 'TTL_TRD_QNTY_percentage', headerName: 'TTL TRD QNTY %', filter: true, flex: 1 }
-                ])
+
             } else {
                 setNoDataFoundMsg('No data found for the selected option.');
             }
@@ -191,14 +201,20 @@ const FundDeliveryDashboard = () => {
 
 
     const [showMutualFunds, setShowMutualFunds] = useState(false)
+    const [showDailySpurt, setShowDailySpurt] = useState(false)
 
 
     return (
         <>
             <div className="flex justify-between mb-3">
-                <Button className={''} children={
-                    <input max={getYesterdayDate()} value={toDate} onChange={(e) => handleDateChange(e.target.value)} type='date' className='button' placeholder='Choose Date' />
-                } />
+                <div className='flex gap-2'>
+                    <button onClick={() => setShowDailySpurt((showDailySpurt) => !showDailySpurt)} className='button button_daily'>{showDailySpurt ? 'Hide' : 'Show'} Daily Spurt</button>
+                    {showDailySpurt &&
+                        <Button className={''} children={
+                            <input max={getYesterdayDate()} value={toDate} onChange={(e) => handleDateChange(e.target.value)} type='date' className='button' placeholder='Choose Date' />
+                        } />
+                    }
+                </div>
                 <div className='flex gap-2'>
                     <button onClick={() => setShowMutualFunds((showMutualFunds) => !showMutualFunds)} className='button button_video'>{showMutualFunds ? 'Hide' : 'Show'} Mutual Funds</button>
                     {showMutualFunds && ['large-cap', 'mid-cap', 'small-cap'].map((type) => (
@@ -219,19 +235,11 @@ const FundDeliveryDashboard = () => {
             {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
             {!isLoading && !error && !noDataFoundMsg && (
                 <div className="ag-theme-alpine h-[71vh] w-full">
-                    {/* <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} /> */}
+                    <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
 
-                    {decision ?
-
+                    {/* {decision ?
                         (
                             <>
-
-                                {/* <Line key={Date.now()}
-                                data={chartData}
-                                options={{
-                                    responsive: true,
-                                    plugins: { legend: { position: 'top' }, title: { display: true, text: 'Delivery % Change Over Dates' } }
-                                }} /> */}
                                 <div className='p-2 border rounded bg-gradient-to-r from-amber-50 to-slate-100'>
                                     <Bar
                                         key={Date.now()} // ensures chart is remounted on data change
@@ -249,7 +257,7 @@ const FundDeliveryDashboard = () => {
                             </>
                         ) : <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
 
-                    }
+                    } */}
 
                 </div>
 
