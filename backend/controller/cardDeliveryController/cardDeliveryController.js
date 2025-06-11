@@ -664,7 +664,7 @@ const getDeliveryStats_DailySpurtsData_second = async (to_date) => {
     }
 };
 
-const getDeliveryStats_DailySpurtsData = async (to_date) => {
+const getDeliveryStats_DailySpurtsData_third = async (to_date) => {
     try {
         if (!to_date) return {};
 
@@ -790,7 +790,7 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
                     group.DELIV_QTY_percentage = percentChangeValue.toFixed(2) + '%';
                     group.TTL_TRD_QNTY_percentage = percentChangeQtyTraded.toFixed(2) + '%';
 
-                    if (percentChangeValue > 500 && percentChangeQtyTraded > 500) {
+                    if (percentChangeValue > 400 && percentChangeQtyTraded > 400) {
                         // Final output per symbol
                         filteredSymbolGroups[symbol] = group;
 
@@ -812,6 +812,7 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
         // Filter symbols that appear in more than one date
         const symbolAppearanceMap = {};
         for (const date in dateAverages) {
+            console.log(dateAverages[date])
             for (const symbol in dateAverages[date]) {
                 symbolAppearanceMap[symbol] = (symbolAppearanceMap[symbol] || 0) + 1;
             }
@@ -825,6 +826,25 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
             }
         }
 
+
+        // const MIN_OCCURRENCE = 2; // Or 5 if you want exactly 5-day symbols
+
+        // const symbolAppearanceMap = {};
+        // for (const date in dateAverages) {
+        //     for (const symbol in dateAverages[date]) {
+        //         symbolAppearanceMap[symbol] = (symbolAppearanceMap[symbol] || 0) + 1;
+        //     }
+        // }
+
+        // for (const date in dateAverages) {
+        //     for (const symbol of Object.keys(dateAverages[date])) {
+        //         if (symbolAppearanceMap[symbol] < MIN_OCCURRENCE) {
+        //             delete dateAverages[date][symbol];
+        //         }
+        //     }
+        // }
+
+
         return { status: true, dateAverages };
 
     } catch (error) {
@@ -832,6 +852,277 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
         return { status: 500, error: 'Server error' };
     }
 };
+
+const getDeliveryStats_DailySpurtsData_fourth = async (to_date) => {
+    try {
+        if (!to_date) return {};
+
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
+
+        // const formatDate = (dateStr) => dateStr.split('-').join('');
+
+        const toDateFormatted = formatDate(to_date);
+
+        const files = await fsp.readdir(folderPath);
+        const dateFiles = files
+            .filter(file => /^date_\d{8}\.csv$/.test(file))
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1];
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`;
+                return { file, rawDate, formatted };
+            })
+            .sort((a, b) => b.formatted.localeCompare(a.formatted));
+
+        const allDates = dateFiles.map(f => f.formatted);
+        const toIndex = allDates.indexOf(toDateFormatted);
+        const mainDates = allDates.slice(toIndex, toIndex + 5);
+
+        const results = {};
+        const symbolCount = {};
+
+        for (const mainDate of mainDates) {
+            const prevDates = allDates.filter(d => d < mainDate).slice(0, 5);
+            if (prevDates.length < 5) continue;
+
+            const mainFile = dateFiles.find(f => f.formatted === mainDate)?.file;
+            if (!mainFile) continue;
+            const mainCSV = await fsp.readFile(path.join(folderPath, mainFile), 'utf8');
+            const mainParsed = Papa.parse(mainCSV, { header: true, skipEmptyLines: true }).data;
+            const mainData = mainParsed.filter(r => r.SERIES?.trim() !== 'EQ');
+
+
+
+            const avgStats = {};
+
+            for (const prevDate of prevDates) {
+                const prevFile = dateFiles.find(f => f.formatted === prevDate)?.file;
+                if (!prevFile) continue;
+
+                const content = await fsp.readFile(path.join(folderPath, prevFile), 'utf8');
+                const parsed = Papa.parse(content, { header: true, skipEmptyLines: true }).data.filter(r => r.SERIES?.trim().toUpperCase() !== 'EQ');
+
+                for (const row of parsed) {
+                    console.log(row)
+                    const sym = row.SYMBOL?.trim();
+                    if (!sym) continue;
+
+                    if (!avgStats[sym]) avgStats[sym] = { deliv: 0, trade: 0, count: 0 };
+                    avgStats[sym].deliv += Number(row.DELIV_QTY || 0);
+                    avgStats[sym].trade += Number(row.TTL_TRD_QNTY || 0);
+                    avgStats[sym].count += 1;
+                }
+            }
+            console.log(`[${mainDate}] EQ rows in mainFile:`, mainData.length);
+            console.log(`[${mainDate}] avgStats keys:`, Object.keys(avgStats).length);
+
+            const mainSeriesSet = new Set(mainParsed.map(r => r.SERIES?.trim()));
+            console.log(`[${mainDate}] All SERIES in mainFile:`, Array.from(mainSeriesSet));
+
+
+            for (const row of mainData) {
+                // console.log(row)
+                const sym = row.SYMBOL?.trim();
+                const deliv = Number(row.DELIV_QTY || 0);
+                const trade = Number(row.TTL_TRD_QNTY || 0);
+                const avg = avgStats[sym];
+
+                if (!sym || !avg || avg.count < 5) continue;
+
+                const avgDeliv = avg.deliv / avg.count;
+                const avgTrade = avg.trade / avg.count;
+
+                const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+                const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+                if (sym === 'RELIANCE') {
+                    console.log(`${mainDate} RELIANCE: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
+                }
+
+                if (delivPct > 50 && tradePct > 50) {
+                    const dateKey = `${mainDate.slice(6, 8)}/${mainDate.slice(4, 6)}/${mainDate.slice(0, 4)}`;
+
+                    if (!results[sym]) results[sym] = {};
+                    results[sym][dateKey] = {
+                        DELIV_QTY_avg: Math.round(avgDeliv),
+                        DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                        TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                        TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                    };
+
+                    symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+                }
+            }
+        }
+
+        // Filter symbols with 2 or more appearances
+        const filteredResults = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                filteredResults[sym] = results[sym];
+
+                console.log('Symbols and how many days matched >400%:', symbolCount);
+
+            }
+        }
+        console.log(filteredResults)
+
+        console.log('--- Summary ---');
+        console.log('All Symbols Matched:', Object.keys(results));
+        console.log('Symbol Match Count:', symbolCount);
+        console.log('Filtered Result:', filteredResults);
+
+
+        return {
+            status: true,
+            data: filteredResults
+        };
+
+    } catch (error) {
+        console.error('Error in rolling comparison', error);
+        return { status: 500, error: 'Server error' };
+    }
+};
+
+const getDeliveryStats_DailySpurtsData = async (to_date) => {
+    try {
+        if (!to_date) return {};
+
+        const folderPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        const formatDate = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${year}${month}${day}`;
+        };
+
+        const toDateFormatted = formatDate(to_date);
+
+        const files = await fsp.readdir(folderPath);
+        const dateFiles = files
+            .filter(file => /^date_\d{8}\.csv$/.test(file))
+            .map(file => {
+                const rawDate = file.match(/^date_(\d{8})\.csv$/)[1];
+                const day = rawDate.slice(0, 2);
+                const month = rawDate.slice(2, 4);
+                const year = rawDate.slice(4, 8);
+                const formatted = `${year}${month}${day}`;
+                return { file, rawDate, formatted };
+            })
+            .sort((a, b) => b.formatted.localeCompare(a.formatted));
+
+        const allDates = dateFiles.map(f => f.formatted);
+        const toIndex = allDates.indexOf(toDateFormatted);
+        if (toIndex === -1) {
+            console.warn('Selected to_date not found in filenames:', toDateFormatted);
+            return { status: true, data: {} };
+        }
+
+        const mainDates = allDates.slice(toIndex, toIndex + 5);
+        const results = {};
+        const symbolCount = {};
+
+        for (const mainDate of mainDates) {
+            const prevDates = allDates.filter(d => d < mainDate).slice(0, 5);
+            if (prevDates.length < 5) continue;
+
+            const mainFile = dateFiles.find(f => f.formatted === mainDate)?.file;
+            if (!mainFile) continue;
+
+            const mainCSV = await fsp.readFile(path.join(folderPath, mainFile), 'utf8');
+            const mainParsed = Papa.parse(mainCSV, {
+                header: true,
+                skipEmptyLines: true,
+                transformHeader: h => h.trim()
+            }).data;
+
+            const mainData = mainParsed.filter(r => r.SERIES?.trim().toUpperCase() === 'EQ');
+
+            const avgStats = {};
+
+            for (const prevDate of prevDates) {
+                const prevFile = dateFiles.find(f => f.formatted === prevDate)?.file;
+                if (!prevFile) continue;
+
+                const content = await fsp.readFile(path.join(folderPath, prevFile), 'utf8');
+                const parsed = Papa.parse(content, {
+                    header: true,
+                    skipEmptyLines: true,
+                    transformHeader: h => h.trim()
+                }).data.filter(r => r.SERIES?.trim().toUpperCase() === 'EQ');
+
+                for (const row of parsed) {
+                    const sym = row.SYMBOL?.trim();
+                    if (!sym) continue;
+
+                    if (!avgStats[sym]) avgStats[sym] = { deliv: 0, trade: 0, count: 0 };
+                    avgStats[sym].deliv += Number(row.DELIV_QTY || 0);
+                    avgStats[sym].trade += Number(row.TTL_TRD_QNTY || 0);
+                    avgStats[sym].count += 1;
+                }
+            }
+
+            for (const row of mainData) {
+                const sym = row.SYMBOL?.trim();
+                const deliv = Number(row.DELIV_QTY || 0);
+                const trade = Number(row.TTL_TRD_QNTY || 0);
+                const avg = avgStats[sym];
+
+                if (!sym || !avg || avg.count < 5) continue;
+
+                const avgDeliv = avg.deliv / avg.count;
+                const avgTrade = avg.trade / avg.count;
+
+                const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+                const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+                // if (sym === 'AIROLAM') {
+                //     console.log(`${mainDate} AIROLAM: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
+                // }
+
+                if (delivPct > 300 && tradePct > 300) {
+                    const dateKey = `${mainDate.slice(6, 8)}/${mainDate.slice(4, 6)}/${mainDate.slice(0, 4)}`;
+                    if (!results[sym]) results[sym] = {};
+                    results[sym][dateKey] = {
+                        DELIV_QTY_avg: Math.round(avgDeliv),
+                        DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                        TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                        TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                    };
+                    symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+                }
+            }
+        }
+
+        // Filter for symbols that appeared 2+ times
+        const dateAverages = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                dateAverages[sym] = results[sym];
+            }
+        }
+
+        // console.log('--- Summary ---');
+        // console.log('All Symbols Matched:', Object.keys(results));
+        // console.log('Symbol Match Count:', symbolCount);
+        // console.log('Filtered Result:', dateAverages);
+        return {
+            status: true,
+            dateAverages: dateAverages
+        };
+
+    } catch (error) {
+        console.error('Error in rolling comparison', error);
+        return { status: 500, error: 'Server error' };
+    }
+};
+
 
 
 const getDeliveryStats_AllCap = async (cap) => {

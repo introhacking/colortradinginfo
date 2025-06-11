@@ -55,6 +55,14 @@ const FundDeliveryDashboard = () => {
         if (params.value >= 5) { return { backgroundColor: 'green', ...customCellStyle } };
     };
 
+    const getCellStyles = (params) => {
+        const value = parseFloat(params.value?.replace('%', '') || '0');
+        if (value > 800) return { backgroundColor: 'green', ...customCellStyle }; // green
+        if (value > 250) return { backgroundColor: 'lightgreen', ...customCellStyle }; // yellow
+        return null;
+    };
+
+
     const fetchData = async (type, to_date) => {
         setIsLoading(true);
         setError('');
@@ -102,65 +110,94 @@ const FundDeliveryDashboard = () => {
 
 
             } else if (type === 'daily-spurts') {
-                const transformedData = Object.entries(serverResponse.data?.dateAverages).flatMap(([date, symbols]) =>
-                    Object.entries(symbols).map(([symbol, stats]) => ({
-                        date,
-                        symbol,
-                        ...stats,
-                    }))
-                );
-                console.log(transformedData)
 
-                const groupedBySymbol = transformedData.reduce((acc, curr) => {
-                    const { symbol, date, DELIV_QTY_percentage } = curr;
-                    if (!acc[symbol]) acc[symbol] = {};
-                    acc[symbol][date] = DELIV_QTY_percentage;
-                    return acc;
-                }, {});
+                // [ 2 METHOD ]
+                const raw = serverResponse.data?.dateAverages || {};
 
-                const dates = [...new Set(transformedData.map(item => item.date))].sort();
+                const allDates = new Set();
+                const pivoted = Object.entries(raw).map(([symbol, dateEntries]) => {
+                    const row = { symbol };
+                    for (const [date, stats] of Object.entries(dateEntries)) {
+                        allDates.add(date);
 
-                // ✅ Set row data immediately
-                setRowData(transformedData);
-
-                // ✅ Extract dynamic columns from transformedData (not rowData)
-                const dynamicDateKeys = new Set();
-                transformedData.forEach(row => {
-                    Object.keys(row).forEach(key => {
-                        if (key.startsWith('date_')) {
-                            dynamicDateKeys.add(key);
-                        }
-                    });
+                        row[`deliv_${date}`] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
+                        row[`ttd_${date}`] = `${stats.TTL_TRD_QNTY_avg} / ${stats.TTL_TRD_QNTY_percent}`;
+                    }
+                    return row;
                 });
 
-                const dynamicDateColumns = Array.from(dynamicDateKeys).map(dateKey => ({
-                    field: dateKey,
-                    headerName: dateKey.replace('date_', 'Deliv qty on ').replace(/_/g, '-'),
-                    filter: true,
+                const formatDateToHeader = (dateStr) => {
+                    const [day, month, year] = dateStr.split('/');
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const monthIndex = parseInt(month, 10) - 1;
+                    return `${day}-${monthNames[monthIndex]}-${year}`;
+                };
+
+                const dateColumns = Array.from(allDates).map(date => ({
+                    headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
+                    marryChildren: true,
+                    headerClass: 'cs_ag-center-header',
+                    children: [
+                        {
+                            field: `deliv_${date}`,
+                            headerName: 'Deliv Avg / Deliv %',
+                            tooltipField: `deliv_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params)
+                        },
+                        {
+                            field: `ttd_${date}`,
+                            headerName: 'TTD Avg / TTD %',
+                            tooltipField: `ttd_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params)
+                        }
+                    ]
                 }));
 
-                const staticColumns = [
-                    { field: 'symbol', headerName: 'SYMBOLS', filter: true },
-                    { field: 'date', headerName: 'Date', filter: true },
-                    { field: 'DELIV_QTY_avg', headerName: 'DELIVERY QUANTITY AVG' },
-                    { field: 'DELIV_QTY_percentage', headerName: 'DELIVERY QUANTITY %', filter: true, cellStyle: params => getCellStyle(params) },
-                    { field: 'TTL_TRD_QNTY_avg', headerName: 'TTL TRD QNTY AVG' },
-                    { field: 'TTL_TRD_QNTY_percentage', headerName: 'TTL TRD QNTY %', filter: true },
+                const columns = [
+                    { field: 'symbol', headerName: 'Symbol', pinned: 'left', filter: true },
+                    ...dateColumns
                 ];
 
-                setColumnDefs([...staticColumns, ...dynamicDateColumns]);
+                setColumnDefs(columns);
+                setRowData(pivoted);
 
 
-                // setColumnDefs([
-                //     { field: 'symbol', headerName: 'SYMBOLS', filter: true, flex: 1 },
-                //     { field: 'date', headerName: 'Date', filter: true, flex: 1 },
-                //     { field: 'DELIV_QTY_avg', headerName: 'DELIVERY QUANTITY AVG', flex: 1 },
-                //     { field: 'DELIV_QTY_percentage', headerName: 'DELIVERY QUANTITY %', filter: true, flex: 1, cellStyle: params => getCellStyle(params) },
-                //     { field: 'TTL_TRD_QNTY_avg', headerName: 'TTL TRD QNTY AVG', flex: 1 },
-                //     { field: 'TTL_TRD_QNTY_percentage', headerName: 'TTL TRD QNTY %', filter: true, flex: 1 },
-                //     { field: 'date', headerName: 'Date', filter: true, flex: 1 }
-                // ])
 
+
+                // [ 1 METHOD ]
+
+                // const transformedData = Object.entries(serverResponse.data?.dateAverages || {}).flatMap(([symbol, dates]) =>
+                //     Object.entries(dates).map(([date, stats]) => ({
+                //         symbol,
+                //         date,
+                //         ...stats,
+                //     }))
+                // );
+
+                // // ✅ Set row data immediately
+                // setRowData(transformedData);
+
+                // const staticColumns = [
+                //     { field: 'symbol', headerName: 'Symbol', filter: true },
+                //     { field: 'date', headerName: 'Date', filter: true },
+                //     { field: 'DELIV_QTY_avg', headerName: 'Delivery Qty Avg', type: 'numericColumn' },
+                //     {
+                //         field: 'DELIV_QTY_percent',
+                //         headerName: 'Delivery Qty %',
+                //         filter: true,
+                //         cellStyle: params => getCellStyles(params), // optional color
+                //     },
+                //     { field: 'TTL_TRD_QNTY_avg', headerName: 'Total Traded Qty Avg', type: 'numericColumn' },
+                //     {
+                //         field: 'TTL_TRD_QNTY_percent',
+                //         headerName: 'Total Traded Qty %',
+                //         filter: true,
+                //     },
+                // ];
+                // setColumnDefs(staticColumns);
 
             } else {
                 setNoDataFoundMsg('No data found for the selected option.');
@@ -233,35 +270,37 @@ const FundDeliveryDashboard = () => {
             {isLoading && <Loading msg='Loading... please wait' />}
             {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}
             {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
-            {!isLoading && !error && !noDataFoundMsg && (
+            {!isLoading && !error && !noDataFoundMsg && rowData.length > 0 ? (
                 <div className="ag-theme-alpine h-[71vh] w-full">
                     <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
 
-                    {/* {decision ?
-                        (
-                            <>
-                                <div className='p-2 border rounded bg-gradient-to-r from-amber-50 to-slate-100'>
-                                    <Bar
-                                        key={Date.now()} // ensures chart is remounted on data change
-                                        data={chartData}
-                                        options={{
-                                            responsive: true,
-                                            plugins: {
-                                                legend: { position: 'top' },
-                                                title: { display: true, text: category.replace('-', ' ').toUpperCase() },
-                                            },
-                                        }}
-                                    />
-                                </div>
-
-                            </>
-                        ) : <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
-
-                    } */}
 
                 </div>
 
-            )}
+            ) : <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: No data found for the selected option</span></div>
+            }
+
+            {/* {decision ?
+    (
+        <>
+            <div className='p-2 border rounded bg-gradient-to-r from-amber-50 to-slate-100'>
+                <Bar
+                    key={Date.now()} // ensures chart is remounted on data change
+                    data={chartData}
+                    options={{
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: category.replace('-', ' ').toUpperCase() },
+                        },
+                    }}
+                />
+            </div>
+
+        </>
+    ) : <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
+
+} */}
 
         </>
     )

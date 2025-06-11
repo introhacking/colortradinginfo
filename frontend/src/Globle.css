@@ -45,6 +45,12 @@ canvas {
   height: 100%;
 }
 
+.cs_ag-center-header{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .ag-header-cell-label {
   justify-content: center;
   width: '100%';
