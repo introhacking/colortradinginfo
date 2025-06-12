@@ -1076,15 +1076,15 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
 
                 if (!sym || !avg || avg.count < 5) continue;
 
+                // if (sym === 'Axis Bank Ltd') {
+                //     console.log(`${mainDate} Axis Bank Ltd: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
+                // }
+
                 const avgDeliv = avg.deliv / avg.count;
                 const avgTrade = avg.trade / avg.count;
 
                 const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
                 const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
-
-                // if (sym === 'AIROLAM') {
-                //     console.log(`${mainDate} AIROLAM: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
-                // }
 
                 if (delivPct > 300 && tradePct > 300) {
                     const dateKey = `${mainDate.slice(6, 8)}/${mainDate.slice(4, 6)}/${mainDate.slice(0, 4)}`;
@@ -1107,11 +1107,6 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
                 dateAverages[sym] = results[sym];
             }
         }
-
-        // console.log('--- Summary ---');
-        // console.log('All Symbols Matched:', Object.keys(results));
-        // console.log('Symbol Match Count:', symbolCount);
-        // console.log('Filtered Result:', dateAverages);
         return {
             status: true,
             dateAverages: dateAverages
@@ -1661,7 +1656,7 @@ const getCombineDeliveryStats_AllCapss = async () => {
     }
 };
 
-const getCombineDeliveryStats_AllCap = async () => {
+const getCombineDeliveryStats_AllCap_third = async () => {
     try {
         // const caps = ['large', 'mid', 'small'];  // Define the 3 caps/folders
         const stockMaps = [];
@@ -1817,11 +1812,53 @@ const getCombineDeliveryStats_AllCap = async () => {
             }
         }
 
+        const avgStats = {};
+        const results = {};
+        const symbolCount = {};
+
+
+        for (const row of filteredStocks) {
+            console.log(row)
+            const sym = row.stockName?.trim();
+            const deliv = Number(row.DELIV_QTY || 0);
+            const trade = Number(row.TTL_TRD_QNTY || 0);
+            const avg = avgStats[sym];
+
+            if (!sym || !avg || avg.count < 5) continue;
+
+            const avgDeliv = avg.deliv / avg.count;
+            const avgTrade = avg.trade / avg.count;
+
+            const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+            const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+            if (delivPct > 300 && tradePct > 300) {
+                const dateKey = `${mainDate.slice(6, 8)}/${mainDate.slice(4, 6)}/${mainDate.slice(0, 4)}`;
+                if (!results[sym]) results[sym] = {};
+                results[sym][dateKey] = {
+                    DELIV_QTY_avg: Math.round(avgDeliv),
+                    DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                    TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                    TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                };
+                symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+            }
+        }
+
+        // Filter for symbols that appeared 2+ times
+        const dateAverages = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                dateAverages[sym] = results[sym];
+            }
+        }
+
         return {
             status: 200,
             success: true,
             monthsHeader,
-            stocks: filteredStocks
+            stocks: filteredStocks,
+            dateAverages
         };
 
     } catch (err) {
@@ -1829,7 +1866,801 @@ const getCombineDeliveryStats_AllCap = async () => {
     }
 };
 
+const getCombineDeliveryStats_AllCapAndDaily_fourth = async () => {
+    try {
+        const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
+        const stockMaps = [];
+        const monthsHeaderSet = new Set();
 
+        const capBasePath = path.join(__dirname, '../../uploads/scrubbing');
+        const dailyPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        // === Clean Keys ===
+        function cleanKeyDynamic(key) {
+            return key
+                .replace(/<[^>]*>/g, '')
+                .replace(/%/g, 'Percent')
+                .replace(/[^a-zA-Z0-9 ]/g, '')
+                .trim()
+                .split(' ')
+                .map((word, index) =>
+                    index === 0
+                        ? word.toLowerCase()
+                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join('');
+        }
+
+        function cleanKeys(record) {
+            const cleaned = {};
+            for (const key in record) {
+                const newKey = cleanKeyDynamic(key);
+                cleaned[newKey || key] = record[key];
+            }
+            return cleaned;
+        }
+
+        function getWeight(percentageStr) {
+            if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') return 1;
+
+            const percent = parseFloat(percentageStr);
+            if (isNaN(percent)) return 0;
+
+            if (percent < 0) {
+                const abs = Math.abs(percent);
+                if (abs > 100) return -6;
+                if (abs > 80) return -5;
+                if (abs > 60) return -4;
+                if (abs > 40) return -3;
+                if (abs > 20) return -2;
+                return -1;
+            }
+
+            if (percent > 100) return 6;
+            if (percent > 80) return 5;
+            if (percent > 60) return 4;
+            if (percent > 40) return 3;
+            if (percent > 20) return 2;
+            if (percent > 0) return 1;
+
+            return 0;
+        }
+
+        // === Read cap data ===
+        for (const cap of caps) {
+            // const folderPath = path.join(capBasePath, cap);
+            // console.log(folderPath)
+            const data = await readerFileService.mergeCSVFile(cap);
+            const stockMap = new Map();
+
+            data.data?.forEach(item => {
+                const modifiedKey = cleanKeys(item);
+
+                Object.keys(modifiedKey).forEach(key => {
+                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                    if (match) {
+                        const month = match[2];
+                        const year = match[3].slice(2);
+                        const label = `${month}-${year}`;
+                        monthsHeaderSet.add(label);
+                    }
+                });
+
+                const keyName = modifiedKey.investedIn?.trim();
+                if (keyName) {
+                    const stockKey = keyName.toLowerCase();
+                    const existing = stockMap.get(stockKey) || { stockName: keyName };
+
+                    Object.keys(modifiedKey).forEach(key => {
+                        const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                        if (match) {
+                            const month = match[2];
+                            const year = match[3].slice(2);
+                            const formattedMonth = `${month}${year}`;
+
+                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+                            const numericWeight = typeof weight === 'number' ? weight : 0;
+
+                            const existingValue = existing[formattedMonth];
+                            if (existingValue === 'New') {
+                                existing[formattedMonth] = 'New';
+                            } else {
+                                existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
+                            }
+                        }
+                    });
+
+                    stockMap.set(stockKey, existing);
+                }
+            });
+
+            stockMaps.push(stockMap);
+        }
+
+        const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
+
+        // === Find common stocks across all cap maps ===
+        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
+        const commonStocks = [...allStockNames[0]].filter(name =>
+            allStockNames.every(set => set.has(name))
+        );
+
+        // === Merge cap data with weight filtering > 5 ===
+        const filteredStocks = [];
+
+        for (const stockKey of commonStocks) {
+            const baseStock = stockMaps[0].get(stockKey);
+            const mergedStock = { stockName: baseStock.stockName };
+
+            let grandTotal = 0;
+
+            for (const month of allMonthKeys) {
+                let totalWeight = 0;
+
+                for (const map of stockMaps) {
+                    const stock = map.get(stockKey);
+                    const weight = stock?.[month];
+                    if (typeof weight === 'number') {
+                        totalWeight += weight;
+                    }
+                }
+
+                if (totalWeight > 5) {
+                    mergedStock[month] = totalWeight;
+                    grandTotal += totalWeight;
+                } else {
+                    mergedStock[month] = null;
+                }
+            }
+
+            if (grandTotal > 5) {
+                filteredStocks.push(mergedStock);
+            }
+        }
+
+        // === Read Daily-Spurt Data ===
+        // const dailyData = await readerFileService.mergeCSVFile(dailyPath);
+        async function readCSVFile(filePath) {
+            return new Promise((resolve, reject) => {
+                const result = [];
+                fs.createReadStream(filePath)
+                    .pipe(csvParser({
+                        mapHeaders: ({ header }) =>
+                            header.trim().toUpperCase().replace(/\s+/g, '_')
+                    }))
+                    .on('data', data => result.push(data))
+                    .on('end', () => resolve(result))
+                    .on('error', err => reject(err));
+            });
+        }
+
+        async function readCSVFolder(folderPath) {
+            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
+            let allData = [];
+
+            for (const file of files) {
+                const filePath = path.join(folderPath, file);
+                const fileData = await readCSVFile(filePath);
+                allData = allData.concat(fileData);
+            }
+
+            return allData;
+        }
+        const dailyData = await readCSVFolder(dailyPath);
+        const avgStats = {};
+        const results = {};
+        const symbolCount = {};
+
+        dailyData?.forEach(item => {
+            const symbol = item.SYMBOL?.trim();
+            if (!symbol) return;
+
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+
+            if (!avgStats[symbol]) {
+                avgStats[symbol] = { deliv: 0, trade: 0, count: 0 };
+            }
+
+            avgStats[symbol].deliv += deliv;
+            avgStats[symbol].trade += trade;
+            avgStats[symbol].count += 1;
+        });
+
+        dailyData?.forEach(item => {
+            const sym = item.SYMBOL?.trim();
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+            const dateStr = item.DATE || '';
+            const avg = avgStats[sym];
+
+            if (!sym || !avg || avg.count < 5) return;
+
+            const avgDeliv = avg.deliv / avg.count;
+            const avgTrade = avg.trade / avg.count;
+
+            const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+            const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+            if (delivPct > 300 && tradePct > 300) {
+                const formattedDate = new Date(dateStr);
+                const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')
+                    }/${formattedDate.getFullYear()}`;
+
+                if (!results[sym]) results[sym] = {};
+                results[sym][dateKey] = {
+                    DELIV_QTY_avg: Math.round(avgDeliv),
+                    DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                    TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                    TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                };
+
+                symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+            }
+        });
+
+        // === Final Filtering ===
+        const dateAverages = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                dateAverages[sym] = results[sym];
+            }
+        }
+
+        return {
+            status: 200,
+            success: true,
+            monthsHeader: Array.from(monthsHeaderSet),
+            stocks: filteredStocks,
+            dateAverages
+        };
+
+    } catch (err) {
+        return { status: 500, success: false, message: err.message };
+    }
+};
+
+const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
+    try {
+        const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
+        const stockMaps = [];
+        const monthsHeaderSet = new Set();
+
+        const capBasePath = path.join(__dirname, '../../uploads/scrubbing');
+        const dailyPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        function cleanKeyDynamic(key) {
+            return key
+                .replace(/<[^>]*>/g, '')
+                .replace(/%/g, 'Percent')
+                .replace(/[^a-zA-Z0-9 ]/g, '')
+                .trim()
+                .split(' ')
+                .map((word, index) =>
+                    index === 0
+                        ? word.toLowerCase()
+                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join('');
+        }
+
+        function cleanKeys(record) {
+            const cleaned = {};
+            for (const key in record) {
+                const newKey = cleanKeyDynamic(key);
+                cleaned[newKey || key] = record[key];
+            }
+            return cleaned;
+        }
+
+        function getWeight(percentageStr) {
+            if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') return 1;
+            const percent = parseFloat(percentageStr);
+            if (isNaN(percent)) return 0;
+
+            if (percent < 0) {
+                const abs = Math.abs(percent);
+                if (abs > 100) return -6;
+                if (abs > 80) return -5;
+                if (abs > 60) return -4;
+                if (abs > 40) return -3;
+                if (abs > 20) return -2;
+                return -1;
+            }
+
+            if (percent > 100) return 6;
+            if (percent > 80) return 5;
+            if (percent > 60) return 4;
+            if (percent > 40) return 3;
+            if (percent > 20) return 2;
+            if (percent > 0) return 1;
+
+            return 0;
+        }
+
+        // === Read cap data ===
+        for (const cap of caps) {
+            const data = await readerFileService.mergeCSVFile(cap);
+            const stockMap = new Map();
+
+            data.data?.forEach(item => {
+                const modifiedKey = cleanKeys(item);
+
+                Object.keys(modifiedKey).forEach(key => {
+                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                    if (match) {
+                        const month = match[2];
+                        const year = match[3].slice(2);
+                        const label = `${month}-${year}`;
+                        monthsHeaderSet.add(label);
+                    }
+                });
+
+                const keyName = modifiedKey.investedIn?.trim();
+                if (keyName) {
+                    const stockKey = keyName.toLowerCase();
+                    const existing = stockMap.get(stockKey) || { stockName: keyName };
+
+                    Object.keys(modifiedKey).forEach(key => {
+                        const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                        if (match) {
+                            const month = match[2];
+                            const year = match[3].slice(2);
+                            const formattedMonth = `${month}${year}`;
+                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+                            const numericWeight = typeof weight === 'number' ? weight : 0;
+
+                            const existingValue = existing[formattedMonth];
+                            if (existingValue === 'New') {
+                                existing[formattedMonth] = 'New';
+                            } else {
+                                existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
+                            }
+                        }
+                    });
+
+                    stockMap.set(stockKey, existing);
+                }
+            });
+
+            stockMaps.push(stockMap);
+        }
+
+        const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
+
+        // === Find common stocks across all cap maps ===
+        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
+        const commonStocks = [...allStockNames[0]].filter(name =>
+            allStockNames.every(set => set.has(name))
+        );
+
+        // === Merge cap data with weight filtering > 5 ===
+        const filteredStocks = [];
+
+        for (const stockKey of commonStocks) {
+            const baseStock = stockMaps[0].get(stockKey);
+            const mergedStock = { stockName: baseStock.stockName };
+
+            let grandTotal = 0;
+
+            for (const month of allMonthKeys) {
+                let totalWeight = 0;
+
+                for (const map of stockMaps) {
+                    const stock = map.get(stockKey);
+                    const weight = stock?.[month];
+                    if (typeof weight === 'number') {
+                        totalWeight += weight;
+                    }
+                }
+
+                if (totalWeight > 3) {
+                    mergedStock[month] = totalWeight;
+                    grandTotal += totalWeight;
+                } else {
+                    mergedStock[month] = null;
+                }
+            }
+
+            if (grandTotal > 3) {
+                filteredStocks.push(mergedStock);
+            }
+        }
+
+        // === Read Daily-Spurt Data ===
+        async function readCSVFile(filePath) {
+            return new Promise((resolve, reject) => {
+                const result = [];
+                fs.createReadStream(filePath)
+                    .pipe(csvParser({
+                        mapHeaders: ({ header }) => header.trim().toUpperCase().replace(/\s+/g, '_')
+                    }))
+                    .on('data', data => result.push(data))
+                    .on('end', () => resolve(result))
+                    .on('error', err => reject(err));
+            });
+        }
+
+        async function readCSVFolder(folderPath) {
+            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
+            let allData = [];
+
+            for (const file of files) {
+                const filePath = path.join(folderPath, file);
+                const fileData = await readCSVFile(filePath);
+                allData = allData.concat(fileData);
+            }
+            return allData;
+        }
+
+        const dailyData = await readCSVFolder(dailyPath);
+
+        // === Calculate daily stats only for filtered stocks ===
+        const filteredSymbols = new Set(filteredStocks.map(stock => stock.stockName.toUpperCase()));
+        const avgStats = {};
+        const results = {};
+        const symbolCount = {};
+
+        dailyData?.forEach(item => {
+            const symbol = item.SYMBOL?.trim()?.toUpperCase();
+            if (!symbol || !filteredSymbols.has(symbol)) return;
+
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+
+            if (!avgStats[symbol]) {
+                avgStats[symbol] = { deliv: 0, trade: 0, count: 0 };
+            }
+
+            avgStats[symbol].deliv += deliv;
+            avgStats[symbol].trade += trade;
+            avgStats[symbol].count += 1;
+        });
+
+        dailyData?.forEach(item => {
+            const sym = item.SYMBOL?.trim()?.toUpperCase();
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+            const dateStr = item.DATE1 || '';
+            const avg = avgStats[sym];
+            if (!sym || !avg || avg.count < 5 || !filteredSymbols.has(sym)) return;
+
+            if (sym === 'Axis Bank Ltd') {
+                console.log(`Axis Bank Ltd: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
+            }
+
+            const avgDeliv = avg.deliv / avg.count;
+            const avgTrade = avg.trade / avg.count;
+
+            const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+            const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+            if (delivPct > 0 && tradePct > 0) {
+                const formattedDate = new Date(dateStr);
+                const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()}`;
+
+                if (!results[sym]) results[sym] = {};
+                results[sym][dateKey] = {
+                    DELIV_QTY_avg: Math.round(avgDeliv),
+                    DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                    TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                    TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                };
+
+                symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+            }
+        });
+
+        // === Final Filtering
+        const dateAverages = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                dateAverages[sym] = results[sym];
+            }
+        }
+
+        return {
+            status: 200,
+            success: true,
+            monthsHeader: Array.from(monthsHeaderSet),
+            stocks: filteredStocks,
+            dateAverages
+        };
+
+    } catch (err) {
+        return { status: 500, success: false, message: err.message };
+    }
+};
+
+const getCombineDeliveryStats_AllCapAndDaily = async () => {
+    try {
+        const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
+        const stockMaps = [];
+        const monthsHeaderSet = new Set();
+
+        const capBasePath = path.join(__dirname, '../../uploads/scrubbing');
+        const dailyPath = path.join(__dirname, '../../uploads/csvfilefolder');
+
+        function cleanKeyDynamic(key) {
+            return key
+                .replace(/<[^>]*>/g, '')
+                .replace(/%/g, 'Percent')
+                .replace(/[^a-zA-Z0-9 ]/g, '')
+                .trim()
+                .split(' ')
+                .map((word, index) =>
+                    index === 0
+                        ? word.toLowerCase()
+                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join('');
+        }
+
+        function cleanKeys(record) {
+            const cleaned = {};
+            for (const key in record) {
+                const newKey = cleanKeyDynamic(key);
+                cleaned[newKey || key] = record[key];
+            }
+            return cleaned;
+        }
+
+        function getWeight(percentageStr) {
+            if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') return 1;
+            const percent = parseFloat(percentageStr);
+            if (isNaN(percent)) return 0;
+
+            if (percent < 0) {
+                const abs = Math.abs(percent);
+                if (abs > 100) return -6;
+                if (abs > 80) return -5;
+                if (abs > 60) return -4;
+                if (abs > 40) return -3;
+                if (abs > 20) return -2;
+                return -1;
+            }
+
+            if (percent > 100) return 6;
+            if (percent > 80) return 5;
+            if (percent > 60) return 4;
+            if (percent > 40) return 3;
+            if (percent > 20) return 2;
+            if (percent > 0) return 1;
+
+            return 0;
+        }
+
+        // === Read cap data ===
+        for (const cap of caps) {
+            const data = await readerFileService.mergeCSVFile(cap);
+            const stockMap = new Map();
+
+            data.data?.forEach(item => {
+                const modifiedKey = cleanKeys(item);
+
+                Object.keys(modifiedKey).forEach(key => {
+                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                    if (match) {
+                        const month = match[2];
+                        const year = match[3].slice(2);
+                        const label = `${month}-${year}`;
+                        monthsHeaderSet.add(label);
+                    }
+                });
+
+                const keyName = modifiedKey.investedIn?.trim();
+                if (keyName) {
+                    const stockKey = keyName.toLowerCase();
+                    const existing = stockMap.get(stockKey) || { stockName: keyName };
+
+                    Object.keys(modifiedKey).forEach(key => {
+                        const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
+                        if (match) {
+                            const month = match[2];
+                            const year = match[3].slice(2);
+                            const formattedMonth = `${month}${year}`;
+
+                            // FIX: Use fake percent if missing
+                            const percentStr = modifiedKey.monthChangeInSharesPercent || '';
+                            const weight = getWeight(percentStr);
+                            const numericWeight = typeof weight === 'number' ? weight : 0;
+
+                            const existingValue = existing[formattedMonth];
+                            if (existingValue === 'New') {
+                                existing[formattedMonth] = 'New';
+                            } else {
+                                existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
+                            }
+                        }
+                    });
+
+                    stockMap.set(stockKey, existing);
+                }
+            });
+
+            stockMaps.push(stockMap);
+        }
+
+        const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
+
+        // === Find common stocks across all cap maps ===
+        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
+        const commonStocks = [...allStockNames[0]].filter(name =>
+            allStockNames.every(set => set.has(name))
+        );
+
+        // === Merge cap data with weight filtering > 3 ===
+        const filteredStocks = [];
+
+        for (const stockKey of commonStocks) {
+            const baseStock = stockMaps[0].get(stockKey);
+            const mergedStock = { stockName: baseStock.stockName };
+
+            let grandTotal = 0;
+
+            for (const month of allMonthKeys) {
+                let totalWeight = 0;
+
+                for (const map of stockMaps) {
+                    const stock = map.get(stockKey);
+                    const weight = stock?.[month];
+                    if (typeof weight === 'number') {
+                        totalWeight += weight;
+                    }
+                }
+
+                if (totalWeight > 4) {
+                    mergedStock[month] = totalWeight;
+                    grandTotal += totalWeight;
+                } else {
+                    mergedStock[month] = null;
+                }
+            }
+
+            if (grandTotal > 4) {
+                filteredStocks.push(mergedStock);
+            }
+        }
+
+        // console.log('Filtered Stocks Count:', filteredStocks.length);
+
+        // === Read Daily-Spurt Data ===
+        async function readCSVFile(filePath) {
+            return new Promise((resolve, reject) => {
+                const result = [];
+                fs.createReadStream(filePath)
+                    .pipe(csvParser({
+                        mapHeaders: ({ header }) => header.trim().toUpperCase().replace(/\s+/g, '_')
+                    }))
+                    .on('data', data => result.push(data))
+                    .on('end', () => resolve(result))
+                    .on('error', err => reject(err));
+            });
+        }
+
+        async function readCSVFolder(folderPath) {
+            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
+            let allData = [];
+
+            for (const file of files) {
+                const filePath = path.join(folderPath, file);
+                const fileData = await readCSVFile(filePath);
+                allData = allData.concat(fileData);
+            }
+            return allData;
+        }
+
+        const dailyData = await readCSVFolder(dailyPath);
+
+        function normalizeSymbol(name) {
+            return name?.replace(/\s+/g, '').toUpperCase();
+        }
+
+        // const filteredSymbols = new Set(filteredStocks.map(stock => stock.stockName.toUpperCase()));
+        const filteredSymbols = new Set(filteredStocks.map(stock => normalizeSymbol(stock.stockName)));
+        const avgStats = {};
+        const results = {};
+        const symbolCount = {};
+
+        dailyData?.forEach(item => {
+            // const symbol = item.SYMBOL?.trim()?.toUpperCase();
+            const symbol = normalizeSymbol(item.SYMBOL);
+
+            if (!symbol || !filteredSymbols.has(symbol)) return;
+
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+
+            if (!avgStats[symbol]) {
+                avgStats[symbol] = { deliv: 0, trade: 0, count: 0 };
+            }
+
+            avgStats[symbol].deliv += deliv;
+            avgStats[symbol].trade += trade;
+            avgStats[symbol].count += 1;
+        });
+
+        dailyData?.forEach(item => {
+            // const sym = item.SYMBOL?.trim()?.toUpperCase();
+            const sym = normalizeSymbol(item.SYMBOL);
+            const deliv = Number(item.DELIV_QTY || 0);
+            const trade = Number(item.TTL_TRD_QNTY || 0);
+            const dateStr = item.DATE1 || '';
+            const avg = avgStats[sym];
+            if (!sym || !avg || avg.count < 5 || !filteredSymbols.has(sym)) return;
+
+            const avgDeliv = avg.deliv / avg.count;
+            const avgTrade = avg.trade / avg.count;
+
+            const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+            const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+
+            // if (!avg || avg.count < 5) {
+            //     console.log(`❌ Skipping ${sym} - avg.count too low: ${avg?.count}`);
+            // } else {
+            //     const avgDeliv = avg.deliv / avg.count;
+            //     const avgTrade = avg.trade / avg.count;
+
+            //     const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
+            //     const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
+
+            //     console.log(`📊 ${sym} - delivPct: ${delivPct}, tradePct: ${tradePct}`);
+            // }
+
+
+            if (delivPct > 50 && tradePct > 50) {
+                const formattedDate = new Date(dateStr);
+                const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()}`;
+
+                if (!results[sym]) results[sym] = {};
+                results[sym][dateKey] = {
+                    DELIV_QTY_avg: Math.round(avgDeliv),
+                    DELIV_QTY_percent: delivPct.toFixed(2) + '%',
+                    TTL_TRD_QNTY_avg: Math.round(avgTrade),
+                    TTL_TRD_QNTY_percent: tradePct.toFixed(2) + '%'
+                };
+
+                symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+            }
+        });
+
+        const dateAverages = {};
+        for (const sym in results) {
+            if (symbolCount[sym] >= 2) {
+                dateAverages[sym] = results[sym];
+            }
+        }
+
+        // Normalize function (already exists)
+        function normalizeSymbol(name) {
+            return name?.replace(/\s+/g, '').toUpperCase();
+        }
+
+        // Get normalized keys of dateAverages
+        const availableSymbols = new Set(Object.keys(dateAverages));
+
+        // Filter only those stocks whose normalized stockName exists in dateAverages
+        const commonFilteredStocks = filteredStocks.filter(stock => {
+            const normalizedStock = normalizeSymbol(stock.stockName);
+            return availableSymbols.has(normalizedStock);
+        });
+
+        // console.log('Date Averages Symbol Count:', Object.keys(dateAverages).length);
+
+        return {
+            status: 200,
+            success: true,
+            monthsHeader: Array.from(monthsHeaderSet),
+            // stocks: filteredStocks,
+            stocks: commonFilteredStocks,
+            dateAverages
+        };
+
+    } catch (err) {
+        return { status: 500, success: false, message: err.message };
+    }
+};
 
 exports.getFundData = async (req, res) => {
     const { type, to_date } = req.query;
@@ -1853,7 +2684,8 @@ exports.getFundData = async (req, res) => {
                 data = await getDeliveryStats_AllCap('smallcap');
                 break;
             case 'combine-cap':
-                data = await getCombineDeliveryStats_AllCap();
+                // data = await getCombineDeliveryStats_AllCap();
+                data = await getCombineDeliveryStats_AllCapAndDaily();
                 break;
             default:
                 return res.status(400).json({ message: 'Invalid or missing fund type' });

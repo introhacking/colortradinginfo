@@ -77,7 +77,7 @@ const FundDeliveryDashboard = () => {
             const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/fetch-data', queryParams);
             console.log(serverResponse);
 
-            if (type === 'large-cap' || type === 'mid-cap' || type === 'small-cap' || type === 'combine-cap') {
+            if (type === 'large-cap' || type === 'mid-cap' || type === 'small-cap') {
                 setRowData(serverResponse.data?.stocks);
                 const dynamicColumns = Object.keys(serverResponse.data?.stocks[0]).map(key => ({
                     headerName: key,
@@ -199,6 +199,162 @@ const FundDeliveryDashboard = () => {
                 // ];
                 // setColumnDefs(staticColumns);
 
+            } else if (type === 'combine-cap') {
+
+                const normalizeSymbol = (str) =>
+                    str?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();  // removes space, dot, dash, etc.
+
+                // STEP 1: Process pivoted data
+                const raw = serverResponse.data?.dateAverages || {};
+                const allDates = new Set();
+                const pivotMap = {};
+
+                Object.entries(raw).forEach(([symbol, dateEntries]) => {
+                    const normalizedSymbol = normalizeSymbol(symbol);
+                    const row = { normalizedSymbol }; // you can also store original if needed
+
+                    for (const [date, stats] of Object.entries(dateEntries)) {
+                        allDates.add(date);
+                        row[`deliv_${date}`] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
+                        row[`ttd_${date}`] = `${stats.TTL_TRD_QNTY_avg} / ${stats.TTL_TRD_QNTY_percent}`;
+                    }
+
+                    pivotMap[normalizedSymbol] = row;
+                });
+
+
+                // STEP 2: Filter only those stocks that exist in pivoted
+                const stocks = serverResponse.data?.stocks || [];
+
+                const mergedRows = stocks
+                    .map(stock => {
+                        const normalizedSymbol = normalizeSymbol(stock.stockName || stock.symbol);
+                        if (pivotMap[normalizedSymbol]) {
+                            return {
+                                ...stock,
+                                ...pivotMap[normalizedSymbol]
+                            };
+                        }
+                        return null;
+                    })
+                    .filter(Boolean); // keep only matched rows
+                // Remove nulls (i.e., non-common symbols)
+
+                // STEP 3: Dynamic columns from stock
+                const dynamicColumns = Object.keys(stocks[0] || {}).map(key => ({
+                    headerName: key.toUpperCase(),
+                    field: key,
+                    sortable: true,
+                    filter: true,
+                    resizable: true,
+                    pinned:'left',
+                    cellStyle: params => getCellStyle(params),
+                }));
+
+                const formatDateToHeader = (dateStr) => {
+                    const [day, month, year] = dateStr.split('/');
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    return `${day}-${monthNames[parseInt(month, 10) - 1]}-${year}`;
+                };
+
+                const dateColumns = Array.from(allDates).map(date => ({
+                    headerName: `Date: ${formatDateToHeader(date)}`,
+                    marryChildren: true,
+                    headerClass: 'cs_ag-center-header',
+                    children: [
+                        {
+                            field: `deliv_${date}`,
+                            headerName: 'Deliv Avg / Deliv %',
+                            tooltipField: `deliv_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params),
+                        },
+                        {
+                            field: `ttd_${date}`,
+                            headerName: 'TTD Avg / TTD %',
+                            tooltipField: `ttd_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params),
+                        }
+                    ]
+                }));
+
+
+                // STEP 5: Set data
+                setRowData(mergedRows);
+                setColumnDefs([
+                    ...dynamicColumns,
+                    ...dateColumns
+                ]);
+
+
+
+
+
+                // const raw = serverResponse.data?.dateAverages || {};
+
+                // const allDates = new Set();
+                // const pivoted = Object.entries(raw).map(([symbol, dateEntries]) => {
+                //     const row = { symbol };
+                //     for (const [date, stats] of Object.entries(dateEntries)) {
+                //         allDates.add(date);
+
+                //         row[`deliv_${date}`] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
+                //         row[`ttd_${date}`] = `${stats.TTL_TRD_QNTY_avg} / ${stats.TTL_TRD_QNTY_percent}`;
+                //     }
+                //     return row;
+                // });
+
+                // const formatDateToHeader = (dateStr) => {
+                //     const [day, month, year] = dateStr.split('/');
+                //     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                //         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                //     const monthIndex = parseInt(month, 10) - 1;
+                //     return `${day}-${monthNames[monthIndex]}-${year}`;
+                // };
+
+                // const dateColumns = Array.from(allDates).map(date => ({
+                //     headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
+                //     marryChildren: true,
+                //     headerClass: 'cs_ag-center-header',
+                //     children: [
+                //         {
+                //             field: `deliv_${date}`,
+                //             headerName: 'Deliv Avg / Deliv %',
+                //             tooltipField: `deliv_${date}`,
+                //             filter: true,
+                //             cellStyle: params => getCellStyles(params)
+                //         },
+                //         {
+                //             field: `ttd_${date}`,
+                //             headerName: 'TTD Avg / TTD %',
+                //             tooltipField: `ttd_${date}`,
+                //             filter: true,
+                //             cellStyle: params => getCellStyles(params)
+                //         }
+                //     ]
+                // }));
+
+                // const columns = [
+                //     { field: 'symbol', headerName: 'Symbol', filter: true },
+                //     ...dateColumns
+                // ];
+
+                // // setRowData(serverResponse.data?.stocks);
+                // const dynamicColumns = Object.keys(serverResponse.data?.stocks[0]).map(key => ({
+                //     headerName: key,
+                //     field: key,
+                //     sortable: true,
+                //     filter: true,
+                //     resizable: true,
+                //     cellStyle: params => getCellStyle(params),
+                // }));
+
+                // // setRowData([...serverResponse.data?.stocks , ...pivoted]);
+                // // setColumnDefs([...dynamicColumns , ...columns]);
+                // setRowData([...pivoted]);
+                // setColumnDefs([...columns]);
             } else {
                 setNoDataFoundMsg('No data found for the selected option.');
             }
@@ -218,6 +374,14 @@ const FundDeliveryDashboard = () => {
         setCategory(type);
         fetchData(type, undefined);
     };
+    // const handleCombineTypeChange = (type) => {
+    //     if (type === 'combine-cap' || type === 'large-cap' || type === 'small-cap' || type === 'mid-cap') {
+    //         setDecision(true)
+    //     }
+    //     setToDate('')
+    //     setCategory(type);
+    //     fetchData(type, undefined);
+    // };
 
     const handleDateChange = (date) => {
         setDecision(false)
@@ -273,34 +437,32 @@ const FundDeliveryDashboard = () => {
             {!isLoading && !error && !noDataFoundMsg && rowData.length > 0 ? (
                 <div className="ag-theme-alpine h-[71vh] w-full">
                     <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
-
-
                 </div>
-
             ) : <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: No data found for the selected option</span></div>
+
             }
 
             {/* {decision ?
-    (
-        <>
-            <div className='p-2 border rounded bg-gradient-to-r from-amber-50 to-slate-100'>
-                <Bar
-                    key={Date.now()} // ensures chart is remounted on data change
-                    data={chartData}
-                    options={{
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: category.replace('-', ' ').toUpperCase() },
-                        },
-                    }}
-                />
-            </div>
+                (
+                    <>
+                        <div className='p-2 border rounded bg-gradient-to-r from-amber-50 to-slate-100'>
+                            <Bar
+                                key={Date.now()} // ensures chart is remounted on data change
+                                data={chartData}
+                                options={{
+                                    responsive: true,
+                                    plugins: {
+                                        legend: { position: 'top' },
+                                        title: { display: true, text: category.replace('-', ' ').toUpperCase() },
+                                    },
+                                }}
+                            />
+                        </div>
 
-        </>
-    ) : <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
+                    </>
+                ) : <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
 
-} */}
+            } */}
 
         </>
     )
