@@ -2437,6 +2437,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
 
             data.data?.forEach(item => {
                 const modifiedKey = cleanKeys(item);
+                // console.log(modifiedKey)
 
                 Object.keys(modifiedKey).forEach(key => {
                     const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
@@ -2448,7 +2449,8 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
                     }
                 });
 
-                const keyName = modifiedKey.investedIn?.trim();
+                // const keyName = modifiedKey.investedIn?.trim();
+                const keyName = modifiedKey.nseCode?.trim();
                 if (keyName) {
                     const stockKey = keyName.toLowerCase();
                     const existing = stockMap.get(stockKey) || { stockName: keyName };
@@ -2509,7 +2511,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
                     }
                 }
 
-                if (totalWeight > 4) {
+                if (totalWeight > 5) {
                     mergedStock[month] = totalWeight;
                     grandTotal += totalWeight;
                 } else {
@@ -2517,7 +2519,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
                 }
             }
 
-            if (grandTotal > 4) {
+            if (grandTotal > 5) {
                 filteredStocks.push(mergedStock);
             }
         }
@@ -2540,6 +2542,17 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
 
         async function readCSVFolder(folderPath) {
             const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
+            // [ GET 10 DAYS FILES FROM LATEST]
+            // const files = fs.readdirSync(folderPath)
+            //     .filter(file => file.endsWith('.csv'))
+            //     .map(file => ({
+            //         name: file,
+            //         time: fs.statSync(path.join(folderPath, file)).mtime.getTime()
+            //     }))
+            //     .sort((a, b) => b.time - a.time) // newest first
+            //     .slice(0, 10) // pick top 10
+            //     .map(file => file.name); // extract names
+
             let allData = [];
 
             for (const file of files) {
@@ -2609,7 +2622,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
             // }
 
 
-            if (delivPct > 50 && tradePct > 50) {
+            if (delivPct > 70 && tradePct > 70) {
                 const formattedDate = new Date(dateStr);
                 const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()}`;
 

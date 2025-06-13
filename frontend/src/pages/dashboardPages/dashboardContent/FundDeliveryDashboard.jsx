@@ -247,7 +247,7 @@ const FundDeliveryDashboard = () => {
                     sortable: true,
                     filter: true,
                     resizable: true,
-                    pinned:'left',
+                    pinned: 'left',
                     cellStyle: params => getCellStyle(params),
                 }));
 
@@ -258,27 +258,34 @@ const FundDeliveryDashboard = () => {
                     return `${day}-${monthNames[parseInt(month, 10) - 1]}-${year}`;
                 };
 
-                const dateColumns = Array.from(allDates).map(date => ({
-                    headerName: `Date: ${formatDateToHeader(date)}`,
-                    marryChildren: true,
-                    headerClass: 'cs_ag-center-header',
-                    children: [
-                        {
-                            field: `deliv_${date}`,
-                            headerName: 'Deliv Avg / Deliv %',
-                            tooltipField: `deliv_${date}`,
-                            filter: true,
-                            cellStyle: params => getCellStyles(params),
-                        },
-                        {
-                            field: `ttd_${date}`,
-                            headerName: 'TTD Avg / TTD %',
-                            tooltipField: `ttd_${date}`,
-                            filter: true,
-                            cellStyle: params => getCellStyles(params),
-                        }
-                    ]
-                }));
+                const dateColumns = Array.from(allDates).sort((a, b) => {
+                    const [dayA, monthA, yearA] = a.split('/').map(Number);
+                    const [dayB, monthB, yearB] = b.split('/').map(Number);
+                    const dateObjA = new Date(yearA, monthA - 1, dayA);
+                    const dateObjB = new Date(yearB, monthB - 1, dayB);
+                    return dateObjB - dateObjA;
+                })
+                    .map(date => ({
+                        headerName: `Date: ${formatDateToHeader(date)}`,
+                        marryChildren: true,
+                        headerClass: 'cs_ag-center-header',
+                        children: [
+                            {
+                                field: `deliv_${date}`,
+                                headerName: 'Deliv Avg / Deliv %',
+                                tooltipField: `deliv_${date}`,
+                                filter: true,
+                                cellStyle: params => getCellStyles(params),
+                            },
+                            {
+                                field: `ttd_${date}`,
+                                headerName: 'TTD Avg / TTD %',
+                                tooltipField: `ttd_${date}`,
+                                filter: true,
+                                cellStyle: params => getCellStyles(params),
+                            }
+                        ]
+                    }));
 
 
                 // STEP 5: Set data
