@@ -105,7 +105,7 @@ const exportFromPage = async (browser, url, downloadPath, attempt = 1) => {
             if (!a || !a.href.startsWith('blob:')) return false;
             const name = a.getAttribute('download');
             return name && name !== 'data.csv' && name.trim().length > 4;
-        }, { timeout: 15000 });
+        }, { timeout: 20000 });
 
         // await page.waitForFunction(() => {
         //     const a = document.querySelector('a[download]');

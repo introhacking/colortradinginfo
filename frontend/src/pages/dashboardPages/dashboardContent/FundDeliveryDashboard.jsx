@@ -48,11 +48,22 @@ const FundDeliveryDashboard = () => {
     }
 
     const getCellStyle = params => {
-        if (params.value == 1) { return { backgroundColor: 'red', ...customCellStyle } };
-        if (params.value == 2) { return { backgroundColor: 'lightgray', ...customCellStyle } };
-        if (params.value == 3) { return { backgroundColor: 'orange', ...customCellStyle } };
-        if (params.value == 4) { return { backgroundColor: 'lightgreen', ...customCellStyle } };
-        if (params.value >= 5) { return { backgroundColor: 'green', ...customCellStyle } };
+        const value = params.value;
+        // Handle string '-' or empty
+        if (value === '-' || value === '' || value == null) {
+            return { backgroundColor: 'black', fontStyle: 'italic', ...customCellStyle }; // style for missing data
+        }
+        const numValue = Number(value);
+        if (numValue === -2) return { backgroundColor: 'red', ...customCellStyle };
+        if (numValue === -1) return { backgroundColor: 'lightgray', ...customCellStyle };
+        if (numValue === 0) return { backgroundColor: '#9056a9', ...customCellStyle };
+        if (numValue === 1) return { backgroundColor: 'lightblue', ...customCellStyle };
+        if (numValue === 2) return { backgroundColor: 'gray', ...customCellStyle };
+        if (numValue === 3) return { backgroundColor: 'orange', ...customCellStyle };
+        if (numValue === 4) return { backgroundColor: 'lightgreen', ...customCellStyle };
+        if (numValue >= 5) return { backgroundColor: 'green', ...customCellStyle };
+
+        return null; // no style
     };
 
     const getCellStyles = (params) => {
@@ -79,15 +90,46 @@ const FundDeliveryDashboard = () => {
 
             if (type === 'large-cap' || type === 'mid-cap' || type === 'small-cap') {
                 setRowData(serverResponse.data?.stocks);
-                const dynamicColumns = Object.keys(serverResponse.data?.stocks[0]).map(key => ({
-                    headerName: key,
-                    field: key,
-                    sortable: true,
-                    filter: true,
-                    resizable: true,
-                    cellStyle: params => getCellStyle(params),
-                }));
+
+                const today = new Date();
+                const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
+                const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
+                const currentHeader = `${currentMonth}${currentYear}`;
+
+                const dynamicColumns = Object.keys(serverResponse.data?.stocks[0])
+                    .sort((a, b) => {
+                        // Always keep 'stockName' first
+                        if (a === 'stockName') return -1;
+                        if (b === 'stockName') return 1;
+
+                        // Put current month first
+                        if (a === currentHeader) return -1;
+                        if (b === currentHeader) return 1;
+
+                        // Parse month and year to compare
+                        const parse = (val) => {
+                            const monthAbbr = val.slice(0, 3);
+                            const year = parseInt(val.slice(3), 10);
+                            const month = new Date(`${monthAbbr} 1, 2000`).getMonth(); // Get month index
+                            return year * 12 + month;
+                        };
+
+                        return parse(b) - parse(a); // Descending order
+                    })
+                    .map(key => ({
+                        headerName: key,
+                        field: key,
+                        sortable: true,
+                        filter: true,
+                        resizable: true,
+                        cellRenderer: (params) => {
+                            return (params.value === null || params.value === undefined) ? '-' : params.value;
+                        },
+                        cellStyle: params => getCellStyle(params),
+                    }));
                 setColumnDefs([...dynamicColumns]);
+
+                console.log(dynamicColumns)
 
                 // Extract chart labels
                 const dates = serverResponse.data?.monthsHeader || [];
@@ -134,27 +176,33 @@ const FundDeliveryDashboard = () => {
                     return `${day}-${monthNames[monthIndex]}-${year}`;
                 };
 
-                const dateColumns = Array.from(allDates).map(date => ({
-                    headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
-                    marryChildren: true,
-                    headerClass: 'cs_ag-center-header',
-                    children: [
-                        {
-                            field: `deliv_${date}`,
-                            headerName: 'Deliv Avg / Deliv %',
-                            tooltipField: `deliv_${date}`,
-                            filter: true,
-                            cellStyle: params => getCellStyles(params)
-                        },
-                        {
-                            field: `ttd_${date}`,
-                            headerName: 'TTD Avg / TTD %',
-                            tooltipField: `ttd_${date}`,
-                            filter: true,
-                            cellStyle: params => getCellStyles(params)
-                        }
-                    ]
-                }));
+                const today = new Date();
+                const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
+                const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
+                const currentHeader = `${currentMonth}${currentYear}`;
+
+                const dateColumns = Array.from(allDates)
+                    .map(date => ({
+                        headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
+                        marryChildren: true,
+                        headerClass: 'cs_ag-center-header',
+                        children: [
+                            {
+                                field: `deliv_${date}`,
+                                headerName: 'Deliv Avg / Deliv %',
+                                tooltipField: `deliv_${date}`,
+                                filter: true,
+                                cellStyle: params => getCellStyles(params)
+                            },
+                            {
+                                field: `ttd_${date}`,
+                                headerName: 'TTD Avg / TTD %',
+                                tooltipField: `ttd_${date}`,
+                                filter: true,
+                                cellStyle: params => getCellStyles(params)
+                            }
+                        ]
+                    }));
 
                 const columns = [
                     { field: 'symbol', headerName: 'Symbol', pinned: 'left', filter: true },
@@ -201,6 +249,23 @@ const FundDeliveryDashboard = () => {
 
             } else if (type === 'combine-cap') {
 
+
+                const today = new Date();
+                const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
+                const currentYear = String(today.getFullYear()).slice(2);               // e.g., '25'
+                const currentKey = `${currentMonth}${currentYear}`;                     // e.g., 'Jun25'
+
+                // Helper to convert "Apr25" to numeric for sorting
+                const getMonthValue = (key) => {
+                    if (!/^[A-Za-z]{3}\d{2}$/.test(key)) return -Infinity; // non-date keys like 'stockName' go first
+                    const monthAbbr = key.slice(0, 3);
+                    const year = parseInt(key.slice(3), 10);
+                    const month = new Date(`${monthAbbr} 1, 2000`).getMonth(); // 0-11
+                    return year * 12 + month;
+                };
+
+
+
                 const normalizeSymbol = (str) =>
                     str?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();  // removes space, dot, dash, etc.
 
@@ -241,15 +306,28 @@ const FundDeliveryDashboard = () => {
                 // Remove nulls (i.e., non-common symbols)
 
                 // STEP 3: Dynamic columns from stock
-                const dynamicColumns = Object.keys(stocks[0] || {}).map(key => ({
-                    headerName: key.toUpperCase(),
-                    field: key,
-                    sortable: true,
-                    filter: true,
-                    resizable: true,
-                    pinned: 'left',
-                    cellStyle: params => getCellStyle(params),
-                }));
+                const dynamicColumns = Object.keys(stocks[0] || {})
+                    .sort((a, b) => {
+                        if (a.toLowerCase() === 'stockname') return -1;
+                        if (b.toLowerCase() === 'stockname') return 1;
+
+                        if (a === currentKey) return -1;
+                        if (b === currentKey) return 1;
+
+                        return getMonthValue(b) - getMonthValue(a); // Descending order
+                    })
+                    .map(key => ({
+                        headerName: key.toUpperCase(),
+                        field: key,
+                        sortable: true,
+                        filter: true,
+                        resizable: true,
+                        // pinned: 'left',
+                        cellRenderer: (params) => {
+                            return (params.value === null || params.value === undefined) ? '-' : params.value;
+                        },
+                        cellStyle: params => getCellStyle(params),
+                    }));
 
                 const formatDateToHeader = (dateStr) => {
                     const [day, month, year] = dateStr.split('/');

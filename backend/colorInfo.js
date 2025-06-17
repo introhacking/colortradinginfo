@@ -139,6 +139,10 @@ app.get('/api/v1/csv-files', (req, res) => {
 const loginRoute = require('./router/authRouter/authRoute');
 app.use('/api/v1', loginRoute)
 
+// [ SCRUBBING CAPS ROUTER ]
+const masterRoute = require('./router/masterScreenRouter/masterRouter');
+app.use('/api/v1', masterRoute)
+
 
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {

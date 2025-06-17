@@ -1194,6 +1194,7 @@ const getDeliveryStats_AllCap = async (cap) => {
             });
 
             const keyName = modifiedKey.investedIn?.trim();
+            // const keyName = modifiedKey.nseCode?.trim();
 
             if (keyName) {
                 const stockKey = keyName.toLowerCase();
@@ -1244,13 +1245,13 @@ const getDeliveryStats_AllCap = async (cap) => {
         // });
 
         const filteredStocks = Array.from(stockMap.values()).filter(stock => {
-            return monthsHeader.every(header => {
+            // return monthsHeader.every(header => {    // Every condition is satified then return 
+            return monthsHeader.some(header => {
                 const key = header.replace('-', '');
                 const val = stock[key];
-                return typeof val === 'number' && val > 3;
+                return typeof val === 'number' && val > 4;
             });
         });
-
 
         return {
             status: 200,
@@ -2486,10 +2487,12 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
         const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
 
         // === Find common stocks across all cap maps ===
-        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
+        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));        
         const commonStocks = [...allStockNames[0]].filter(name =>
             allStockNames.every(set => set.has(name))
         );
+
+        // console.log(commonStocks)
 
         // === Merge cap data with weight filtering > 3 ===
         const filteredStocks = [];
@@ -2511,7 +2514,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
                     }
                 }
 
-                if (totalWeight > 5) {
+                if (totalWeight >= 4) {
                     mergedStock[month] = totalWeight;
                     grandTotal += totalWeight;
                 } else {
@@ -2519,7 +2522,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
                 }
             }
 
-            if (grandTotal > 5) {
+            if (grandTotal >= 4) {
                 filteredStocks.push(mergedStock);
             }
         }
@@ -2541,17 +2544,17 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
         }
 
         async function readCSVFolder(folderPath) {
-            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
+            // const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
             // [ GET 10 DAYS FILES FROM LATEST]
-            // const files = fs.readdirSync(folderPath)
-            //     .filter(file => file.endsWith('.csv'))
-            //     .map(file => ({
-            //         name: file,
-            //         time: fs.statSync(path.join(folderPath, file)).mtime.getTime()
-            //     }))
-            //     .sort((a, b) => b.time - a.time) // newest first
-            //     .slice(0, 10) // pick top 10
-            //     .map(file => file.name); // extract names
+            const files = fs.readdirSync(folderPath)
+                .filter(file => file.endsWith('.csv'))
+                .map(file => ({
+                    name: file,
+                    time: fs.statSync(path.join(folderPath, file)).mtime.getTime()
+                }))
+                .sort((a, b) => b.time - a.time) // newest first
+                .slice(0, 30) // pick top 30
+                .map(file => file.name); // extract names
 
             let allData = [];
 

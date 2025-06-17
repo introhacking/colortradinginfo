@@ -36,7 +36,7 @@ cron.schedule('35 10 * * *', async () => {
 
 
 // Schedule to run at 00:00 on the 16th of every month
-cron.schedule('10 10 16 * *', () => {
+cron.schedule('10 10 18 * *', () => {
     const previousMonth = new Date();
     previousMonth.setMonth(previousMonth.getMonth() - 1);
 
