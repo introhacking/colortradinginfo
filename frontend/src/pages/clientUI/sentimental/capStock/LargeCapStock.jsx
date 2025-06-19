@@ -96,7 +96,7 @@ const LargeCapStock = () => {
             const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
             const serverResponseData = serverResponse.response
 
-            if (!serverResponseData?.newModifiedKeyRecord?.length) {
+            if (!serverResponseData?.length) {
                 setLargeCapStockLists([]);
                 setColumnDefs([]);
                 setErrorMsgStatus(true);
@@ -104,25 +104,50 @@ const LargeCapStock = () => {
                 return;
             }
 
-            setLargeCapStockLists(serverResponseData.newModifiedKeyRecord)
+            setLargeCapStockLists(serverResponseData)
 
             const dynamicCols = []
-            if (serverResponseData.monthsHeader.length > 0) {
-                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
-                    headerName: month,
-                    field: month.replace(/-/g, ''),
-                    sortable: true,
-                    filter: true,
-                    maxWidth: 120,
-                    cellStyle: params => getCellStyle(params),
-                    valueFormatter: (params) => {
-                        const value = params.value;
-                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
-                            return 'New';
+            
+            const today = new Date();
+            const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
+            const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
+            const currentHeader = `${currentMonth}${currentYear} `;
+
+            if (serverResponse.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponse.monthsHeader
+                    .sort((a, b) => {
+                        // Always keep 'stockName' first
+                        if (a === 'stockName') return -1;
+                        if (b === 'stockName') return 1;
+
+                        // Put current month first
+                        if (a === currentHeader) return -1;
+                        if (b === currentHeader) return 1;
+
+                        // Parse month and year to compare
+                        const parse = (val) => {
+                            const monthAbbr = val.slice(0, 3);
+                            const year = parseInt(val.slice(3), 10);
+                            const month = new Date(`${monthAbbr} 1, 2000`).getMonth(); // Get month index
+                            return year * 12 + month;
+                        };
+
+                        return parse(a) - parse(b); // Descending order
+                    }).map((month) => ({
+                        headerName: month,
+                        field: month.replace(/-/g, ''),
+                        sortable: true,
+                        filter: true,
+                        maxWidth: 120,
+                        cellStyle: params => getCellStyle(params),
+                        valueFormatter: (params) => {
+                            const value = params.value;
+                            if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                                return 'New';
+                            }
+                            return value; // fallback
                         }
-                        return value; // fallback
-                    }
-                }));
+                    }));
 
                 dynamicCols.push({
                     headerName: 'Monthly Data',

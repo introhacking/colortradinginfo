@@ -2,7 +2,7 @@
 // const csvParser = require('csv-parser');
 const readerFileService = require('../../services/fileReadingServices');
 
-exports.masterScreenController = async (req, res) => {
+exports.masterScreenController_first = async (req, res) => {
     try {
         const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
         const stockMaps = [];
@@ -161,3 +161,102 @@ exports.masterScreenController = async (req, res) => {
         res.status(500).json({ error: 'Something went wrong.' });
     }
 };
+
+
+exports.masterScreenController = async (req, res) => {
+    try {
+        const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
+        const stockMaps = [];
+        const monthsHeaderSet = new Set();
+
+        for (const cap of caps) {
+            const response = await readerFileService.getMasterMergeCSVFileBasedUponCaps(cap);
+
+            if (!response || !response.success) continue;
+
+            const { newModifiedKeyRecord, monthsHeader } = response;
+
+            monthsHeader.forEach(month => monthsHeaderSet.add(month));
+
+            const stockMap = new Map();
+            newModifiedKeyRecord.forEach(stock => {
+                const key = stock.stockName?.trim()?.toLowerCase();
+                if (key) {
+                    stockMap.set(key, stock);
+                }
+            });
+
+            stockMaps.push(stockMap);
+        }
+
+        const allStockKeysSet = new Set();
+        stockMaps.forEach(map => {
+            for (const key of map.keys()) {
+                allStockKeysSet.add(key);
+            }
+        });
+
+        const monthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
+
+        const mergedStocks = [];
+
+        for (const stockKey of allStockKeysSet) {
+            const baseStock = stockMaps.find(map => map.has(stockKey))?.get(stockKey);
+            if (!baseStock) continue;
+
+            const mergedStock = { stockName: baseStock.stockName };
+
+            for (const month of monthKeys) {
+                let total = 0;
+                let found = false;
+
+                for (const map of stockMaps) {
+                    const stock = map.get(stockKey);
+                    const value = stock?.[month];
+                    if (typeof value === 'number') {
+                        total += value;
+                        found = true;
+                    }
+                }
+
+                mergedStock[month] = found ? total : '-';
+            }
+
+            mergedStocks.push(mergedStock);
+        }
+
+        // === Sorting Logic (no score or label added)
+        function getScoreForSort(stock) {
+            const values = monthKeys.map(m => stock[m]);
+
+            if (values.some(v => typeof v === 'number' && v < 0)) return 0;
+
+            const allAbove5 = values.every(v => typeof v === 'number' && v >= 5);
+            if (allAbove5) return 3;
+
+            let streak = 0;
+            for (const val of values) {
+                if (typeof val === 'number' && val >= 5) {
+                    streak++;
+                    if (streak >= 2) return 2;
+                } else {
+                    streak = 0;
+                }
+            }
+
+            return 1;
+        }
+
+        const sorted = mergedStocks
+            .filter(stock => monthKeys.some(m => typeof stock[m] === 'number'))
+            .sort((a, b) => getScoreForSort(b) - getScoreForSort(a));
+
+        return res.status(200).json(sorted);
+
+    } catch (err) {
+        console.error('Error in masterScreenController:', err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+};
+
+

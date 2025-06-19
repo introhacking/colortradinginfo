@@ -19,11 +19,11 @@ const MasterScreen = () => {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '13px 0',
-    // width: '80px',
+    width: '80px',
     height: "20px",
     marginTop: '7px',
     marginRight: 'auto',
-    marginLeft: '10px',
+    marginLeft: '40px',
     color: 'white',
     textAlign: 'center'
   }
@@ -53,8 +53,6 @@ const MasterScreen = () => {
     try {
       const serverResponse = await bankingService.getInfoFromServer('/master-screen')
       setRowData(serverResponse);
-      console.log(serverResponse)
-
       const today = new Date();
       const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
       const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
@@ -78,7 +76,7 @@ const MasterScreen = () => {
             return year * 12 + month;
           };
 
-          return parse(b) - parse(a); // Descending order
+          return parse(a) - parse(b); // Descending order
         })
         .map(key => ({
           headerName: key,
@@ -86,6 +84,7 @@ const MasterScreen = () => {
           sortable: true,
           filter: true,
           resizable: true,
+          maxWidth:145,
           cellRenderer: (params) => {
             return (params.value === null || params.value === undefined) ? '-' : params.value;
           },
@@ -127,7 +126,7 @@ const MasterScreen = () => {
   return (
     <div>
       <div className='flex justify-end mb-2 gap-2'>
-        <Button onClick={handleExportToExcel} children={'Export to CSV'} className={`${rowData.length > 0 ?  'button hover:bg-green-400 bg-green-500 text-white' : 'button bg-green-400 text-white hover:bg-green-400 cursor-not-allowed'}  `} />
+        <Button onClick={handleExportToExcel} children={'Export to CSV'} className={`${rowData.length > 0 ? 'button hover:bg-green-400 bg-green-500 text-white' : 'button bg-green-400 text-white hover:bg-green-400 cursor-not-allowed'}  `} />
       </div>
       {isLoading && <Loading msg='Loading... please wait' />}
       {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}

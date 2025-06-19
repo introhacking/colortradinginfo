@@ -1123,136 +1123,44 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
 const getDeliveryStats_AllCap = async (cap) => {
     const capKey = cap?.toUpperCase();
     try {
-        const data = await readerFileService.mergeCSVFile(capKey);
+        const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
 
-        function cleanKeyDynamic(key) {
-            return key
-                .replace(/<[^>]*>/g, '')        // Remove <br>, <span>, etc.
-                .replace(/%/g, 'Percent')       // Replace % with Percent
-                .replace(/[^a-zA-Z0-9 ]/g, '')  // Remove special chars except spaces
-                .trim()
-                .split(' ')
-                .map((word, index) =>
-                    index === 0
-                        ? word.toLowerCase()
-                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                )
-                .join('');
-        }
+        const { monthsHeader, newModifiedKeyRecord } = data
 
-        function cleanKeys(record) {
-            const cleaned = {};
-            for (const key in record) {
-                const newKey = cleanKeyDynamic(key);
-                cleaned[newKey || key] = record[key];
-            }
-            return cleaned;
-        }
+        function getScore(stock, monthKeys) {
+            let values = monthKeys.map(month => stock[month]);
 
-        function getWeight(percentageStr) {
-            if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
-                return 1;
-            }
+            if (values.some(v => typeof v === 'number' && v < 0)) return 0;
 
-            const percent = parseFloat(percentageStr);
-            if (isNaN(percent)) return 0;
+            // 1. Check if all values > 5
+            const allAbove5 = values.every(val => typeof val === 'number' && val > 4);
+            if (allAbove5) return 3;
 
-            if (percent < 0) {
-                const absPercent = Math.abs(percent);
-                if (absPercent > 100) return -6;
-                if (absPercent > 80) return -5;
-                if (absPercent > 60) return -4;
-                if (absPercent > 40) return -3;
-                if (absPercent > 20) return -2;
-                return -1;
-            }
-
-            if (percent > 100) return 6;
-            if (percent > 80) return 5;
-            if (percent > 60) return 4;
-            if (percent > 40) return 3;
-            if (percent > 20) return 2;
-            if (percent > 0) return 1;
-
-            return 0;
-        }
-
-        const monthsHeaderSet = new Set();
-        const stockMap = new Map();
-
-        data.data?.forEach((item) => {
-            const modifiedKey = cleanKeys(item);
-
-            Object.keys(modifiedKey).forEach((key) => {
-                const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
-                if (match) {
-                    const month = match[2];
-                    const year = match[3].slice(2);
-                    const label = `${month}-${year}`;
-                    monthsHeaderSet.add(label);
-                }
-            });
-
-            const keyName = modifiedKey.investedIn?.trim();
-            // const keyName = modifiedKey.nseCode?.trim();
-
-            if (keyName) {
-                const stockKey = keyName.toLowerCase();
-                const existing = stockMap.get(stockKey) || { stockName: keyName };
-
-                Object.keys(modifiedKey).forEach((key) => {
-                    const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
-                    if (match) {
-                        const month = match[2];
-                        const year = match[3].slice(2);
-                        const formattedMonth = `${month}${year}`;
-
-                        const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
-                        const numericWeight = typeof weight === 'number' ? weight : 0;
-
-                        const existingValue = existing[formattedMonth];
-                        if (existingValue === 'New') {
-                            existing[formattedMonth] = 'New';
-                        } else {
-                            existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
-                        }
-                    }
-                });
-
-                stockMap.set(stockKey, existing);
-            }
-        });
-
-        const monthsHeader = Array.from(monthsHeaderSet);
-        const allMonthKeys = monthsHeader.map(m => m.replace('-', ''));
-
-        for (const stock of stockMap.values()) {
-            for (const monthKey of allMonthKeys) {
-                if (!(monthKey in stock)) {
-                    stock[monthKey] = '-';
+            // 2. Check for at least 2 continuous values > 5
+            let streak = 0;
+            for (const val of values) {
+                if (typeof val === 'number' && val > 4) {
+                    streak += 1;
+                    if (streak >= 2) return 2;
+                } else {
+                    streak = 0;
                 }
             }
+
+            // 3. Others
+            return 1;
         }
 
-        // const filteredStocks = Array.from(stockMap.values()).filter(stock => {
-        //     const hasAllMonths = allMonthKeys.every(month => stock[month] !== '-');
-        //     const totalWeight = allMonthKeys.reduce((sum, month) => {
-        //         const val = stock[month];
-        //         return typeof val === 'number' ? sum + val : sum;
-        //     }, 0);
+        // Format month keys correctly: ['Apr25', 'May25', 'Mar25']
+        const monthKeys = monthsHeader.map(m => m.replace('-', ''));
 
-        //     return hasAllMonths && totalWeight > 5;
-        // });
+        // Apply filtering and sorting
+        const filteredStocks = newModifiedKeyRecord
+            .filter(stock => monthKeys.some(month => typeof stock[month] === 'number'))
+            .sort((a, b) => getScore(b, monthKeys) - getScore(a, monthKeys));
 
-        const filteredStocks = Array.from(stockMap.values()).filter(stock => {
-            // return monthsHeader.every(header => {    // Every condition is satified then return 
-            return monthsHeader.some(header => {
-                const key = header.replace('-', '');
-                const val = stock[key];
-                return typeof val === 'number' && val > 4;
-            });
-        });
 
+        // const filteredStocks = newModifiedKeyRecord
         return {
             status: 200,
             success: true,
@@ -2121,39 +2029,15 @@ const getCombineDeliveryStats_AllCapAndDaily_fourth = async () => {
     }
 };
 
-const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
+const getCombineDeliveryStats_AllCapAndDaily = async () => {
     try {
         const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
         const stockMaps = [];
         const monthsHeaderSet = new Set();
 
-        const capBasePath = path.join(__dirname, '../../uploads/scrubbing');
         const dailyPath = path.join(__dirname, '../../uploads/csvfilefolder');
 
-        function cleanKeyDynamic(key) {
-            return key
-                .replace(/<[^>]*>/g, '')
-                .replace(/%/g, 'Percent')
-                .replace(/[^a-zA-Z0-9 ]/g, '')
-                .trim()
-                .split(' ')
-                .map((word, index) =>
-                    index === 0
-                        ? word.toLowerCase()
-                        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                )
-                .join('');
-        }
-
-        function cleanKeys(record) {
-            const cleaned = {};
-            for (const key in record) {
-                const newKey = cleanKeyDynamic(key);
-                cleaned[newKey || key] = record[key];
-            }
-            return cleaned;
-        }
-
+        // Converts % change into weight
         function getWeight(percentageStr) {
             if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') return 1;
             const percent = parseFloat(percentageStr);
@@ -2179,69 +2063,56 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             return 0;
         }
 
-        // === Read cap data ===
+        // Read and normalize all caps files
         for (const cap of caps) {
-            const data = await readerFileService.mergeCSVFile(cap);
+            const { success, newModifiedKeyRecord, modifiedKeyRecord, monthsHeader } = await readerFileService.getMasterMergeCSVFileBasedUponCaps(cap);
+            if (!success) continue;
+
+            monthsHeader.forEach(m => monthsHeaderSet.add(m));
             const stockMap = new Map();
 
-            data.data?.forEach(item => {
-                const modifiedKey = cleanKeys(item);
+            modifiedKeyRecord?.forEach(modifiedKey => {
+                const keyName = modifiedKey.nseCode?.trim();
+                if (!keyName) return;
+
+                const stockKey = keyName.toLowerCase();
+                const existing = stockMap.get(stockKey) || { stockName: keyName };
+                // const existing = stockMap.get(stockKey) || { stockName: keyName, nseCode: keyName };
 
                 Object.keys(modifiedKey).forEach(key => {
                     const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
                     if (match) {
                         const month = match[2];
                         const year = match[3].slice(2);
-                        const label = `${month}-${year}`;
-                        monthsHeaderSet.add(label);
+                        const formattedMonth = `${month}${year}`;
+                        const percentStr = modifiedKey.monthChangeInSharesPercent || '';
+                        const weight = getWeight(percentStr);
+
+                        const existingValue = existing[formattedMonth];
+                        if (existingValue === 'New') {
+                            existing[formattedMonth] = 'New';
+                        } else {
+                            existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + weight;
+                        }
                     }
                 });
 
-                const keyName = modifiedKey.investedIn?.trim();
-                if (keyName) {
-                    const stockKey = keyName.toLowerCase();
-                    const existing = stockMap.get(stockKey) || { stockName: keyName };
-
-                    Object.keys(modifiedKey).forEach(key => {
-                        const match = key.match(/^valueAsOf(\d*)([A-Za-z]+)(\d{4})$/);
-                        if (match) {
-                            const month = match[2];
-                            const year = match[3].slice(2);
-                            const formattedMonth = `${month}${year}`;
-                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
-                            const numericWeight = typeof weight === 'number' ? weight : 0;
-
-                            const existingValue = existing[formattedMonth];
-                            if (existingValue === 'New') {
-                                existing[formattedMonth] = 'New';
-                            } else {
-                                existing[formattedMonth] = (typeof existingValue === 'number' ? existingValue : 0) + numericWeight;
-                            }
-                        }
-                    });
-
-                    stockMap.set(stockKey, existing);
-                }
+                stockMap.set(stockKey, existing);
             });
 
             stockMaps.push(stockMap);
         }
 
         const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
-
-        // === Find common stocks across all cap maps ===
         const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
-        const commonStocks = [...allStockNames[0]].filter(name =>
-            allStockNames.every(set => set.has(name))
-        );
+        const commonStocks = [...allStockNames[0]].filter(name => allStockNames.every(set => set.has(name)));
 
-        // === Merge cap data with weight filtering > 5 ===
         const filteredStocks = [];
 
         for (const stockKey of commonStocks) {
             const baseStock = stockMaps[0].get(stockKey);
             const mergedStock = { stockName: baseStock.stockName };
-
+            // const mergedStock = { stockName: baseStock.stockName, nseCode: baseStock.nseCode };
             let grandTotal = 0;
 
             for (const month of allMonthKeys) {
@@ -2255,20 +2126,19 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
                     }
                 }
 
-                if (totalWeight > 3) {
-                    mergedStock[month] = totalWeight;
-                    grandTotal += totalWeight;
-                } else {
-                    mergedStock[month] = null;
-                }
+                mergedStock[month] = totalWeight > 4 ? totalWeight : null;
+                if (totalWeight > 4) grandTotal += totalWeight;
             }
 
-            if (grandTotal > 3) {
-                filteredStocks.push(mergedStock);
-            }
+            if (grandTotal > 4) filteredStocks.push(mergedStock);
         }
 
-        // === Read Daily-Spurt Data ===
+        // Normalize utility
+        function normalizeSymbol(name) {
+            return name?.replace(/\s+/g, '').toUpperCase();
+        }
+
+        // CSV utilities
         async function readCSVFile(filePath) {
             return new Promise((resolve, reject) => {
                 const result = [];
@@ -2283,9 +2153,17 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
         }
 
         async function readCSVFolder(folderPath) {
-            const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.csv'));
-            let allData = [];
+            const files = fs.readdirSync(folderPath)
+                .filter(file => file.endsWith('.csv'))
+                .map(file => ({
+                    name: file,
+                    time: fs.statSync(path.join(folderPath, file)).mtime.getTime()
+                }))
+                .sort((a, b) => b.time - a.time)
+                .slice(0, 30)
+                .map(file => file.name);
 
+            let allData = [];
             for (const file of files) {
                 const filePath = path.join(folderPath, file);
                 const fileData = await readCSVFile(filePath);
@@ -2294,16 +2172,18 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             return allData;
         }
 
+        // Daily spurt analysis
         const dailyData = await readCSVFolder(dailyPath);
+        const filteredSymbols = new Set(filteredStocks.map(stock => normalizeSymbol(stock.stockName)));
+        // const filteredSymbols = new Set(filteredStocks.map(stock => normalizeSymbol(stock.nseCode)));
 
-        // === Calculate daily stats only for filtered stocks ===
-        const filteredSymbols = new Set(filteredStocks.map(stock => stock.stockName.toUpperCase()));
         const avgStats = {};
         const results = {};
         const symbolCount = {};
 
+        // First Pass: Average Calculation
         dailyData?.forEach(item => {
-            const symbol = item.SYMBOL?.trim()?.toUpperCase();
+            const symbol = normalizeSymbol(item.SYMBOL);
             if (!symbol || !filteredSymbols.has(symbol)) return;
 
             const deliv = Number(item.DELIV_QTY || 0);
@@ -2318,17 +2198,14 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             avgStats[symbol].count += 1;
         });
 
+        // Second Pass: Spike Identification
         dailyData?.forEach(item => {
-            const sym = item.SYMBOL?.trim()?.toUpperCase();
+            const sym = normalizeSymbol(item.SYMBOL);
             const deliv = Number(item.DELIV_QTY || 0);
             const trade = Number(item.TTL_TRD_QNTY || 0);
             const dateStr = item.DATE1 || '';
             const avg = avgStats[sym];
             if (!sym || !avg || avg.count < 5 || !filteredSymbols.has(sym)) return;
-
-            if (sym === 'Axis Bank Ltd') {
-                console.log(`Axis Bank Ltd: avgDeliv=${avgDeliv}, todayDeliv=${deliv}, delivPct=${delivPct}`);
-            }
 
             const avgDeliv = avg.deliv / avg.count;
             const avgTrade = avg.trade / avg.count;
@@ -2336,7 +2213,7 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
             const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
 
-            if (delivPct > 0 && tradePct > 0) {
+            if (delivPct > 70 && tradePct > 70) {
                 const formattedDate = new Date(dateStr);
                 const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()}`;
 
@@ -2352,7 +2229,6 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             }
         });
 
-        // === Final Filtering
         const dateAverages = {};
         for (const sym in results) {
             if (symbolCount[sym] >= 2) {
@@ -2360,20 +2236,57 @@ const getCombineDeliveryStats_AllCapAndDaily_fifth = async () => {
             }
         }
 
+        const availableSymbols = new Set(Object.keys(dateAverages));
+        const commonFilteredStocks = filteredStocks.filter(stock => availableSymbols.has(normalizeSymbol(stock.stockName)));
+        // const commonFilteredStocks = filteredStocks.filter(stock => availableSymbols.has(normalizeSymbol(stock.nseCode)));
+
+        // === Score logic
+        function getScore(stock, monthKeys) {
+            const values = monthKeys.map(month => stock[month]);
+
+            if (values.some(v => typeof v === 'number' && v < 0)) return 0;
+
+            const allAbove5 = values.every(val => typeof val === 'number' && val > 4);
+            if (allAbove5) return 3;
+
+            let streak = 0;
+            for (const val of values) {
+                if (typeof val === 'number' && val > 4) {
+                    streak++;
+                    if (streak >= 2) return 2;
+                } else {
+                    streak = 0;
+                }
+            }
+
+            return 1;
+        }
+
+        const finalStocks = commonFilteredStocks
+            .filter(stock => allMonthKeys.some(month => typeof stock[month] === 'number'))
+            .sort((a, b) => getScore(b, allMonthKeys) - getScore(a, allMonthKeys));
+
+        // Optional Query Param Filter
+        // const filterByCode = req.query.nseCode?.toUpperCase();
+        // let finalStocks = commonFilteredStocks;
+        // if (filterByCode) {
+        //     finalStocks = finalStocks.filter(stock => normalizeSymbol(stock.nseCode) === filterByCode);
+        // }
+
         return {
             status: 200,
             success: true,
             monthsHeader: Array.from(monthsHeaderSet),
-            stocks: filteredStocks,
+            stocks: finalStocks,
             dateAverages
         };
-
     } catch (err) {
         return { status: 500, success: false, message: err.message };
     }
 };
 
-const getCombineDeliveryStats_AllCapAndDaily = async () => {
+
+const getCombineDeliveryStats_AllCapAndDaily_hold = async () => {
     try {
         const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
         const stockMaps = [];
@@ -2487,7 +2400,7 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
         const allMonthKeys = Array.from(monthsHeaderSet).map(m => m.replace('-', ''));
 
         // === Find common stocks across all cap maps ===
-        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));        
+        const allStockNames = stockMaps.map(map => new Set([...map.keys()]));
         const commonStocks = [...allStockNames[0]].filter(name =>
             allStockNames.every(set => set.has(name))
         );

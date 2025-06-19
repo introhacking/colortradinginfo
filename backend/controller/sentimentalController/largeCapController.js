@@ -236,9 +236,9 @@ exports.getMergeCSVFileBasedUponCaps_isWorkingValid = async (req, resp) => {
     }
 };
 
-exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
+exports.getMergeCSVFileBasedUponCaps_first = async (req, resp) => {
     const { cap } = req.query;
-    const capKey = cap?.toUpperCase();
+    const capKey = cap?.toUpperCase()
 
     if (!capKey) {
         return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
@@ -252,6 +252,70 @@ exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
         console.log(err)
     }
 }
+
+exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
+    const { cap } = req.query;
+    const capKey = cap?.toUpperCase();
+
+    if (!capKey) {
+        return resp.status(400).json({ success: false, message: 'Missing or invalid "cap" query parameter' });
+    }
+
+    try {
+        const result = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
+
+        if (!result || !result.success) {
+            return resp.status(500).json({ success: false, message: 'Error fetching data.' });
+        }
+
+        const { newModifiedKeyRecord, monthsHeader } = result;
+        const monthKeys = monthsHeader.map(m => m.replace('-', ''));
+
+        function getScore(stock) {
+            const values = monthKeys.map(month => stock[month]);
+
+            if (values.some(v => typeof v === 'number' && v < 0)) {
+                return { score: 0, label: 'Invalid' };
+            }
+
+            const allAbove4 = values.every(v => typeof v === 'number' && v > 4);
+            if (allAbove4) return { score: 3, label: 'Strong' };
+
+            let streak = 0;
+            for (const val of values) {
+                if (typeof val === 'number' && val > 4) {
+                    streak++;
+                    if (streak >= 2) return { score: 2, label: 'Moderate' };
+                } else {
+                    streak = 0;
+                }
+            }
+
+            return { score: 1, label: 'Weak' };
+        }
+
+        const data = newModifiedKeyRecord
+            // ✅ Step 1: Filter stocks where at least one month value > 3
+            .filter(stock => monthKeys.some(month => typeof stock[month] === 'number' && stock[month] > 3))
+            // ✅ Step 2: Assign score & label
+            .map(stock => {
+                const { score, label } = getScore(stock);
+                return { ...stock, score, label };
+            })
+            // ✅ Step 3: Sort by score descending
+            .sort((a, b) => b.score - a.score);
+
+        return resp.status(200).json({
+            success: true,
+            monthsHeader,
+            response: data
+        });
+
+    } catch (err) {
+        console.error(err);
+        return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
+    }
+};
 
 
 

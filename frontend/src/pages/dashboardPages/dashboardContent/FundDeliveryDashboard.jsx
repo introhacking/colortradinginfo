@@ -38,13 +38,27 @@ const FundDeliveryDashboard = () => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '13px 0',
-        // width: '80px',
+        width: '80px',
         height: "20px",
         marginTop: '7px',
         marginRight: 'auto',
+        marginLeft: '40px',
+        color: 'white',
+        textAlign: 'center',
+    }
+
+
+    const customCellStyles = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '13px 0',
+        height: "20px",
+        marginTop: '7px',
+        marginRight: '10px',
         marginLeft: '10px',
         color: 'white',
-        textAlign: 'center'
+        textAlign: 'center',
     }
 
     const getCellStyle = params => {
@@ -54,8 +68,7 @@ const FundDeliveryDashboard = () => {
             return { backgroundColor: 'black', fontStyle: 'italic', ...customCellStyle }; // style for missing data
         }
         const numValue = Number(value);
-        if (numValue === -2) return { backgroundColor: 'red', ...customCellStyle };
-        if (numValue === -1) return { backgroundColor: 'lightgray', ...customCellStyle };
+        if (numValue <= -1) return { backgroundColor: 'red', ...customCellStyle };
         if (numValue === 0) return { backgroundColor: '#9056a9', ...customCellStyle };
         if (numValue === 1) return { backgroundColor: 'lightblue', ...customCellStyle };
         if (numValue === 2) return { backgroundColor: 'gray', ...customCellStyle };
@@ -68,8 +81,8 @@ const FundDeliveryDashboard = () => {
 
     const getCellStyles = (params) => {
         const value = parseFloat(params.value?.replace('%', '') || '0');
-        if (value > 800) return { backgroundColor: 'green', ...customCellStyle }; // green
-        if (value > 250) return { backgroundColor: 'lightgreen', ...customCellStyle }; // yellow
+        if (value > 800) return { backgroundColor: 'green', ...customCellStyles }; // green
+        if (value > 250) return { backgroundColor: 'lightgreen', ...customCellStyles }; // yellow
         return null;
     };
 
@@ -86,7 +99,7 @@ const FundDeliveryDashboard = () => {
             if (to_date) queryParams.to_date = to_date;
 
             const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/fetch-data', queryParams);
-            console.log(serverResponse);
+            // console.log(serverResponse);
 
             if (type === 'large-cap' || type === 'mid-cap' || type === 'small-cap') {
                 setRowData(serverResponse.data?.stocks);
@@ -94,7 +107,7 @@ const FundDeliveryDashboard = () => {
                 const today = new Date();
                 const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
                 const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
-                const currentHeader = `${currentMonth}${currentYear}`;
+                const currentHeader = `${currentMonth}${currentYear} `;
 
                 const dynamicColumns = Object.keys(serverResponse.data?.stocks[0])
                     .sort((a, b) => {
@@ -114,7 +127,7 @@ const FundDeliveryDashboard = () => {
                             return year * 12 + month;
                         };
 
-                        return parse(b) - parse(a); // Descending order
+                        return parse(a) - parse(b); // Descending order
                     })
                     .map(key => ({
                         headerName: key,
@@ -122,6 +135,14 @@ const FundDeliveryDashboard = () => {
                         sortable: true,
                         filter: true,
                         resizable: true,
+                        maxWidth: 150,
+                        valueFormatter: (params) => {
+                            const value = params.value;
+                            if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                                return 'New';
+                            }
+                            return value; // fallback
+                        },
                         cellRenderer: (params) => {
                             return (params.value === null || params.value === undefined) ? '-' : params.value;
                         },
@@ -129,7 +150,7 @@ const FundDeliveryDashboard = () => {
                     }));
                 setColumnDefs([...dynamicColumns]);
 
-                console.log(dynamicColumns)
+                // console.log(dynamicColumns)
 
                 // Extract chart labels
                 const dates = serverResponse.data?.monthsHeader || [];
@@ -162,7 +183,7 @@ const FundDeliveryDashboard = () => {
                     for (const [date, stats] of Object.entries(dateEntries)) {
                         allDates.add(date);
 
-                        row[`deliv_${date}`] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
+                        row[`deliv_${date} `] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
                         row[`ttd_${date}`] = `${stats.TTL_TRD_QNTY_avg} / ${stats.TTL_TRD_QNTY_percent}`;
                     }
                     return row;
@@ -314,7 +335,7 @@ const FundDeliveryDashboard = () => {
                         if (a === currentKey) return -1;
                         if (b === currentKey) return 1;
 
-                        return getMonthValue(b) - getMonthValue(a); // Descending order
+                        return getMonthValue(a) - getMonthValue(b); // Descending order
                     })
                     .map(key => ({
                         headerName: key.toUpperCase(),
@@ -322,6 +343,7 @@ const FundDeliveryDashboard = () => {
                         sortable: true,
                         filter: true,
                         resizable: true,
+                        maxWidth: 140,
                         // pinned: 'left',
                         cellRenderer: (params) => {
                             return (params.value === null || params.value === undefined) ? '-' : params.value;

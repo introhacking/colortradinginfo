@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import LargeCapStock from './capStock/LargeCapStock';
 import MidCapStock from './capStock/MidCapStock';
 import SmallCapStock from './capStock/SmallCapStock';
+import MasterScreen from '../../dashboardPages/masterScreenCAPS/MasterScreen';
 
 const Sentimental = () => {
     const [activeTab, setActiveTab] = useState('tab1');
@@ -9,6 +10,7 @@ const Sentimental = () => {
         { id: 'tab1', title: 'Large Cap', content: <LargeCapStock /> },
         { id: 'tab2', title: 'Mid Cap', content: <MidCapStock /> },
         { id: 'tab3', title: 'Small Cap', content: <SmallCapStock /> },
+        { id: 'tab4', title: 'Master Screen', content: <MasterScreen /> },
 
     ];
     return (

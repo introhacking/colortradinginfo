@@ -45,17 +45,21 @@ const FromURL_Info_Modal2 = ({ isOpen, onClose, fetchFileLists }) => {
             try {
                 const serverResponse = await bankingService.fetchCSV2('/csv/fetch-url-data', result);
                 fetchFileLists()
-                toast.success(`Data successfully fetched for`);
 
                 if (serverResponse.errors.length > 0) {
                     for (let err of serverResponse.errors) {
-                        toast.error(err.error)
+                        return toast.error(err.error)
                     }
                 }
-                console.log(serverResponse)
+                if (serverResponse.data.length > 0) {
+                    for (let data of serverResponse.data) {
+                        return toast.success(`Data successfully fetched for ${data.date}`);
+                    }
+                }
+                // console.log(serverResponse)
 
             } catch (err) {
-                console.error(`Error fetching CSV for`, error);
+                // console.error(`Error fetching CSV for`, error);
                 setError(`Error fetching CSV data for`);
             }
 

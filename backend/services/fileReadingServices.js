@@ -394,7 +394,7 @@ const readerFileService = {
     getMasterMergeCSVFileBasedUponCaps: async (cap) => {
         const capKey = cap?.toUpperCase();
         try {
-            const data = await readerFileService.mergeCSVFile(capKey);
+            const { data } = await readerFileService.mergeCSVFile(capKey);
 
             function cleanKeyDynamic(key) {
                 return key
@@ -431,7 +431,6 @@ const readerFileService = {
                 const percent = parseFloat(percentageStr);
                 if (isNaN(percent)) return 0;
 
-                // Handle negative values
                 if (percent < 0) {
                     const absPercent = Math.abs(percent);
                     if (absPercent > 100) return -6;
@@ -439,10 +438,9 @@ const readerFileService = {
                     if (absPercent > 60) return -4;
                     if (absPercent > 40) return -3;
                     if (absPercent > 20) return -2;
-                    return -1; // absPercent <= 20
+                    return -1;
                 }
 
-                // Positive ranges
                 if (percent > 100) return 6;
                 if (percent > 80) return 5;
                 if (percent > 60) return 4;
@@ -450,8 +448,39 @@ const readerFileService = {
                 if (percent > 20) return 2;
                 if (percent > 0) return 1;
 
-                return 0; // 0 or invalid
+                return 0;
             }
+
+
+            // function getWeight(percentageStr) {
+            //     if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
+            //         return 1;
+            //     }
+
+            //     const percent = parseFloat(percentageStr);
+            //     if (isNaN(percent)) return 0;
+
+            //     // Handle negative values
+            //     if (percent < 0) {
+            //         const absPercent = Math.abs(percent);
+            //         if (absPercent > 100) return -6;
+            //         if (absPercent > 80) return -5;
+            //         if (absPercent > 60) return -4;
+            //         if (absPercent > 40) return -3;
+            //         if (absPercent > 20) return -2;
+            //         return -1; // absPercent <= 20
+            //     }
+
+            //     // Positive ranges
+            //     if (percent > 100) return 6;
+            //     if (percent > 80) return 5;
+            //     if (percent > 60) return 4;
+            //     if (percent > 40) return 3;
+            //     if (percent > 20) return 2;
+            //     if (percent > 0) return 1;
+
+            //     return 0; // 0 or invalid
+            // }
 
 
             // function getWeight(percentageStr) {
@@ -482,7 +511,7 @@ const readerFileService = {
             const monthsHeaderSet = new Set();
             const stockMap = new Map();
 
-            data.data?.forEach((item, index) => {
+            data?.forEach((item, index) => {
                 const modifiedKey = cleanKeys(item);
                 modifiedKeyRecord.push(modifiedKey);
 
@@ -512,6 +541,9 @@ const readerFileService = {
                             const formattedMonth = `${month}${year}`;
 
                             const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+                            // const dynamicPercentKey = `monthChangeInSharesPercent${month}${year}`;
+                            // const weight = getWeight(modifiedKey[dynamicPercentKey] ?? modifiedKey.monthChangeInSharesPercent);
+
 
                             if (weight === 'New') {
                                 existing[formattedMonth] = 'New';

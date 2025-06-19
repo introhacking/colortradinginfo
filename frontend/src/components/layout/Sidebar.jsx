@@ -106,7 +106,7 @@ const Sidebar = () => {
               </ul>
             )}
           </li>
-          <li className="p-2 hover:bg-gray-700">
+          {/* <li className="p-2 hover:bg-gray-700">
             <NavLink to="/dashboard/delivery" className={({ isActive }) =>
               `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
             }>
@@ -114,7 +114,7 @@ const Sidebar = () => {
                 className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
               >Delivery</button>
             </NavLink>
-          </li>
+          </li> */}
           <li className="p-2 hover:bg-gray-700">
             <NavLink to="/dashboard/sectorial" className={({ isActive }) =>
               `block hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
@@ -125,21 +125,21 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/fromdate" className={({ isActive }) =>
+            <NavLink to="/dashboard/fii-data" className={({ isActive }) =>
               `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
             }>
               <button
                 className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >From Date Choose</button>
+              >Fetch FII data</button>
             </NavLink>
           </li>
           <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/fromurl" className={({ isActive }) =>
+            <NavLink to="/dashboard/daily-spurt" className={({ isActive }) =>
               `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
             }>
               <button
                 className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >From URL</button>
+              >Fetch Daily Stocks Data</button>
             </NavLink>
           </li>
           <li className="p-2 hover:bg-gray-700">
@@ -148,10 +148,10 @@ const Sidebar = () => {
             }>
               <button
                 className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Upload</button>
+              >Upload Videos</button>
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
+          {/* <li className="p-2 hover:bg-gray-700">
             <NavLink to="/dashboard/master-screen" className={({ isActive }) =>
               `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
             }>
@@ -159,7 +159,7 @@ const Sidebar = () => {
                 className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
               >Master Screen</button>
             </NavLink>
-          </li>
+          </li> */}
         </ul>
       </nav>
     </div>

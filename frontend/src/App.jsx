@@ -120,12 +120,12 @@ function App() {
               <Route path="sentimental/mid-cap" element={<ErrorBoundary><MidCapTable /></ErrorBoundary>} />
               <Route path="sentimental/small-cap" element={<ErrorBoundary><SmallCapTable /></ErrorBoundary>} />
               <Route path="technical/banking" element={<ErrorBoundary><TechnicalBankingTable /></ErrorBoundary>} />
-              <Route path="delivery" element={<ErrorBoundary><DeliveryTable /></ErrorBoundary>} />
+              {/* <Route path="delivery" element={<ErrorBoundary><DeliveryTable /></ErrorBoundary>} /> */}
               <Route path="sectorial" element={<ErrorBoundary><SectorialTable /></ErrorBoundary>} />
-              <Route path="fromdate" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
+              <Route path="fii-data" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
               <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
-              <Route path="fromurl" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
-              <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} />
+              <Route path="daily-spurt" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
+              {/* <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} /> */}
               <Route path="*" element={<ErrorPageComponent />} />
             </Route>
           </Route>
