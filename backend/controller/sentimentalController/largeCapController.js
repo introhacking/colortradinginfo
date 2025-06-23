@@ -269,46 +269,44 @@ exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
         }
 
         const { newModifiedKeyRecord, monthsHeader } = result;
-        const monthKeys = monthsHeader.map(m => m.replace('-', ''));
 
-        function getScore(stock) {
-            const values = monthKeys.map(month => stock[month]);
 
-            if (values.some(v => typeof v === 'number' && v < 0)) {
-                return { score: 0, label: 'Invalid' };
-            }
+        function getScore(stock, monthKeys) {
+            let values = monthKeys.map(month => stock[month]);
 
-            const allAbove4 = values.every(v => typeof v === 'number' && v > 4);
-            if (allAbove4) return { score: 3, label: 'Strong' };
+            if (values.some(v => typeof v === 'number' && v < 0)) return 0;
 
+            // 1. Check if all values > 5
+            const allAbove5 = values.every(val => typeof val === 'number' && val > 4);
+            if (allAbove5) return 3;
+
+            // 2. Check for at least 2 continuous values > 5
             let streak = 0;
             for (const val of values) {
                 if (typeof val === 'number' && val > 4) {
-                    streak++;
-                    if (streak >= 2) return { score: 2, label: 'Moderate' };
+                    streak += 1;
+                    if (streak >= 2) return 2;
                 } else {
                     streak = 0;
                 }
             }
 
-            return { score: 1, label: 'Weak' };
+            // 3. Others
+            return 1;
         }
 
-        const data = newModifiedKeyRecord
-            // ✅ Step 1: Filter stocks where at least one month value > 3
-            .filter(stock => monthKeys.some(month => typeof stock[month] === 'number' && stock[month] > 3))
-            // ✅ Step 2: Assign score & label
-            .map(stock => {
-                const { score, label } = getScore(stock);
-                return { ...stock, score, label };
-            })
-            // ✅ Step 3: Sort by score descending
-            .sort((a, b) => b.score - a.score);
+        // Format month keys correctly: ['Apr25', 'May25', 'Mar25']
+        const monthKeys = monthsHeader.map(m => m.replace('-', ''));
+
+        // Apply filtering and sorting
+        const filteredStocks = newModifiedKeyRecord
+            .filter(stock => monthKeys.some(month => typeof stock[month] === 'number'))
+            .sort((a, b) => getScore(b, monthKeys) - getScore(a, monthKeys));
 
         return resp.status(200).json({
             success: true,
             monthsHeader,
-            response: data
+            response: filteredStocks
         });
 
     } catch (err) {

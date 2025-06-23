@@ -216,12 +216,12 @@ const MidCapTable = () => {
                 setError(serverResponseData.message);
             }
 
-            if (serverResponseData?.newModifiedKeyRecord.length > 0) {
-                setRowData(serverResponseData.newModifiedKeyRecord)
+            if (serverResponseData?.length > 0) {
+                setRowData(serverResponseData)
             }
             const dynamicCols = []
-            if (serverResponseData.monthsHeader.length > 0) {
-                const monthlyChildren = serverResponseData.monthsHeader.map((month) => ({
+            if (serverResponse.monthsHeader.length > 0) {
+                const monthlyChildren = serverResponse.monthsHeader.map((month) => ({
                     headerName: month,
                     field: month.replace(/-/g, ''),
                     sortable: true,
