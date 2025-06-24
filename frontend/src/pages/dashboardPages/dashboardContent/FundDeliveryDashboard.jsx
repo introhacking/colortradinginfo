@@ -53,6 +53,7 @@ const FundDeliveryDashboard = () => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '13px 0',
+        width: '170px',
         height: "20px",
         marginTop: '7px',
         marginRight: '10px',

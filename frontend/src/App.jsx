@@ -33,6 +33,7 @@ import ProtectedRoutes from './pages/dashboardPages/ProtectedRoutes';
 import DeliveryDashboard from './pages/dashboardPages/dashboardContent/DeliveryDashboard';
 import FundDeliveryDashboard from './pages/dashboardPages/dashboardContent/FundDeliveryDashboard';
 import MasterScreen from './pages/dashboardPages/masterScreenCAPS/MasterScreen';
+import StockPriceChecker from './pages/dashboardPages/stockPriceChecker/StockPriceChecker';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -125,6 +126,7 @@ function App() {
               <Route path="fii-data" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
               <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
               <Route path="daily-spurt" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
+              <Route path="stock-price-checker" element={<ErrorBoundary><StockPriceChecker /></ErrorBoundary>} />
               {/* <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} /> */}
               <Route path="*" element={<ErrorPageComponent />} />
             </Route>

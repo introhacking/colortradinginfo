@@ -526,7 +526,8 @@ const readerFileService = {
                     }
                 });
 
-                const keyName = modifiedKey.investedIn?.trim();
+                // const keyName = modifiedKey.investedIn?.trim();
+                const keyName = modifiedKey.nseCode?.trim();
 
                 if (keyName) {
                     const stockKey = keyName.toLowerCase();

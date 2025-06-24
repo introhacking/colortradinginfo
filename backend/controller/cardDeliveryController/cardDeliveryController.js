@@ -1125,7 +1125,7 @@ const getDeliveryStats_AllCap = async (cap) => {
     try {
         const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
 
-        const { monthsHeader, newModifiedKeyRecord } = data
+        const { monthsHeader, modifiedKeyRecord, newModifiedKeyRecord } = data
 
         function getScore(stock, monthKeys) {
             let values = monthKeys.map(month => stock[month]);
@@ -1151,13 +1151,40 @@ const getDeliveryStats_AllCap = async (cap) => {
             return 1;
         }
 
-        // Format month keys correctly: ['Apr25', 'May25', 'Mar25']
-        const monthKeys = monthsHeader.map(m => m.replace('-', ''));
 
-        // Apply filtering and sorting
+        // // Apply filtering and sorting
+        // const filteredStocks = newModifiedKeyRecord
+        //     .filter(stock => monthKeys.some(month => typeof stock[month] === 'number'))
+        //     .sort((a, b) => getScore(b, monthKeys) - getScore(a, monthKeys));
+
+        function monthStringToDate(str) {
+            const monthMap = {
+                Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+                Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+            };
+
+            const match = str.match(/^([A-Za-z]{3})(\d{2})$/);
+            if (!match) return new Date(0);
+
+            const [_, monStr, yearStr] = match;
+            const month = monthMap[monStr];
+            const year = 2000 + parseInt(yearStr); // Assumes year like 25 → 2025
+            return new Date(year, month);
+        }
+
+
+        // Format month keys correctly: ['Apr25', 'May25', 'Mar25']
+        const monthKeys = monthsHeader.map(m => m.replace('-', '')).sort((a, b) => monthStringToDate(a) - monthStringToDate(b));
+
+
+        // ✅ Filter stocks with any month's weight > 5
+        const latestMonthKey = monthKeys[monthKeys.length - 1]; // May25
+
         const filteredStocks = newModifiedKeyRecord
-            .filter(stock => monthKeys.some(month => typeof stock[month] === 'number'))
+            .filter(stock => typeof stock[latestMonthKey] === 'number' && stock[latestMonthKey] > 5)
             .sort((a, b) => getScore(b, monthKeys) - getScore(a, monthKeys));
+
+
 
 
         // const filteredStocks = newModifiedKeyRecord
@@ -1174,7 +1201,7 @@ const getDeliveryStats_AllCap = async (cap) => {
 }
 
 
-const caps = ['largecap', 'midcap', 'smallcap'];
+// const caps = ['largecap', 'midcap', 'smallcap'];
 
 const getCombineDeliveryStats_AllCaps = async () => {
     try {

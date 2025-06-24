@@ -60,16 +60,84 @@ const MasterScreen = () => {
     return null; // no style
   }
 
+  // const getCellStyles = (params) => {
+  //   const cs_value = parseFloat(params.value?.replace('%', '') || '0');
+  //   const value = params.value;
+  //   console.log(value)
+  //   if (value === '-' || value === '' || value == null) {
+  //     return { backgroundColor: 'black', fontStyle: 'italic', ...customCellStyle }; // style for missing data
+  //   }
+  //   if (cs_value > 800) return { backgroundColor: 'green', ...customCellStyles }; // green
+  //   if (cs_value > 250) return { backgroundColor: 'lightgreen', ...customCellStyles }; // yellow
+  //   return null;
+  // };
+
+
   const getCellStyles = (params) => {
-    const cs_value = parseFloat(params.value?.replace('%', '') || '0');
     const value = params.value;
+
     if (value === '-' || value === '' || value == null) {
-      return { backgroundColor: 'black', fontStyle: 'italic', ...customCellStyle }; // style for missing data
+      return {
+        backgroundColor: 'black',
+        color: 'white',
+        fontStyle: 'italic',
+        ...customCellStyle
+      };
     }
-    if (cs_value > 800) return { backgroundColor: 'green', ...customCellStyles }; // green
-    if (cs_value > 250) return { backgroundColor: 'lightgreen', ...customCellStyles }; // yellow
-    return null;
+
+    // Extract % value from format like: "874563 / -72.24%"
+    const percentMatch = value.match(/([-+]?[0-9]*\.?[0-9]+)%/);
+    const percentValue = percentMatch ? parseFloat(percentMatch[1]) : null;
+
+    if (percentValue === null || isNaN(percentValue)) {
+      return {
+        backgroundColor: 'black',
+        color: 'white',
+        fontStyle: 'italic',
+        ...customCellStyle
+      };
+    }
+
+    // ✅ Style conditions
+    if (percentValue > 80) {
+      return {
+        backgroundColor: 'green',
+        color: 'white',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue > 50) {
+      return {
+        backgroundColor: 'lightgreen',
+        color: 'black',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue >= 0) {
+      return {
+        backgroundColor: 'orange',
+        color: 'black',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue < 0) {
+      return {
+        backgroundColor: 'red',
+        color: 'white',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    return null; // default style
   };
+
+
 
   const getCapMergeFile_first = async () => {
     setIsLoading(true);

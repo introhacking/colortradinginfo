@@ -29,6 +29,7 @@
     "papaparse": "^5.5.2",
     "puppeteer": "^24.6.1",
     "socket.io": "^4.8.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "yahoo-finance2": "^2.13.3"
   }
 }

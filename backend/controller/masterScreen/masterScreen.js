@@ -361,11 +361,11 @@ exports.masterScreenController = async (req, res) => {
                     }
                 }
 
-                mergedStock[month] = totalWeight > 4 ? totalWeight : null;
-                if (totalWeight > 4) grandTotal += totalWeight;
+                mergedStock[month] = totalWeight ? totalWeight : null;
+                if (totalWeight) grandTotal += totalWeight;
             }
 
-            if (grandTotal > 4) filteredStocks.push(mergedStock);
+            if (grandTotal) filteredStocks.push(mergedStock);
         }
 
         // === Normalize
@@ -443,7 +443,8 @@ exports.masterScreenController = async (req, res) => {
             const delivPct = avgDeliv > 0 ? ((deliv - avgDeliv) / avgDeliv) * 100 : 0;
             const tradePct = avgTrade > 0 ? ((trade - avgTrade) / avgTrade) * 100 : 0;
 
-            if (delivPct > 70 && tradePct > 70) {
+            // if (delivPct > 70 && tradePct > 70) {
+            if (delivPct && tradePct) {
                 const formattedDate = new Date(dateStr);
                 const dateKey = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()}`;
 

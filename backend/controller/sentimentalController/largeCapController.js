@@ -268,7 +268,7 @@ exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
             return resp.status(500).json({ success: false, message: 'Error fetching data.' });
         }
 
-        const { newModifiedKeyRecord, monthsHeader } = result;
+        const { newModifiedKeyRecord, modifiedKeyRecord , monthsHeader } = result;
 
 
         function getScore(stock, monthKeys) {

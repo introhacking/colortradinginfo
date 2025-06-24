@@ -9,7 +9,7 @@ class ErrorBoundary extends React.Component {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
-  
+
   static getDerivedStateFromError(error) {
     // this.navigate = useNavigate()
     // Update state so the next render shows fallback UI.
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
   }
-
+  
   render() {
     if (this.state.hasError) {
       return (
@@ -35,7 +35,7 @@ class ErrorBoundary extends React.Component {
               </details>
             </div>
             <div className='my-6'>
-              <Button children={'Reload'} className={'button background-gradient text-white'} type={'button'}/>
+              <Button onClick={()=>window.reload} children={'Reload'} className={'button background-gradient text-white'} type={'button'} />
             </div>
           </div>
 

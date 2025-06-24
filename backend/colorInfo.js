@@ -143,6 +143,10 @@ app.use('/api/v1', loginRoute)
 const masterRoute = require('./router/masterScreenRouter/masterRouter');
 app.use('/api/v1', masterRoute)
 
+// [ GOOGLE FINANCE ]
+const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
+app.use('/api/v1', googleFinanceRoute)
+
 
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {
