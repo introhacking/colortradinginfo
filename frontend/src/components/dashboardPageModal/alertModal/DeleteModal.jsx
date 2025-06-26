@@ -7,8 +7,7 @@ import { toast } from 'sonner'
 
 const DeleteModal = ({ isOpen, onClose, isDeletingId }) => {
     if (!isOpen) return null;
-    const { _id, stockName , deletingPath } = isDeletingId
-    // console.log(isDeletingId)
+    const { _id, stockName, deletingPath } = isDeletingId
 
     const deleteTableRowsData = async () => {
         try {

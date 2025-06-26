@@ -34,6 +34,7 @@ import DeliveryDashboard from './pages/dashboardPages/dashboardContent/DeliveryD
 import FundDeliveryDashboard from './pages/dashboardPages/dashboardContent/FundDeliveryDashboard';
 import MasterScreen from './pages/dashboardPages/masterScreenCAPS/MasterScreen';
 import StockPriceChecker from './pages/dashboardPages/stockPriceChecker/StockPriceChecker';
+import LiveData from './pages/dashboardPages/liveData/LiveData';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -72,17 +73,23 @@ function App() {
             <Route index={true} path="/" element={<Home />} />
             <Route path="user-dashboard" element={
               <div className='py-8 px-6 h-[85vh]'>
-              {/* <DeliveryDashboard /> */}
-              <FundDeliveryDashboard/>
+                {/* <DeliveryDashboard /> */}
+                <FundDeliveryDashboard />
               </div>
-              } />
+            } />
             <Route path="fundamentals" element={<Fundamentals />} />
             <Route path="sentimental" element={<Sentimental />} />
             {/* <Route path="technical" element={<TechnicalUI />} /> */}
             {/* <Route path="delivery" element={<DeliveryMain />} /> */}
             {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
             <Route path="daily-spurts" element={<DailyIOMain />} />
+            <Route path="live-data" element={
+              <div className='p-4 h-[70vh]'>
+                <LiveData />
+              </div>
+            } />
             <Route path="video" element={<VideoDelivery />} />
+            <Route path="*" element={<ErrorPageComponent />} />
           </Route>
 
 

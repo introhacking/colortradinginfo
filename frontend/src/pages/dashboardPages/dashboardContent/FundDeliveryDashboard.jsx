@@ -203,28 +203,33 @@ const FundDeliveryDashboard = () => {
                 const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
                 const currentHeader = `${currentMonth}${currentYear}`;
 
-                const dateColumns = Array.from(allDates)
-                    .map(date => ({
-                        headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
-                        marryChildren: true,
-                        headerClass: 'cs_ag-center-header',
-                        children: [
-                            {
-                                field: `deliv_${date}`,
-                                headerName: 'Deliv Avg / Deliv %',
-                                tooltipField: `deliv_${date}`,
-                                filter: true,
-                                cellStyle: params => getCellStyles(params)
-                            },
-                            {
-                                field: `ttd_${date}`,
-                                headerName: 'TTD Avg / TTD %',
-                                tooltipField: `ttd_${date}`,
-                                filter: true,
-                                cellStyle: params => getCellStyles(params)
-                            }
-                        ]
-                    }));
+                const dateColumns = Array.from(allDates).sort((a, b) => {
+                    const [dayA, monthA, yearA] = a.split('/').map(Number);
+                    const [dayB, monthB, yearB] = b.split('/').map(Number);
+                    const dateObjA = new Date(yearA, monthA - 1, dayA);
+                    const dateObjB = new Date(yearB, monthB - 1, dayB);
+                    return dateObjB - dateObjA;
+                }).map(date => ({
+                    headerName: `Date: ${formatDateToHeader(date)}`, // e.g., "Date: 10/Jun/25"
+                    marryChildren: true,
+                    headerClass: 'cs_ag-center-header',
+                    children: [
+                        {
+                            field: `deliv_${date}`,
+                            headerName: 'Deliv Avg / Deliv %',
+                            tooltipField: `deliv_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params)
+                        },
+                        {
+                            field: `ttd_${date}`,
+                            headerName: 'TTD Avg / TTD %',
+                            tooltipField: `ttd_${date}`,
+                            filter: true,
+                            cellStyle: params => getCellStyles(params)
+                        }
+                    ]
+                }));
 
                 const columns = [
                     { field: 'symbol', headerName: 'Symbol', pinned: 'left', filter: true },

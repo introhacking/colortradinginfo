@@ -37,6 +37,7 @@ const Header = () => {
                                 {/* <Link className="mr-5 hover:text-gray-900" to='/delivery'>Delivery</Link> */}
                                 {/* <Link className="mr-5 hover:text-gray-900" to='/sectorial'>Sectorial</Link> */}
                                 <Link className="mr-5 hover:text-gray-900" to='/daily-spurts'>Daily Spurts</Link>
+                                <Link className="mr-5 hover:text-gray-900" to='/live-data'>Live Data</Link>
                                 <Link className="mr-5 hover:text-gray-900" to='/video'>Video</Link>
                             </>
                         )

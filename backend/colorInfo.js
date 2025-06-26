@@ -145,6 +145,7 @@ app.use('/api/v1', masterRoute)
 
 // [ GOOGLE FINANCE ]
 const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
+const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
 app.use('/api/v1', googleFinanceRoute)
 
 
@@ -172,4 +173,10 @@ server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
     setTimeout(() => {
     }, 1500);
+
+    // Push updates every 60 seconds
+    setInterval(async () => {
+        const data = await fetchAndSortLiveNSEData();
+        io.emit('liveStockData', data);
+    }, 60000);
 });

@@ -1119,9 +1119,15 @@ const getDeliveryStats_DailySpurtsData = async (to_date) => {
 };
 
 
+const cache = new Map();
 
 const getDeliveryStats_AllCap = async (cap) => {
+
     const capKey = cap?.toUpperCase();
+
+    if (cache.has(capKey)) {
+        return cache.get(capKey);
+    }
     try {
         const data = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
 
@@ -1188,12 +1194,16 @@ const getDeliveryStats_AllCap = async (cap) => {
 
 
         // const filteredStocks = newModifiedKeyRecord
-        return {
+
+        const result = {
             status: 200,
             success: true,
             monthsHeader,
             stocks: filteredStocks
         };
+
+        cache.set(capKey, result);
+        return result
 
     } catch (err) {
         return err;
@@ -2059,6 +2069,11 @@ const getCombineDeliveryStats_AllCapAndDaily_fourth = async () => {
 const getCombineDeliveryStats_AllCapAndDaily = async () => {
     try {
         const caps = ['LARGECAP', 'MIDCAP', 'SMALLCAP'];
+
+        if (cache.has('combineCaps_Daily')) {
+            return cache.get('combineCaps_Daily');
+        }
+
         const stockMaps = [];
         const monthsHeaderSet = new Set();
 
@@ -2300,13 +2315,17 @@ const getCombineDeliveryStats_AllCapAndDaily = async () => {
         //     finalStocks = finalStocks.filter(stock => normalizeSymbol(stock.nseCode) === filterByCode);
         // }
 
-        return {
+        const result = {
             status: 200,
             success: true,
             monthsHeader: Array.from(monthsHeaderSet),
             stocks: finalStocks,
             dateAverages
         };
+
+        cache.set('combineCaps_Daily', result);        
+        return result
+
     } catch (err) {
         return { status: 500, success: false, message: err.message };
     }

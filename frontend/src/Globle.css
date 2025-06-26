@@ -45,7 +45,7 @@ canvas {
   height: 100%;
 }
 
-.cs_ag-center-header{
+.cs_ag-center-header {
   display: flex;
   justify-content: center;
   align-items: center;

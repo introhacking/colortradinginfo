@@ -290,8 +290,6 @@ const readerFileService = {
 
     },
 
-
-
     fetchDataForDates: async (dates) => {
         if (!dates || dates.length === 0) {
             throw new Error('❌ No dates provided');
@@ -346,8 +344,6 @@ const readerFileService = {
             return { date, success: false, error: error.message };
         }
     },
-
-
 
     mergeCSVFile: async (capName) => {
         try {
@@ -590,6 +586,18 @@ const readerFileService = {
         } catch (err) {
             // return resp.status(500).json({ success: false, message: 'Server error while processing data.' });
             return err
+        }
+    },
+
+    createFolderIfNotExists: async (relativePath) => {
+        try {
+            const fullPath = path.join(__dirname, relativePath);
+            await fsp.mkdir(fullPath, { recursive: true });
+            console.log(`✅ Folder created or already exists: ${fullPath}`);
+            return { success: true, message: 'Folder created or already exists', fullPath };
+        } catch (err) {
+            console.error('❌ Error creating folder:', err);
+            return { success: false, message: err.message };
         }
     }
 

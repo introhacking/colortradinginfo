@@ -20,7 +20,11 @@ export const bankingService = {
             const bankData = await axios.post(`${BASE_URL}/${endpoint}`, data, config)
             return bankData.data
         } catch (err) {
-            throw { message: err.message }
+            throw {
+                message: err.response?.data?.message || err.message,
+                status: err.response?.status || 500,
+                data: err.response?.data || null
+            };
         }
     },
     // [ VIDEO POST ]
