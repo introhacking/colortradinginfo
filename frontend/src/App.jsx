@@ -84,7 +84,7 @@ function App() {
             {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
             <Route path="daily-spurts" element={<DailyIOMain />} />
             <Route path="live-data" element={
-              <div className='p-4 h-[70vh]'>
+              <div className='flex justify-center items-end p-4 h-[88vh]'>
                 <LiveData />
               </div>
             } />

@@ -145,10 +145,10 @@ app.use('/api/v1', masterRoute)
 
 // [ GOOGLE FINANCE ]
 const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
-const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
 app.use('/api/v1', googleFinanceRoute)
 
-
+const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
+// const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {
 //     const folderPath = path.join(__dirname, 'uploads/scrubbing/SMALLCAP');

@@ -1,10 +1,15 @@
-const readerFileService = require('../../services/fileReadingServices');
 const path = require('path');
 const fs = require('fs');
 const fsp = require('fs/promises');
 const csv = require('csv-parser');
 const papa = require('papaparse');
-const { io } = require('../../colorInfo');
+const readerFileService = require('../../services/fileReadingServices');
+const fetch = require('node-fetch');
+const XLSX = require('xlsx');
+// const { parse } = require('csv-parse/sync');
+
+
+
 
 const yahooFinance = require('yahoo-finance2').default;
 
@@ -36,60 +41,6 @@ exports.getNSEPrice = async (req, res) => {
         return res.status(500).json({ error: "Unable to fetch stock data" });
     }
 };
-
-// const addLiveNSEStockNames = async (req, res) => {
-//     const { stockNames } = req.body
-//     const relativePath = '../uploads/liveData';
-//     try {
-//         const folderCreationStatus = await readerFileService.createFolderIfNotExists(relativePath);
-
-//         if (!folderCreationStatus.success) {
-//             return {
-//                 success: false,
-//                 message: folderCreationStatus.message || 'Folder creation failed',
-//             };
-//         }
-
-//         const fileName = 'liveData.csv';
-//         const filePath = path.join(folderCreationStatus.fullPath, fileName);
-
-//         const isNewFile = !fs.existsSync(filePath);
-
-//         let existingStockNames = [];
-
-//         // Read file and collect existing stock names
-//         if (!isNewFile) {
-//             const fileContent = fs.readFileSync(filePath, 'utf-8');
-//             const lines = fileContent.trim().split('\n');
-//             existingStockNames = lines.slice(1).map(line => line.trim().toUpperCase()); // skip header
-//         }
-
-//         if (existingStockNames.includes(stockName.toUpperCase())) {
-//             return {
-//                 success: false,
-//                 message: `Duplicate stock name "${stockName}" — not added again.`,
-//             };
-//         }
-
-//         const newLine = isNewFile ? `StockName\n${stockName}\n` : `${stockName}\n`;
-//         fs.appendFileSync(filePath, newLine);
-
-//         const result = {
-//             success: true,
-//             message: 'Stock name saved successfully',
-//             filePath,
-//             data: { stockName }
-//         };
-//         res.status(result.success ? 200 : 500).json(result);
-
-//     } catch (err) {
-//         return {
-//             success: false,
-//             message: 'Internal server error',
-//             error: err.message
-//         };
-//     }
-// };
 
 exports.addLiveNSEStockName = async (req, res) => {
 
@@ -157,69 +108,183 @@ exports.addLiveNSEStockName = async (req, res) => {
     }
 };
 
+// exports.fetchAndSortLiveNSEData = async () => {
+//     const folderPath = path.join(__dirname, `../../uploads/liveData`);
+//     const files = await fsp.readdir(folderPath);
+//     const csvFiles = files.filter(f => f.endsWith('.csv'));
+//     const readPromises = csvFiles.map(file =>
+//         fsp.readFile(path.join(folderPath, file), 'utf8')
+//     );
+//     const fileContents = await Promise.all(readPromises);
+
+//     let allRows = [];
+//     fileContents.forEach((content) => {
+//         const parsed = papa.parse(content.trim(), {
+//             header: true,
+//             skipEmptyLines: true
+//         });
+//         const cleanedRows = parsed.data.map(row => {
+//             const cleaned = {};
+//             Object.keys(row).forEach(key => {
+//                 cleaned[key.trim()] = row[key];
+//             });
+//             return cleaned;
+//         });
+//         allRows = allRows.concat(cleanedRows);
+//     });
+
+//     const results = [];
+
+//     for (const name of allRows) {
+//         const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
+//         try {
+//             const data = await yahooFinance.quote(symbol);
+//             const volume = data.regularMarketVolume || 0;
+//             const avgVolume = data.averageDailyVolume10Day || 1;
+//             const volumePercent = ((volume / avgVolume) * 100).toFixed(2);
+//             results.push({
+//                 stockName: name?.StockName.trim(),
+//                 regularMarketVolume: volume,
+//                 averageDailyVolume10Day: avgVolume,
+//                 volumePercent: Number(volumePercent)
+//             });
+//         } catch (stockErr) {
+//             console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
+//         }
+//     }
+
+//     const sortedResults = results.sort((a, b) => {
+//         const getPriority = (val) => {
+//             const num = Number(val);
+//             if (isNaN(num)) return 999;
+//             if (num >= 60) return 1;
+//             if (num > 30 && num < 60) return 2;
+//             if (num <= 30) return 3;
+//             return 999;
+//         };
+//         return getPriority(a.volumePercent) - getPriority(b.volumePercent);
+//     });
+
+//     return sortedResults;
+// };
+
 exports.fetchAndSortLiveNSEData = async () => {
-    const folderPath = path.join(__dirname, `../../uploads/liveData`);
-    const files = await fsp.readdir(folderPath);
-    const csvFiles = files.filter(f => f.endsWith('.csv'));
-    const readPromises = csvFiles.map(file =>
-        fsp.readFile(path.join(folderPath, file), 'utf8')
-    );
-    const fileContents = await Promise.all(readPromises);
+    try {
+        const folderPath = path.join(__dirname, `../../uploads/liveData`);
 
-    let allRows = [];
-    fileContents.forEach((content) => {
-        const parsed = papa.parse(content.trim(), {
-            header: true,
-            skipEmptyLines: true
-        });
-        const cleanedRows = parsed.data.map(row => {
-            const cleaned = {};
-            Object.keys(row).forEach(key => {
-                cleaned[key.trim()] = row[key];
-            });
-            return cleaned;
-        });
-        allRows = allRows.concat(cleanedRows);
-    });
-
-    const results = [];
-
-    for (const name of allRows) {
-        const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
-        try {
-            const data = await yahooFinance.quote(symbol);
-            const volume = data.regularMarketVolume || 0;
-            const avgVolume = data.averageDailyVolume10Day || 1;
-            const volumePercent = ((volume / avgVolume) * 100).toFixed(2);
-            results.push({
-                stockName: name?.StockName.trim(),
-                regularMarketVolume: volume,
-                averageDailyVolume10Day: avgVolume,
-                volumePercent: Number(volumePercent)
-            });
-        } catch (stockErr) {
-            console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
+        // Check if folder exists
+        if (!fs.existsSync(folderPath)) {
+            console.warn('⚠️ Folder does not exist:', folderPath);
+            return []; // or return some default structure
         }
+
+        const files = await fsp.readdir(folderPath);
+        const csvFiles = files.filter(f => f.endsWith('.csv'));
+
+        if (csvFiles.length === 0) {
+            console.warn('⚠️ No CSV files found in:', folderPath);
+            return [];
+        }
+
+        const readPromises = csvFiles.map(file =>
+            fsp.readFile(path.join(folderPath, file), 'utf8')
+        );
+        const fileContents = await Promise.all(readPromises);
+
+        let allRows = [];
+        for (const content of fileContents) {
+            const parsed = papa.parse(content.trim(), {
+                header: true,
+                skipEmptyLines: true
+            });
+            allRows.push(...parsed.data);
+        }
+        const results = [];
+
+        for (const name of allRows) {
+            const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
+            try {
+                const data = await yahooFinance.quote(symbol);
+
+                const currentMarketPrice = data?.regularMarketPrice ?? 0;
+                const previousMarketClosePrice = data?.regularMarketPreviousClose ?? 0;
+                const fiftyTwoWeekLow = data?.fiftyTwoWeekLow ?? 0;
+                const fiftyTwoWeekHigh = data?.fiftyTwoWeekHigh ?? 0;
+
+                const regularMarketChange = data?.regularMarketChange ?? 0;
+                const regularMarketChangePercent = data?.regularMarketChangePercent != null
+                    ? Number(data.regularMarketChangePercent.toFixed(2))
+                    : 0;
+
+                const fiftyTwoWeekLowChange = data?.fiftyTwoWeekLowChange ?? 0;
+                const fiftyTwoWeekLowChangePercent = data?.fiftyTwoWeekLowChangePercent != null
+                    ? Number(data.fiftyTwoWeekLowChangePercent.toFixed(2))
+                    : 0;
+
+                const fiftyTwoWeekHighChange = data?.fiftyTwoWeekHighChange ?? 0;
+                const fiftyTwoWeekHighChangePercent = data?.fiftyTwoWeekHighChangePercent != null
+                    ? Number(data.fiftyTwoWeekHighChangePercent.toFixed(2))
+                    : 0;
+
+                const fiftyTwoWeekChangePercent = data?.fiftyTwoWeekChangePercent != null
+                    ? Number(data.fiftyTwoWeekChangePercent.toFixed(2))
+                    : 0;
+
+                const regularMarketDayLow = data?.regularMarketDayLow ?? 0;
+                const regularMarketOpen = data?.regularMarketOpen ?? 0;
+
+                const volume = data?.regularMarketVolume ?? 0;
+                const avgVolume = data?.averageDailyVolume10Day || 1; // Prevent divide-by-zero
+                const volumePercent = Number(((volume / avgVolume) * 100).toFixed(2));
+
+                results.push({
+                    stockName: name?.StockName.trim(),
+                    regularMarketVolume: volume,
+                    averageDailyVolume10Day: avgVolume,
+                    volumePercent,
+                    currentMarketPrice,
+                    previousMarketClosePrice,
+                    fiftyTwoWeekHigh,
+                    fiftyTwoWeekLow,
+                    regularMarketChangePercent,
+                    regularMarketChange,
+                    fiftyTwoWeekLowChange,
+                    fiftyTwoWeekLowChangePercent,
+                    fiftyTwoWeekHighChange,
+                    fiftyTwoWeekHighChangePercent,
+                    fiftyTwoWeekChangePercent,
+                    regularMarketDayLow,
+                    regularMarketOpen
+                });
+
+            } catch (stockErr) {
+                console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
+            }
+        }
+
+        const sortedResults = results.sort((a, b) => {
+            const getPriority = (val) => {
+                const num = Number(val);
+                if (isNaN(num)) return 999;
+                if (num >= 60) return 1;
+                if (num > 30 && num < 60) return 2;
+                if (num <= 30) return 3;
+                return 999;
+            };
+            return getPriority(a.volumePercent) - getPriority(b.volumePercent);
+        });
+
+        return sortedResults;
+
+    } catch (err) {
+        console.error('❌ Error in fetchAndSortLiveNSEData:', err.message);
+        throw new Error('Failed to read live stock data.');
     }
-
-    const sortedResults = results.sort((a, b) => {
-        const getPriority = (val) => {
-            const num = Number(val);
-            if (isNaN(num)) return 999;
-            if (num >= 60) return 1;
-            if (num > 30 && num < 60) return 2;
-            if (num <= 30) return 3;
-            return 999;
-        };
-        return getPriority(a.volumePercent) - getPriority(b.volumePercent);
-    });
-
-    return sortedResults;
 };
 
 exports.getNSELiveData = async (req, res) => {
     try {
-        const sortedResults = await fetchAndSortLiveNSEData();
+        const sortedResults = await exports.fetchAndSortLiveNSEData();
         return res.status(200).json(sortedResults);
     } catch (err) {
         console.error('Error in getNSELiveData:', err);
@@ -266,87 +331,114 @@ exports.deleteStockFromLiveDataCSV = async (req, res) => {
 };
 
 
-// exports.getNSELiveData = async (req, res) => {
-//     try {
-//         const folderPath = path.join(__dirname, `../../uploads/liveData`);
-//         const files = await fsp.readdir(folderPath); // Use promise version
-//         const csvFiles = files.filter(f => f.endsWith('.csv'));
-//         // Read all CSV files in parallel
-//         const readPromises = csvFiles.map(file =>
-//             fsp.readFile(path.join(folderPath, file), 'utf8') // Properly awaited
-//         );
-//         const fileContents = await Promise.all(readPromises);
-//         let allRows = [];
-//         fileContents.forEach((content) => {
-//             const parsed = papa.parse(content.trim(), {
-//                 header: true,
-//                 skipEmptyLines: true
-//             });
 
-//             const cleanedRows = parsed.data.map(row => {
-//                 const cleaned = {};
-//                 Object.keys(row).forEach(key => {
-//                     cleaned[key.trim()] = row[key];
-//                 });
-//                 return cleaned;
-//             });
+//  [ LIVE EXCEL SHEET CONNECT ]
 
-//             allRows = allRows.concat(cleanedRows);
-//         });
-//         // const result = { length: allRows.length, success: true, data: allRows };
-//         const results = [];
+exports.liveExcelSheetConnect = async (req, res) => {
+    const url = typeof req.body.excelUrl === 'string'
+        ? req.body.excelUrl
+        : req.body.excelUrl?.url;
 
-//         for (const name of allRows) {
-//             const symbol = `${name?.StockName.trim().toUpperCase()}.NS`; // Assume NSE
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Invalid or missing URL' });
+    }
 
-//             try {
-//                 // Step 2: Fetch quote data from Yahoo Finance
-//                 const data = await yahooFinance.quote(symbol);
+    try {
+        // ✅ GOOGLE SHEETS HANDLER
+        if (url.includes('docs.google.com/spreadsheets')) {
+            const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match) return res.status(400).json({ error: 'Invalid Google Sheet URL' });
 
-//                 // Step 3: Calculate volume percentage
-//                 const volume = data.regularMarketVolume || 0;
-//                 const avgVolume = data.averageDailyVolume10Day || 1; // avoid divide by 0
-//                 const volumePercent = ((volume / avgVolume) * 100).toFixed(2);
+            const sheetId = match[1];
+            const gids = [0]; // replace with actual gid values
 
-//                 results.push({
-//                     stockName: name?.StockName.trim(),
-//                     regularMarketVolume: volume,
-//                     averageDailyVolume10Day: avgVolume,
-//                     volumePercent: Number(volumePercent)
-//                 });
+            let allSheets = {};
 
-//             } catch (stockErr) {
-//                 console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
-//             }
-//         }
+            for (const gid of gids) {
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
-//         const sortedResults = results.sort((a, b) => {
-//             const getPriority = (val) => {
-//                 const num = Number(val);
-//                 if (isNaN(num)) return 999; // Put invalid/missing at end
-//                 if (num >= 60) return 1;     // Green
-//                 if (num > 30 && num < 60) return 2; // Orange
-//                 if (num <= 30) return 3;     // Red
-//                 return 999;
-//             };
+                const response = await fetch(csvUrl);
+                if (!response.ok) {
+                    console.error(`Failed to fetch sheet with gid=${gid}`);
+                    continue;
+                }
 
-//             return getPriority(a.volumePercent) - getPriority(b.volumePercent);
-//         })
+                const csvText = await response.text();
 
-//         console.log(sortedResults)
+                // Parse the CSV
+                const workbook = XLSX.read(csvText, { type: 'string' });
+                const sheetName = workbook.SheetNames[0]; // Usually "Sheet1" since it's coming from CSV
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-//         io.emit('liveStockData', sortedResults); // Push to all connected clients
+                allSheets[`Sheet_gid_${gid}`] = {
+                    data: jsonData,
+                    columns: Object.keys(jsonData[0] || {}).map(col => ({
+                        headerName: col,
+                        field: col,
+                        sortable: true,
+                        filter: true,
+                    }))
+                };
+            }
 
-//         return res.status(200).json(sortedResults)
+            res.json({ sheets: allSheets });
+        }
 
-//     } catch (err) {
-//         console.error('Error in getNSELiveData:', err);
-//         return res.status(500).json({
-//             success: false,
-//             message: 'Unexpected error in getNSELiveData',
-//             error: err.message
-//         });
-//     }
-// };
+        // ✅ ONEDRIVE / SHAREPOINT EXCEL HANDLER
+        else if (url.includes('sharepoint.com') || url.includes('1drv.ms')) {
+            const response = await fetch(url, {
+                responseType: 'arraybuffer',
+            });
+            if (!response.ok) {
+                return res.status(400).json({ error: 'Failed to download Excel file', status: response.status });
+            }
 
+
+            const csvText = await response.text();
+            const records = XLSX.read(csvText, { type: 'string' });
+            const sheetName = records.SheetNames[0];
+            const worksheet = records.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            console.log('Parsed Data:', jsonData);
+
+
+            // const buffer = await response.arrayBuffer();
+            // const workbook = XLSX.read(Buffer.from(buffer), { type: 'buffer' });
+
+            // const sheets = {};
+            // workbook.SheetNames.forEach(name => {
+            //     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[name], { defval: '' });
+            //     const columns = Object.keys(jsonData[0] || {}).map(col => ({
+            //         headerName: col,
+            //         field: col,
+            //         sortable: true,
+            //         filter: true
+            //     }));
+            //     sheets[name] = { columns, data: jsonData };
+            // });
+
+            // return res.json({ sheets });
+        }
+
+        // ❌ Unknown URL
+        else {
+            return res.status(400).json({ error: 'Unknown or unsupported URL type' });
+        }
+
+    } catch (err) {
+        console.error('Excel fetch error:', err);
+        res.status(500).json({ error: 'Failed to load or parse file' });
+    }
+};
+
+
+// (async () => {
+//   const url = 'https://netorgft12450213-my.sharepoint.com/:x:/r/personal/manish_gupta_avgna_com/_layouts/15/doc2.aspx?sourcedoc=%7BCD3D91E5-7FBC-4C2E-9B46-EA0FF311CD9B%7D&file=EMIRATES%20_Version1_updated.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1&ct=1751030663152&wdOrigin=OFFICECOM-WEB.START.EDGEWORTH&cid=80dcca05-707b-4e60-b1bc-d2d4d05063e2&wdPreviousSessionSrc=HarmonyWeb&wdPreviousSession=820b2c4f-0092-4e55-8fb9-68c201733506';
+//   const res = await fetch(url);
+//   console.log('Status:', res.status);
+//   const buffer = await res.arrayBuffer();
+//   fs.writeFileSync('output.xlsx', Buffer.from(buffer));
+// })();
 
