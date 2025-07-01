@@ -147,7 +147,7 @@ app.use('/api/v1', masterRoute)
 const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
 app.use('/api/v1', googleFinanceRoute)
 
-const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
+const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogleSheets } = require('./controller/googleFinance/googleFinance');
 // const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {
@@ -179,4 +179,10 @@ server.listen(PORT, () => {
         const data = await fetchAndSortLiveNSEData();
         io.emit('liveStockData', data);
     }, 60000);
+
+    // Push updates every 60 seconds
+    // setInterval(async () => {
+    //     const data = await fetchGoogleSheets();
+    //     io.emit('live-sheet-update', data);
+    // }, 1000);
 });

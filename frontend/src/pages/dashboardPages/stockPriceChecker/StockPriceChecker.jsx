@@ -37,7 +37,7 @@ function StockPriceChecker() {
                     <Button onClick={() => { setShowLiveNSEData((prev) => !prev); setConnectExcel(false) }} children={`${showLiveNSEData ? 'Show Live Stock Data' : 'Show NSE Checker'}`} className={'button button_video'} />
                     <Button onClick={() => setConnectExcel(true)} children={`Connect to Excel`} className={`${connectExcel ? 'button_ac' : 'bg-green-200 text-green-700'} button`} />
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} children={'Add Live StockName'} className={`${showLiveNSEData && 'hidden'} button button_ac`} />
+                <Button onClick={() => setIsModalOpen(true)} children={'Add Live StockName'} className={`${(showLiveNSEData || !connectExcel) && 'hidden'} button button_ac`} />
             </div>
 
             {!connectExcel ? (

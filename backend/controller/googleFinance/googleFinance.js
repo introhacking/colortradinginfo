@@ -334,104 +334,195 @@ exports.deleteStockFromLiveDataCSV = async (req, res) => {
 
 //  [ LIVE EXCEL SHEET CONNECT ]
 
+// exports.liveExcelSheetConnect = async (req, res) => {
+//     const url = typeof req.body.excelUrl === 'string'
+//         ? req.body.excelUrl
+//         : req.body.excelUrl?.url;
+
+//     if (!url || typeof url !== 'string') {
+//         return res.status(400).json({ error: 'Invalid or missing URL' });
+//     }
+
+//     try {
+//         // ✅ GOOGLE SHEETS HANDLER
+//         if (url.includes('docs.google.com/spreadsheets')) {
+//             const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+//             if (!match) return res.status(400).json({ error: 'Invalid Google Sheet URL' });
+
+//             const sheetId = match[1];
+//             const gids = [0]; // replace with actual gid values
+
+//             let allSheets = {};
+
+//             for (const gid of gids) {
+//                 const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+
+//                 const response = await fetch(csvUrl);
+//                 if (!response.ok) {
+//                     console.error(`Failed to fetch sheet with gid=${gid}`);
+//                     continue;
+//                 }
+
+//                 const csvText = await response.text();
+
+//                 // Parse the CSV
+//                 const workbook = XLSX.read(csvText, { type: 'string' });
+//                 const sheetName = workbook.SheetNames[0]; // Usually "Sheet1" since it's coming from CSV
+//                 const worksheet = workbook.Sheets[sheetName];
+//                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+//                 allSheets[`Sheet_gid_${gid}`] = {
+//                     data: jsonData,
+//                     columns: Object.keys(jsonData[0] || {}).map(col => ({
+//                         headerName: col,
+//                         field: col,
+//                         sortable: true,
+//                         filter: true,
+//                         // valueFormatter: (params) => {
+//                         //     return (params.value === undefined || params.value === null || params.value === '')
+//                         //         ? '-'
+//                         //         : params.value;
+//                         // }
+//                     }))
+//                 };
+//             }
+
+//             res.json({ sheets: allSheets });
+//         }
+
+//         // ✅ ONEDRIVE / SHAREPOINT EXCEL HANDLER
+//         else if (url.includes('sharepoint.com') || url.includes('1drv.ms')) {
+//             const response = await fetch(url, {
+//                 responseType: 'arraybuffer',
+//             });
+//             if (!response.ok) {
+//                 return res.status(400).json({ error: 'Failed to download Excel file', status: response.status });
+//             }
+
+
+//             const csvText = await response.text();
+//             const records = XLSX.read(csvText, { type: 'string' });
+//             const sheetName = records.SheetNames[0];
+//             const worksheet = records.Sheets[sheetName];
+//             const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+//             console.log('Parsed Data:', jsonData);
+
+
+//             // const buffer = await response.arrayBuffer();
+//             // const workbook = XLSX.read(Buffer.from(buffer), { type: 'buffer' });
+
+//             // const sheets = {};
+//             // workbook.SheetNames.forEach(name => {
+//             //     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[name], { defval: '' });
+//             //     const columns = Object.keys(jsonData[0] || {}).map(col => ({
+//             //         headerName: col,
+//             //         field: col,
+//             //         sortable: true,
+//             //         filter: true
+//             //     }));
+//             //     sheets[name] = { columns, data: jsonData };
+//             // });
+
+//             // return res.json({ sheets });
+//         }
+
+//         // ❌ Unknown URL
+//         else {
+//             return res.status(400).json({ error: 'Unknown or unsupported URL type' });
+//         }
+
+//     } catch (err) {
+//         console.error('Excel fetch error:', err);
+//         res.status(500).json({ error: 'Failed to load or parse file' });
+//     }
+// };
+
+
+// Cache sheet config
+const sheetSessions = {}; // You can use Redis instead if needed
+
 exports.liveExcelSheetConnect = async (req, res) => {
     const url = typeof req.body.excelUrl === 'string'
         ? req.body.excelUrl
         : req.body.excelUrl?.url;
+
+    // ✅ Extract gid (if present), fallback to 0
+    const gidMatch = url.match(/gid=([0-9]+)/);
+    const gids = gidMatch ? [gidMatch[1]] : [0];
 
     if (!url || typeof url !== 'string') {
         return res.status(400).json({ error: 'Invalid or missing URL' });
     }
 
     try {
-        // ✅ GOOGLE SHEETS HANDLER
         if (url.includes('docs.google.com/spreadsheets')) {
             const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
             if (!match) return res.status(400).json({ error: 'Invalid Google Sheet URL' });
 
             const sheetId = match[1];
-            const gids = [0]; // replace with actual gid values
+            sheetSessions['latestSheet'] = { sheetId, gids }; // Save for refresh
 
-            let allSheets = {};
+            const allSheets = await fetchGoogleSheets(sheetId, gids);
 
-            for (const gid of gids) {
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-
-                const response = await fetch(csvUrl);
-                if (!response.ok) {
-                    console.error(`Failed to fetch sheet with gid=${gid}`);
-                    continue;
-                }
-
-                const csvText = await response.text();
-
-                // Parse the CSV
-                const workbook = XLSX.read(csvText, { type: 'string' });
-                const sheetName = workbook.SheetNames[0]; // Usually "Sheet1" since it's coming from CSV
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                allSheets[`Sheet_gid_${gid}`] = {
-                    data: jsonData,
-                    columns: Object.keys(jsonData[0] || {}).map(col => ({
-                        headerName: col,
-                        field: col,
-                        sortable: true,
-                        filter: true,
-                    }))
-                };
-            }
-
-            res.json({ sheets: allSheets });
+            return res.json({ sheets: allSheets });
+        } else {
+            return res.status(400).json({ error: 'Unsupported URL format' });
         }
-
-        // ✅ ONEDRIVE / SHAREPOINT EXCEL HANDLER
-        else if (url.includes('sharepoint.com') || url.includes('1drv.ms')) {
-            const response = await fetch(url, {
-                responseType: 'arraybuffer',
-            });
-            if (!response.ok) {
-                return res.status(400).json({ error: 'Failed to download Excel file', status: response.status });
-            }
-
-
-            const csvText = await response.text();
-            const records = XLSX.read(csvText, { type: 'string' });
-            const sheetName = records.SheetNames[0];
-            const worksheet = records.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-            console.log('Parsed Data:', jsonData);
-
-
-            // const buffer = await response.arrayBuffer();
-            // const workbook = XLSX.read(Buffer.from(buffer), { type: 'buffer' });
-
-            // const sheets = {};
-            // workbook.SheetNames.forEach(name => {
-            //     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[name], { defval: '' });
-            //     const columns = Object.keys(jsonData[0] || {}).map(col => ({
-            //         headerName: col,
-            //         field: col,
-            //         sortable: true,
-            //         filter: true
-            //     }));
-            //     sheets[name] = { columns, data: jsonData };
-            // });
-
-            // return res.json({ sheets });
-        }
-
-        // ❌ Unknown URL
-        else {
-            return res.status(400).json({ error: 'Unknown or unsupported URL type' });
-        }
-
     } catch (err) {
         console.error('Excel fetch error:', err);
         res.status(500).json({ error: 'Failed to load or parse file' });
     }
 };
+
+exports.refreshExcel = async (req, res) => {
+    const config = sheetSessions['latestSheet'];
+    if (!config) return res.status(400).json({ error: 'No previous sheet session found' });
+
+    try {
+        const allSheets = await fetchGoogleSheets(config.sheetId, config.gids);
+        return res.json({ sheets: allSheets });
+    } catch (err) {
+        console.error('Excel refresh error:', err);
+        res.status(500).json({ error: 'Failed to refresh data' });
+    }
+};
+
+async function fetchGoogleSheets(sheetId, gids) {
+    let allSheets = {};
+
+    for (const gid of gids) {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+            console.warn(`Failed to fetch gid ${gid}`);
+            continue;
+        }
+
+        const csvText = await response.text();
+        const workbook = XLSX.read(csvText, { type: 'string' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        allSheets[`Sheet_gid_${gid}`] = {
+            data: jsonData,
+            columns: Object.keys(jsonData[0] || {}).map(col => ({
+                headerName: col,
+                field: col,
+                sortable: true,
+                filter: true
+            }))
+        };
+    }
+
+    return allSheets;
+}
+
+
+
+
 
 
 // (async () => {
