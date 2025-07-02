@@ -35,6 +35,7 @@ import FundDeliveryDashboard from './pages/dashboardPages/dashboardContent/FundD
 import MasterScreen from './pages/dashboardPages/masterScreenCAPS/MasterScreen';
 import StockPriceChecker from './pages/dashboardPages/stockPriceChecker/StockPriceChecker';
 import LiveData from './pages/dashboardPages/liveData/LiveData';
+import Footer from './pages/clientUI/home/Footer';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -68,6 +69,7 @@ function App() {
             <>
               <Header />
               <Outlet />
+              <Footer/>
             </>
           }>
             <Route index={true} path="/" element={<Home />} />

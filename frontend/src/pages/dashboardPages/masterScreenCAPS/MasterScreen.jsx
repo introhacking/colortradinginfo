@@ -4,6 +4,7 @@ import Loading from '../../../Loading';
 import { bankingService } from '../../../services/bankingService';
 import { AgGridReact } from 'ag-grid-react';
 import Button from '../../../components/componentLists/Button';
+import Custom_AGFilter from '../../clientUI/daily_IO/Custom_AGFilter';
 const MasterScreen = () => {
   const gridRef = useRef();
   const [rowData, setRowData] = useState([]);
@@ -59,21 +60,7 @@ const MasterScreen = () => {
 
     return null; // no style
   }
-
-  // const getCellStyles = (params) => {
-  //   const cs_value = parseFloat(params.value?.replace('%', '') || '0');
-  //   const value = params.value;
-  //   console.log(value)
-  //   if (value === '-' || value === '' || value == null) {
-  //     return { backgroundColor: 'black', fontStyle: 'italic', ...customCellStyle }; // style for missing data
-  //   }
-  //   if (cs_value > 800) return { backgroundColor: 'green', ...customCellStyles }; // green
-  //   if (cs_value > 250) return { backgroundColor: 'lightgreen', ...customCellStyles }; // yellow
-  //   return null;
-  // };
-
-
-  const getCellStyles = (params) => {
+  const getCellStyless = (params) => {
     const value = params.value;
 
     if (value === '-' || value === '' || value == null) {
@@ -94,7 +81,7 @@ const MasterScreen = () => {
         backgroundColor: 'black',
         color: 'white',
         fontStyle: 'italic',
-        ...customCellStyle
+        ...customCellStyles
       };
     }
 
@@ -137,6 +124,59 @@ const MasterScreen = () => {
     return null; // default style
   };
 
+  const getCellStyles = (params) => {
+    const value = params.value;
+
+    // ✅ Handle empty/null/invalid values
+    if (value === null || value === undefined || value === '' || isNaN(value)) {
+      return {
+        backgroundColor: 'black',
+        color: 'white',
+        fontStyle: 'italic',
+        ...customCellStyles
+      };
+    }
+
+    const percentValue = typeof value === 'number' ? value : parseFloat(value);
+
+    // 🎯 Conditional coloring
+    if (percentValue > 80) {
+      return {
+        backgroundColor: 'green',
+        color: 'white',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue > 50) {
+      return {
+        backgroundColor: 'lightgreen',
+        color: 'black',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue >= 0) {
+      return {
+        backgroundColor: 'orange',
+        color: 'black',
+        ...customCellStyles
+      };
+    }
+
+    if (percentValue < 0) {
+      return {
+        backgroundColor: 'red',
+        color: 'white',
+        fontWeight: 'bold',
+        ...customCellStyles
+      };
+    }
+
+    return null;
+  };
 
 
   const getCapMergeFile_first = async () => {
@@ -293,14 +333,45 @@ const MasterScreen = () => {
             field: `deliv_${date}`,
             headerName: 'Deliv Avg / Deliv %',
             tooltipField: `deliv_${date}`,
-            filter: true,
+            filter: 'agNumberColumnFilter',
+            valueGetter: (params) => {
+              const raw = params.data?.[`deliv_${date}`];
+
+              if (typeof raw !== 'string') return null;
+
+              const parts = raw.split('/');
+              if (!parts[1]) return null;
+
+              const percentStr = parts[1].trim().replace('%', '');
+              const percent = parseFloat(percentStr);
+              return isNaN(percent) ? null : percent;
+            },
+            valueFormatter: (params) => {
+              const raw = params.data?.[`deliv_${date}`];
+              return typeof raw === 'string' ? raw : '-';
+            },
             cellStyle: getCellStyles
           },
           {
             field: `ttd_${date}`,
             headerName: 'TTD Avg / TTD %',
             tooltipField: `ttd_${date}`,
-            filter: true,
+            filter: 'agNumberColumnFilter',
+            valueGetter: (params) => {
+              const raw = params.data?.[`deliv_${date}`];
+              if (typeof raw !== 'string') return null;
+
+              const parts = raw.split('/');
+              if (!parts[1]) return null;
+
+              const percentStr = parts[1].trim().replace('%', '');
+              const percent = parseFloat(percentStr);
+              return isNaN(percent) ? null : percent;
+            },
+            valueFormatter: (params) => {
+              const raw = params.data?.[`deliv_${date}`];
+              return typeof raw === 'string' ? raw : '-';
+            },
             cellStyle: getCellStyles
           }
         ]
@@ -345,8 +416,8 @@ const MasterScreen = () => {
 
 
   return (
-    <div>
-      <div className='flex justify-end mb-2 gap-2'>
+    <div className='w-full'>
+      <div className='w-full flex justify-end mb-2 gap-2'>
         <Button onClick={handleExportToExcel} children={'Export to CSV'} className={`${rowData.length > 0 ? 'button hover:bg-green-400 bg-green-500 text-white' : 'button bg-green-400 text-white hover:bg-green-400 cursor-not-allowed'}  `} />
       </div>
       {isLoading && <Loading msg='Loading... please wait' />}

@@ -139,48 +139,6 @@ const AdminLogin = () => {
                         <div className='flex flex-col justify-center items-center w-full'>
                             {signIn_UpStatus ?
                                 <div className='w-full p-4'>
-                                    <p className="font-semibold mb-2">Security authentication Admin </p>
-                                    <p className="text-sm mb-2 text-red-600 text-left w-full font-semibold">
-                                        Required *
-                                    </p>
-                                    <div className='w-full'>
-                                        <form className='w-full space-y-3 mb-4'>
-                                            <div className="">
-                                                <input onChange={onChangeHandler} value={loginCredential.username} name='username' type="text" id="username" placeholder='Username*' required />
-                                            </div>
-                                            <div className="relative">
-                                                <input onChange={onChangeHandler} value={loginCredential.password} type={eye ? "text" : "password"} name='password' id="password" placeholder='Password*' required />
-                                                <span
-                                                    onClick={() => hideShowPassword()}
-                                                    className="absolute top-2 cursor-pointer right-3 text-2xl"
-                                                >
-                                                    {eye ? (
-                                                        <AiIcons.AiFillEye />
-                                                    ) : (
-                                                        <AiIcons.AiFillEyeInvisible />
-                                                    )}
-                                                </span>
-                                                {errorStatus && (
-                                                    <span className="text-sm text-red-600 font-semibold">
-                                                        {currentError}
-                                                    </span>
-                                                )}
-                                                <p className='text-sm flex justify-end items-end text-gray-400 hover:underline'><Link className='my-2'>Forgot password?</Link></p>
-                                            </div>
-                                        </form>
-                                        <Button disabled={redirectStatus} onClick={loginHandler} type={'button'} className={`${redirectStatus ? 'button cursor-not-allowed opacity-50' : ''} button button_video w-full`} >
-                                            {redirectStatus ? (
-                                                <div className="flex justify-center items-center">
-                                                    <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
-                                                    Redirecting...
-                                                </div>
-                                            ) : (
-                                                'Login'
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div> :
-                                <div className='w-full p-4'>
                                     <p className="font-semibold mb-2">Registration</p>
                                     <p className="text-sm mb-2 text-red-600 text-left w-full font-semibold">
                                         Required *
@@ -267,11 +225,52 @@ const AdminLogin = () => {
                                             Registration
                                         </Button>
                                     </div>
+                                </div> :
+                                <div className='w-full p-4'>
+                                    <p className="font-semibold mb-2">Security authentication Admin </p>
+                                    <p className="text-sm mb-2 text-red-600 text-left w-full font-semibold">
+                                        Required *
+                                    </p>
+                                    <div className='w-full'>
+                                        <form className='w-full space-y-3 mb-4'>
+                                            <div className="">
+                                                <input onChange={onChangeHandler} value={loginCredential.username} name='username' type="text" id="username" placeholder='Username*' required />
+                                            </div>
+                                            <div className="relative">
+                                                <input onChange={onChangeHandler} value={loginCredential.password} type={eye ? "text" : "password"} name='password' id="password" placeholder='Password*' required />
+                                                <span
+                                                    onClick={() => hideShowPassword()}
+                                                    className="absolute top-2 cursor-pointer right-3 text-2xl"
+                                                >
+                                                    {eye ? (
+                                                        <AiIcons.AiFillEye />
+                                                    ) : (
+                                                        <AiIcons.AiFillEyeInvisible />
+                                                    )}
+                                                </span>
+                                                {errorStatus && (
+                                                    <span className="text-sm text-red-600 font-semibold">
+                                                        {currentError}
+                                                    </span>
+                                                )}
+                                                <p className='text-sm flex justify-end items-end text-gray-400 hover:underline'><Link className='my-2'>Forgot password?</Link></p>
+                                            </div>
+                                        </form>
+                                        <Button disabled={redirectStatus} onClick={loginHandler} type={'button'} className={`${redirectStatus ? 'button cursor-not-allowed opacity-50' : ''} button button_video w-full`} >
+                                            {redirectStatus ? (
+                                                <div className="flex justify-center items-center">
+                                                    <ImIcons.ImSpinner9 className="mx-2 text-xl animate-spin" />
+                                                    Redirecting...
+                                                </div>
+                                            ) : (
+                                                'Login'
+                                            )}
+                                        </Button>
+                                    </div>
                                 </div>
-
                             }
                             <div className='mt-4 text-center'>
-                                <p className='font-normal'>Already have an account? <Link className='underline hover:no-underline underline-offset-2 text-blue-600'><span className='font-medium' onClick={switchingBiderectional}>{signIn_UpStatus ? 'Sign Up' : 'Sign In'}</span></Link></p>
+                                <p className='font-normal'>Already have an account? <Link className='underline hover:no-underline underline-offset-2 text-blue-600'><span className='font-medium' onClick={switchingBiderectional}>{signIn_UpStatus ? 'Sign In' : 'Sign Up'}</span></Link></p>
                             </div>
                         </div>
                     </div>

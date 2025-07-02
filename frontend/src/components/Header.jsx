@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from './componentLists/Button'
+import { bankingService } from '../services/bankingService';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -14,6 +15,31 @@ const Header = () => {
         window.localStorage.removeItem('loginInfo');
         navigate('/login');
     };
+    const [top20Stocks, setTop20Stocks] = useState([]);
+
+
+    const live20Data = async () => {
+        try {
+            const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data')
+            if (Array.isArray(serverResponse)) {
+                setTop20Stocks(serverResponse.slice(0, 20));
+            }
+        } catch (err) {
+            console.error('Live fetch error:', err);
+        }
+    }
+
+    const displayText = top20Stocks
+        .map(stock => `${stock.stockName} ₹${stock.currentMarketPrice} (${stock.volumePercent}%)`)
+        .join('  |  ');
+
+    useEffect(() => {
+        live20Data()
+        // Optional: auto-refresh every 60s
+        const interval = setInterval(live20Data, 60000);
+        return () => clearInterval(interval);
+    }, [])
+
 
     return (
         <>
@@ -61,6 +87,9 @@ const Header = () => {
                     )}
                 </div>
             </header>
+            <div className='sticky top-16 z-20' style={{ background: '#000', color: '#0f0', padding: '4px' }}>
+                <marquee scrollamount="5">{displayText}</marquee>
+            </div>
         </>
     )
 }

@@ -10,7 +10,7 @@ const Sentimental = () => {
         { id: 'tab1', title: 'Large Cap', content: <LargeCapStock /> },
         { id: 'tab2', title: 'Mid Cap', content: <MidCapStock /> },
         { id: 'tab3', title: 'Small Cap', content: <SmallCapStock /> },
-        { id: 'tab4', title: 'Master Screen', content: <MasterScreen /> },
+        // { id: 'tab4', title: 'Master Screen', content: <MasterScreen /> },
 
     ];
     return (
