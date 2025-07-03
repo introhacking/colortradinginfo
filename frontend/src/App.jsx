@@ -36,6 +36,8 @@ import MasterScreen from './pages/dashboardPages/masterScreenCAPS/MasterScreen';
 import StockPriceChecker from './pages/dashboardPages/stockPriceChecker/StockPriceChecker';
 import LiveData from './pages/dashboardPages/liveData/LiveData';
 import Footer from './pages/clientUI/home/Footer';
+import ClientLayout from './components/layout/ClientLayout';
+import Research from './pages/dashboardPages/reSearch/Research';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -67,9 +69,10 @@ function App() {
           {/* CLIENT UI  */}
           <Route path='/' element={
             <>
-              <Header />
+              {/* <Header />
               <Outlet />
-              <Footer/>
+              <Footer/> */}
+              <ClientLayout />
             </>
           }>
             <Route index={true} path="/" element={<Home />} />
@@ -86,10 +89,11 @@ function App() {
             {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
             <Route path="daily-spurts" element={<DailyIOMain />} />
             <Route path="live-data" element={
-              <div className='flex justify-center items-end p-4 h-[88vh]'>
+              <div className='flex justify-center items-end p-4'>
                 <LiveData />
               </div>
             } />
+            <Route path="research" element={<p>Research</p>} />
             <Route path="video" element={<VideoDelivery />} />
             <Route path="*" element={<ErrorPageComponent />} />
           </Route>
@@ -133,9 +137,10 @@ function App() {
               {/* <Route path="delivery" element={<ErrorBoundary><DeliveryTable /></ErrorBoundary>} /> */}
               <Route path="sectorial" element={<ErrorBoundary><SectorialTable /></ErrorBoundary>} />
               <Route path="fii-data" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
-              <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
               <Route path="daily-spurt" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
               <Route path="stock-price-checker" element={<ErrorBoundary><StockPriceChecker /></ErrorBoundary>} />
+              <Route path="research" element={<ErrorBoundary><Research/></ErrorBoundary>} />
+              <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
               {/* <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} /> */}
               <Route path="*" element={<ErrorPageComponent />} />
             </Route>

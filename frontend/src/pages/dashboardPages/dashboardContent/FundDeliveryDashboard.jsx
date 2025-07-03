@@ -8,7 +8,6 @@ import Loading from '../../../Loading';
 import Button from '../../../components/componentLists/Button';
 import MasterScreen from '../masterScreenCAPS/MasterScreen';
 
-
 const FundDeliveryDashboard = () => {
     const [category, setCategory] = useState('');
     const [toDate, setToDate] = useState('');
@@ -268,8 +267,6 @@ const FundDeliveryDashboard = () => {
                 // setColumnDefs(staticColumns);
 
             } else if (type === 'combine-cap') {
-
-
                 const today = new Date();
                 const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
                 const currentYear = String(today.getFullYear()).slice(2);               // e.g., '25'
@@ -283,8 +280,6 @@ const FundDeliveryDashboard = () => {
                     const month = new Date(`${monthAbbr} 1, 2000`).getMonth(); // 0-11
                     return year * 12 + month;
                 };
-
-
 
                 const normalizeSymbol = (str) =>
                     str?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();  // removes space, dot, dash, etc.
@@ -438,52 +433,87 @@ const FundDeliveryDashboard = () => {
     const [showDailySpurt, setShowDailySpurt] = useState(false)
 
 
+    const [activeTab, setActiveTab] = useState('tab1');
+    const tabs = [
+        {
+            id: 'tab1', key: 'master-screen', title: 'MASTER SCREEN', content: <MasterScreen />
+        },
+        {
+            id: 'tab2', key: 'daily-spurts', title: 'DAILY SPURTS', content: (
+                <div className="mb-0.5">
+                    <label className="text-sm font-medium mr-2">Select Date:</label>
+                    <Button className={''} children={
+                        <input max={getYesterdayDate()} value={toDate} onChange={(e) => handleDateChange(e.target.value)} type='date' className='button' placeholder='Choose Date' />
+                    } />
+
+                </div>
+            ), onClick: () => { setShowDailySpurt((showDailySpurt) => !showDailySpurt) }
+        },
+        { id: 'tab3', key: 'large-cap', title: 'LARGE CAP', content: '', onClick: () => { setShowMutualFunds((showMutualFunds) => !showMutualFunds); } },
+        { id: 'tab4', key: 'mid-cap', title: 'MID CAP', content: '' },
+        { id: 'tab5', key: 'small-cap', title: 'SMALL CAP', content: '' },
+        { id: 'tab6', key: 'combine-cap', title: 'COMBINE ALL', content: '' },
+
+    ];
+    const currentTab = tabs.find(tab => tab.id === activeTab);
+
+
     return (
         <>
             <div className="flex gap-2 mb-3 w-full">
-                <div className='flex gap-3 flex-col'>
-                    <div className='flex flex-col gap-2'>
-                        <button onClick={() => setShowDailySpurt((showDailySpurt) => !showDailySpurt)} className='button button_daily'>{showDailySpurt ? 'Hide' : 'Show'} Daily Spurt</button>
-                        {showDailySpurt &&
-                            <Button className={''} children={
-                                <input max={getYesterdayDate()} value={toDate} onChange={(e) => handleDateChange(e.target.value)} type='date' className='button' placeholder='Choose Date' />
-                            } />
-                        }
-                    </div>
-                    <div className='flex flex-col gap-2'>
-                        <button onClick={() => setShowMutualFunds((showMutualFunds) => !showMutualFunds)} className='button button_video'>{showMutualFunds ? 'Hide' : 'Show'} Mutual Funds</button>
-                        {showMutualFunds && ['large-cap', 'mid-cap', 'small-cap'].map((type) => (
-                            <button
-                                key={type}
-                                onClick={() => handleTypeChange(type)}
-                                className={`button font-medium rounded ${category === type ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                            >
-                                {type.replace('-', ' ').toUpperCase()}
-                            </button>
-                        ))}
+                {/* Sidebar Tabs */}
+                <div className="shadow-md p-2 rounded mt-5 w-1/6 bg-white">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`py-2 px-4 text-sm w-full font-medium border-b-2 ${activeTab === tab.id
+                                ? 'border-blue-500 text-white bg-blue-400 rounded'
+                                : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
+                                }`}
+                            onClick={() => {
+                                setActiveTab(tab.id);
+                                handleTypeChange(tab.key);
+                                if (tab.onClick) tab.onClick(); // call any additional action like toggling visibility
+                            }}
+                        >
+                            {tab.title}
+                        </button>
 
-                    </div>
-                    <Button onClick={() => handleTypeChange('master-screen')} className={'button bg-pink-500 text-white'} children={'Master Screen'} />
-                    <Button onClick={() => handleTypeChange('combine-cap')} className={'button bg-blue-500 text-white'} children={'Combine All Caps'} />
+                    ))}
                 </div>
-                {decision &&
-                    <div className='w-full'>
-                        <MasterScreen />
-                    </div>
-                }
-                {isLoading && <Loading msg='Loading... please wait' />}
-                {error && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {error}</span></div>}
-                {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
-                {!isLoading && !error && !decision && rowData.length > 0 ? (
-                    <div className="ag-theme-alpine h-[71vh] w-full">
-                        <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
-                    </div>
-                ) : ''
 
-                }
+                {/* Right Content Area */}
+                <div className="w-full px-3">
+                    {/* Render static component (e.g., MasterScreen) */}
+                    {currentTab?.content ? (
+                        // <div>{currentTab.content}</div>
+                        <div>
+                            {/* Render tab-specific content */}
+                            {currentTab.content}
+                            {/* 👉 AG Grid for tabs like Daily Spurt */}
+                            {isLoading && <Loading msg="Loading... please wait" />}
+                            {error && <div className="text-red-500">Error: {error}</div>}
+                            {noDataFoundMsg && <div className="text-gray-500">{noDataFoundMsg}</div>}
+                            {activeTab === 'tab2' && !isLoading && !error && rowData.length > 0 && (
+                                <div className="ag-theme-alpine h-[71vh] w-full mt-2">
+                                    <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            {isLoading && <Loading msg="Loading... please wait" />}
+                            {error && <div className="text-red-500">Error: {error}</div>}
+                            {noDataFoundMsg && <div className="text-gray-500">{noDataFoundMsg}</div>}
+                            {!isLoading && !error && rowData.length > 0 && (
+                                <div className="ag-theme-alpine h-[71vh] w-full">
+                                    <AgGridReact rowData={rowData} columnDefs={columnDefs} pagination={true} />
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
-            {/* {category && category} */}
-
         </>
     )
 }

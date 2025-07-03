@@ -10,7 +10,7 @@ const Footer = () => {
               <svg xmlns="#" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-10 h-10 text-white p-2 bg-indigo-500 rounded-full" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
               </svg>
-              <p className='text-sm'>Registration No IN006541264</p>
+              {/* <p className='text-sm'>Registration No IN006541264</p> */}
             </div>
             <p className='font-medium text-sm'>By connecting students all over the world to the best instructors, we helping individuals reach their goals and pursue their dreams.</p>
           </div>

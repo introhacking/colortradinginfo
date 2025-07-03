@@ -147,6 +147,10 @@ app.use('/api/v1', masterRoute)
 const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
 app.use('/api/v1', googleFinanceRoute)
 
+// [ GOOGLE FINANCE ]
+const ResearchRoute = require('./router/researchRouter/research');
+app.use('/api/v1', ResearchRoute)
+
 const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogleSheets } = require('./controller/googleFinance/googleFinance');
 // const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 

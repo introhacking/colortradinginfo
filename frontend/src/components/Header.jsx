@@ -30,8 +30,22 @@ const Header = () => {
     }
 
     const displayText = top20Stocks
-        .map(stock => `${stock.stockName} ₹${stock.currentMarketPrice} (${stock.volumePercent}%)`)
-        .join('  |  ');
+        .sort((a, b) => b.volumePercent - a.volumePercent) // 🔽 descending order
+        .slice(0, 20).map(stock => {
+            const isPositive = stock.regularMarketChange >= 0;
+            const sign = isPositive ? '+' : '';
+            const color = isPositive ? 'limegreen' : 'red';
+            return (
+                `<span>
+      <strong>${stock.stockName}\u00A0</strong>\u00A0₹${stock.currentMarketPrice.toFixed(2)} 
+      <span style="color:${color};">
+         \u00A0${sign}${stock.regularMarketChange.toFixed(2)}\u00A0(${sign}${stock.regularMarketChangePercent}%)
+      </span>
+    <span style="color:#ccc;">\u00A0|\u00A0 Vol: ${stock.volumePercent}%</span>
+
+    </span>`
+            );
+        }).join(' \u00A0\u00A0 | \u00A0\u00A0');
 
     useEffect(() => {
         live20Data()
@@ -64,6 +78,7 @@ const Header = () => {
                                 {/* <Link className="mr-5 hover:text-gray-900" to='/sectorial'>Sectorial</Link> */}
                                 <Link className="mr-5 hover:text-gray-900" to='/daily-spurts'>Daily Spurts</Link>
                                 <Link className="mr-5 hover:text-gray-900" to='/live-data'>Live Data</Link>
+                                <Link className="mr-5 hover:text-gray-900" to='/research'>Research</Link>
                                 <Link className="mr-5 hover:text-gray-900" to='/video'>Video</Link>
                             </>
                         )
@@ -87,9 +102,13 @@ const Header = () => {
                     )}
                 </div>
             </header>
-            <div className='sticky top-16 z-20' style={{ background: '#000', color: '#0f0', padding: '4px' }}>
-                <marquee scrollamount="5">{displayText}</marquee>
-            </div>
+            {displayText &&
+                <div className='sticky top-16 z-20' style={{ background: '#000', color: '#0f0', padding: '4px' }}>
+                    <marquee scrollamount="5" dangerouslySetInnerHTML={{ __html: displayText }} />
+                </div>
+            }
+
+
         </>
     )
 }
