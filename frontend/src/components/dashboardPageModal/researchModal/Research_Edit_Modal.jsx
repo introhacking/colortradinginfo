@@ -1,11 +1,15 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Button from '../../componentLists/Button';
 import { bankingService } from '../../../services/bankingService';
 import JoditEditor from 'jodit-react';
 import { toast } from 'sonner';
 
-const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
+
+const Research_Edit_Modal = ({ isOpen, onClose, isParamsData, refresh }) => {
     if (!isOpen) return null;
+
+    const { _id } = isParamsData
+
     const [reSearchInfo, setReSearchInfo] = useState({
         stock_name: '',
         buy_sell: '',
@@ -20,12 +24,10 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
         const { name, value, files } = e.target;
 
         if (name === 'chart') {
-            // Set file
-            setReSearchInfo(prev => ({
-                ...prev,
+            setReSearchInfo(prevState => ({
+                ...prevState,
                 [name]: files[0]
             }));
-
 
             // Create preview
             const reader = new FileReader();
@@ -38,6 +40,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
             };
 
             reader.readAsDataURL(files[0]);
+
         } else if (['trigger_price', 'target_price', 'stop_loss'].includes(name)) {
             // Allow only numbers and decimal points
             const numericValue = value.replace(/[^0-9.]/g, '');
@@ -89,7 +92,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
     );
 
 
-    const handleUpload = async () => {
+    const handleUpdate = async () => {
         try {
             const formData = new FormData();
             formData.append('stockName', reSearchInfo.stock_name);
@@ -98,29 +101,51 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
             formData.append('target_price', reSearchInfo.target_price);
             formData.append('stop_loss', reSearchInfo.stop_loss);
             formData.append('rationale', reSearchInfo.rationale);
-            formData.append('chart', reSearchInfo.chart);
-            const serverResponse = await bankingService.postFormInfoToServer('research', formData)
+            // formData.append('chart', reSearchInfo.chart);
+
+            // Only append chart if it's a new file
+            if (reSearchInfo.chart instanceof File) {
+                formData.append('chart', reSearchInfo.chart);
+            }
+            const serverResponse = await bankingService.updatingById('research', _id, formData);
             toast.success(serverResponse.message)
             refresh()
-            setReSearchInfo({
-                stock_name: '',
-                buy_sell: '',
-                trigger_price: '',
-                target_price: '',
-                stop_loss: '',
-                chart: '',
-                chartPreview: null,
-                rationale: ''
-            })
         } catch (error) {
             console.error('Error uploading:', error);
         }
     }
+
+
+    useEffect(() => {
+        if (isParamsData) {
+            // Extract base64 from Binary-like object if needed
+            let chartImage = '';
+
+            if (isParamsData.chart?.data.data && Array.isArray(isParamsData.chart.data.data)) {
+                const binary = Uint8Array.from(isParamsData.chart.data.data)
+                    .reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+                chartImage = `data:${isParamsData.chart.contentType};base64,${btoa(binary)}`;
+            }
+
+            setReSearchInfo({
+                ...isParamsData,
+                stock_name: isParamsData.stockName,
+                chartPreview: chartImage, // prefill image
+                chart: '',
+            });
+        }
+    }, [isParamsData]);
+
+
     return (
         <div className='absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
             <div className='w-3/5 mx-auto bg-white rounded'>
-                <div className='flex w-full justify-between items-center font-medium text-xl text-white p-2 shadow'>
+                {/* <div className='flex w-full justify-between items-center font-medium text-xl text-white p-2 shadow'>
                     <p className='text-xl text-black'>Add Research Details</p>
+                    <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
+                </div> */}
+                <div className='flex w-full items-center justify-between font-medium text-xl mb-2 bg-purple-500 p-2 rounded-t'>
+                    <p className='font-medium text-white text-[18px]'>Updating Id : <span className='text-sm'>{_id}</span></p>
                     <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
                 </div>
                 <div className='h-[60vh] overflow-y-auto no-scrollbar py-2 px-4'>
@@ -134,7 +159,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                         id='stock_name'
                                         name='stock_name'
                                         value={reSearchInfo.stock_name}
-                                        onChange={(e) => handleInputChange(e)}
+                                        onChange={handleInputChange}
                                         placeholder=''
                                     />
                                     <label htmlFor="stock_name" className='for_label'>Stock Name</label>
@@ -142,7 +167,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                             </div>
                             <div className='w-1/2 flex items-center mt-2'>
                                 <div className='w-full relative'>
-                                    <select name="buy_sell" id="buy_sell" onChange={(e) => { handleInputChange(e) }}>
+                                    <select name="buy_sell" value={reSearchInfo.buy_sell || ""} id="buy_sell" onChange={handleInputChange}>
                                         <option value="">--Choose Buy or Sell--</option>
                                         <option value="buy">Buy</option>
                                         <option value="sell">Sell</option>
@@ -215,7 +240,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                 </div>
                             </div>
                         </div>
-                        {reSearchInfo.chart && (
+                        {reSearchInfo.chartPreview && (
                             <div className="mt-2">
                                 <p>Image Preview:</p>
                                 <img
@@ -225,18 +250,6 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                 />
                             </div>
                         )}
-
-                        {/* {reSearchInfo.chart && (
-                            <div>
-                                <p>Img Preview : </p>
-                                <img
-                                    src={reSearchInfo.chart}
-                                    alt="Chart preview"
-                                    className="max-h-40 max-w-40 border rounded shadow"
-                                />
-                            </div>
-                        )} */}
-                        {/* <fieldset> */}
                         <fieldset className='border border-gray-300 p-2 mb-6 rounded'>
                             <legend className='text-gray-500 text-sm'>Rationale</legend>
                             <JoditEditor
@@ -247,11 +260,10 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                 minHeight={350}
                                 onChange={rationaleFieldChanged} />
                         </fieldset>
-                        {/* </fieldset> */}
                     </form>
                 </div>
                 <div className='flex gap-2 justify-end p-2'>
-                    <Button onClick={handleUpload} className={'button button_ac'} type={'button'} children={'Submit'} />
+                    <Button onClick={handleUpdate} className={'button button_ac'} type={'button'} children={'Update'} />
                     <Button onClick={onClose} className={'button button_cancel'} type={'button'} children={'Cancel'} />
                 </div>
             </div >
@@ -259,4 +271,4 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
     )
 }
 
-export default Research_Add_Modal
+export default Research_Edit_Modal

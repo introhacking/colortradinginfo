@@ -93,7 +93,11 @@ function App() {
                 <LiveData />
               </div>
             } />
-            <Route path="research" element={<p>Research</p>} />
+            <Route path="research" element={
+              <div className='p-4'>
+                <Research />
+              </div>
+            } />
             <Route path="video" element={<VideoDelivery />} />
             <Route path="*" element={<ErrorPageComponent />} />
           </Route>
@@ -139,7 +143,7 @@ function App() {
               <Route path="fii-data" element={<ErrorBoundary><FromURLTable /></ErrorBoundary>} />
               <Route path="daily-spurt" element={<ErrorBoundary><FromURLTable2 /></ErrorBoundary>} />
               <Route path="stock-price-checker" element={<ErrorBoundary><StockPriceChecker /></ErrorBoundary>} />
-              <Route path="research" element={<ErrorBoundary><Research/></ErrorBoundary>} />
+              <Route path="research" element={<ErrorBoundary><Research /></ErrorBoundary>} />
               <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
               {/* <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} /> */}
               <Route path="*" element={<ErrorPageComponent />} />

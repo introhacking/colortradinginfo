@@ -108,66 +108,6 @@ exports.addLiveNSEStockName = async (req, res) => {
     }
 };
 
-// exports.fetchAndSortLiveNSEData = async () => {
-//     const folderPath = path.join(__dirname, `../../uploads/liveData`);
-//     const files = await fsp.readdir(folderPath);
-//     const csvFiles = files.filter(f => f.endsWith('.csv'));
-//     const readPromises = csvFiles.map(file =>
-//         fsp.readFile(path.join(folderPath, file), 'utf8')
-//     );
-//     const fileContents = await Promise.all(readPromises);
-
-//     let allRows = [];
-//     fileContents.forEach((content) => {
-//         const parsed = papa.parse(content.trim(), {
-//             header: true,
-//             skipEmptyLines: true
-//         });
-//         const cleanedRows = parsed.data.map(row => {
-//             const cleaned = {};
-//             Object.keys(row).forEach(key => {
-//                 cleaned[key.trim()] = row[key];
-//             });
-//             return cleaned;
-//         });
-//         allRows = allRows.concat(cleanedRows);
-//     });
-
-//     const results = [];
-
-//     for (const name of allRows) {
-//         const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
-//         try {
-//             const data = await yahooFinance.quote(symbol);
-//             const volume = data.regularMarketVolume || 0;
-//             const avgVolume = data.averageDailyVolume10Day || 1;
-//             const volumePercent = ((volume / avgVolume) * 100).toFixed(2);
-//             results.push({
-//                 stockName: name?.StockName.trim(),
-//                 regularMarketVolume: volume,
-//                 averageDailyVolume10Day: avgVolume,
-//                 volumePercent: Number(volumePercent)
-//             });
-//         } catch (stockErr) {
-//             console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
-//         }
-//     }
-
-//     const sortedResults = results.sort((a, b) => {
-//         const getPriority = (val) => {
-//             const num = Number(val);
-//             if (isNaN(num)) return 999;
-//             if (num >= 60) return 1;
-//             if (num > 30 && num < 60) return 2;
-//             if (num <= 30) return 3;
-//             return 999;
-//         };
-//         return getPriority(a.volumePercent) - getPriority(b.volumePercent);
-//     });
-
-//     return sortedResults;
-// };
-
 exports.fetchAndSortLiveNSEData = async () => {
     try {
         const folderPath = path.join(__dirname, `../../uploads/liveData`);
@@ -333,112 +273,6 @@ exports.deleteStockFromLiveDataCSV = async (req, res) => {
 
 
 //  [ LIVE EXCEL SHEET CONNECT ]
-
-// exports.liveExcelSheetConnect = async (req, res) => {
-//     const url = typeof req.body.excelUrl === 'string'
-//         ? req.body.excelUrl
-//         : req.body.excelUrl?.url;
-
-//     if (!url || typeof url !== 'string') {
-//         return res.status(400).json({ error: 'Invalid or missing URL' });
-//     }
-
-//     try {
-//         // ✅ GOOGLE SHEETS HANDLER
-//         if (url.includes('docs.google.com/spreadsheets')) {
-//             const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-//             if (!match) return res.status(400).json({ error: 'Invalid Google Sheet URL' });
-
-//             const sheetId = match[1];
-//             const gids = [0]; // replace with actual gid values
-
-//             let allSheets = {};
-
-//             for (const gid of gids) {
-//                 const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-
-//                 const response = await fetch(csvUrl);
-//                 if (!response.ok) {
-//                     console.error(`Failed to fetch sheet with gid=${gid}`);
-//                     continue;
-//                 }
-
-//                 const csvText = await response.text();
-
-//                 // Parse the CSV
-//                 const workbook = XLSX.read(csvText, { type: 'string' });
-//                 const sheetName = workbook.SheetNames[0]; // Usually "Sheet1" since it's coming from CSV
-//                 const worksheet = workbook.Sheets[sheetName];
-//                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-//                 allSheets[`Sheet_gid_${gid}`] = {
-//                     data: jsonData,
-//                     columns: Object.keys(jsonData[0] || {}).map(col => ({
-//                         headerName: col,
-//                         field: col,
-//                         sortable: true,
-//                         filter: true,
-//                         // valueFormatter: (params) => {
-//                         //     return (params.value === undefined || params.value === null || params.value === '')
-//                         //         ? '-'
-//                         //         : params.value;
-//                         // }
-//                     }))
-//                 };
-//             }
-
-//             res.json({ sheets: allSheets });
-//         }
-
-//         // ✅ ONEDRIVE / SHAREPOINT EXCEL HANDLER
-//         else if (url.includes('sharepoint.com') || url.includes('1drv.ms')) {
-//             const response = await fetch(url, {
-//                 responseType: 'arraybuffer',
-//             });
-//             if (!response.ok) {
-//                 return res.status(400).json({ error: 'Failed to download Excel file', status: response.status });
-//             }
-
-
-//             const csvText = await response.text();
-//             const records = XLSX.read(csvText, { type: 'string' });
-//             const sheetName = records.SheetNames[0];
-//             const worksheet = records.Sheets[sheetName];
-//             const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-//             console.log('Parsed Data:', jsonData);
-
-
-//             // const buffer = await response.arrayBuffer();
-//             // const workbook = XLSX.read(Buffer.from(buffer), { type: 'buffer' });
-
-//             // const sheets = {};
-//             // workbook.SheetNames.forEach(name => {
-//             //     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[name], { defval: '' });
-//             //     const columns = Object.keys(jsonData[0] || {}).map(col => ({
-//             //         headerName: col,
-//             //         field: col,
-//             //         sortable: true,
-//             //         filter: true
-//             //     }));
-//             //     sheets[name] = { columns, data: jsonData };
-//             // });
-
-//             // return res.json({ sheets });
-//         }
-
-//         // ❌ Unknown URL
-//         else {
-//             return res.status(400).json({ error: 'Unknown or unsupported URL type' });
-//         }
-
-//     } catch (err) {
-//         console.error('Excel fetch error:', err);
-//         res.status(500).json({ error: 'Failed to load or parse file' });
-//     }
-// };
-
-
 // Cache sheet config
 const sheetSessions = {}; // You can use Redis instead if needed
 
@@ -519,7 +353,6 @@ async function fetchGoogleSheets(sheetId, gids) {
 
     return allSheets;
 }
-
 
 
 

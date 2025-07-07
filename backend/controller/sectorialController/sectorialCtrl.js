@@ -32,36 +32,6 @@ exports.createSectorDetails = async (req, resp) => {
     }
 };
 
-
-// exports.createSectorDetails = async (req, resp) => {
-//     const { sectorialName } = req.body;
-//     const files = req.files;
-//     // console.log(files)
-//     let sectorName = await Sectorial.findOne({ sectorialName });
-//     try {
-//         if (sectorName) return resp.status(404).json({ message: 'Sector all ready exit' });
-//         const fileResponse = await readerFileService.sectorialImportImgTable(files)
-//         const newSectorial = new Sectorial({
-//             sectorialName,
-//             imageData: fileResponse
-//         });
-//         console.log(newSectorial)
-
-//     } catch (err) {
-//         resp.status(500).json({ message: 'Internal server error' });
-
-//     }
-
-//     // await newSectorial.save();
-//     // resp.status(200).json({ message: `${sectorialName} data uploaded successfully`, newSectorial });
-//     // fs.unlink(files, (err) => {
-//     //     if (err) {
-//     //         return resp.status(500).send(err);
-//     //     }
-//     //     console.log('File deleted successfully.');
-//     // })
-// }
-
 // GET controller to fetch all sectorial data
 exports.getSectorialDetails = async (req, res) => {
     try {

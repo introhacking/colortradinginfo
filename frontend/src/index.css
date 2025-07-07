@@ -40,6 +40,9 @@ select {
 .button_video {
     @apply bg-yellow-600 hover:bg-yellow-500 text-white
 }
+.button_pdf {
+    @apply bg-blue-600 hover:bg-blue-500 text-white
+}
 
 .ag_table_edit_button {
     @apply bg-blue-500 text-white

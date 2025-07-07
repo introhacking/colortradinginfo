@@ -8,6 +8,12 @@ import Button from '../../../components/componentLists/Button';
 import { bankingService } from '../../../services/bankingService';
 import Loading from '../../../Loading';
 import Research_Add_Modal from '../../../components/dashboardPageModal/researchModal/Research_Add_Modal';
+import DeleteModal from '../../../components/dashboardPageModal/alertModal/DeleteModal';
+import Preview from '../../../components/dashboardPageModal/researchModal/Preview';
+import Research_Edit_Modal from '../../../components/dashboardPageModal/researchModal/Research_Edit_Modal';
+
+import { useLocation } from 'react-router-dom';
+
 
 const Research = () => {
     const [rowData, setRowData] = useState([{}]);
@@ -19,9 +25,19 @@ const Research = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isParamsData, setIsParamsData] = useState({})
 
+    const useExactPath = (target) => {
+        const { pathname } = useLocation();
+        return pathname === target;
+    };
+
+    const isDashboardResearch = useExactPath('/dashboard/research');
+
     // DELETING HANDLING
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeletingId, setIsDeletingId] = useState({});
+
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [isPreviewData, setIsPreviewData] = useState({});
 
     const updateFunction = (paramData) => {
         // console.log(paramData)
@@ -34,13 +50,25 @@ const Research = () => {
         setIsDeletingId({ ...paramData, deletingPath })
         setIsDeleteModalOpen(true)
     }
+    const previewModal = (paramData) => {
+        setIsPreviewData({ ...paramData })
+        setIsPreviewModalOpen(true)
+    }
 
     const [columnDefs] = useState([
-        {
-            headerName: "Action", field: 'action', flex: 1, maxWidth: 140,
+        ...(isDashboardResearch ? [{
+            headerName: "Action", field: 'action', pinned: 'left', maxWidth: 190,
             cellRenderer: (params) => {
                 return (
                     <div className="flex justify-between">
+                        <div
+                            onClick={() => {
+                                previewModal(params.data);
+                            }}
+                            className="py-1 px-2 text-sm text-center cursor-pointer rounded"
+                        >
+                            <Button children={<RiIcons.RiEyeFill className="text-2xl" />} className={'button button_video'} type={'button'} />
+                        </div>
                         <div
                             onClick={() => updateFunction(params.data)}
                             className="py-1 px-2 text-sm text-center cursor-pointer rounded"
@@ -58,9 +86,45 @@ const Research = () => {
                     </div>
                 );
             },
+        }] : [
+            {
+                headerName: "Action", field: 'action', pinned: 'left', maxWidth: 80,
+                cellRenderer: (params) => {
+                    return (
+                        <div
+                            onClick={() => {
+                                previewModal(params.data);
+                            }}
+                            className="py-1 px-2 text-sm text-center cursor-pointer rounded"
+                        >
+                            <Button children={<RiIcons.RiEyeFill className="text-2xl" />} className={'button button_video'} type={'button'} />
+                        </div>
+                    );
+                },
+            }
+        ]),
+        {
+            headerName: "Stock Name", filter: true, field: 'stockName'
         },
         {
-            headerName: "Stock Name", field: 'stock_name'
+            headerName: "Buy-Sell", filter: true, field: 'buy_sell'
+        },
+        {
+            headerName: "Trigger Price", filter: true, field: 'trigger_price'
+        },
+        {
+            headerName: "Target Price", filter: true, field: 'target_price'
+        },
+        {
+            headerName: "Stop-Loss", filter: true, field: 'stop_loss'
+        },
+        {
+            headerName: "Rationale", field: 'rationale', valueFormatter: (params) => {
+                const htmlString = params.value || '';
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString;
+                return tempDiv.textContent || tempDiv.innerText || '';
+            }
         },
     ]);
     const defaultColDef = useMemo(() => ({
@@ -79,7 +143,6 @@ const Research = () => {
                 setNoDataFoundMsg('No data found ')
             }
         } catch (err) {
-            console.log(err)
             setLiveError(err.message);
         } finally {
             setIsLoading(false);
@@ -94,9 +157,13 @@ const Research = () => {
     return (
         <>
             <div className='flex justify-between flex-col gap-3'>
-                <div className='flex justify-end'>
-                    <Button onClick={() => setIsModalOpen(true)} children={'Add Research Details'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
-                </div>
+
+                {isDashboardResearch &&
+                    <div className='flex justify-end'>
+                        <Button onClick={() => setIsModalOpen(true)} children={'Add Research Details'} className={'button hover:bg-green-400 bg-green-500 text-white '} />
+                    </div>
+                }
+
                 {isLoading && <Loading msg='Loading... please wait' />}
                 {errorLive && <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorLive}</span></div>}
                 {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded text-center inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
@@ -106,7 +173,11 @@ const Research = () => {
                     </div>
                 )}
             </div>
-            <Research_Add_Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <Research_Add_Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} refresh={fetchingApi} />
+            <DeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} refresh={fetchingApi} />
+            <Preview isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} isPreviewData={isPreviewData} />
+            <Research_Edit_Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} isParamsData={isParamsData} refresh={fetchingApi} />
+
         </>
     )
 }

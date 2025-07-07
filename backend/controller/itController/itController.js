@@ -1,7 +1,5 @@
 const ITSchema = require("../../model/IT/it.model");
 
-
-
 exports.getITDetails = async (req, res) => {
     try {
         const responseData = await ITSchema.find()
@@ -11,7 +9,6 @@ exports.getITDetails = async (req, res) => {
         res.status(500).json({ error: 'Error fetching bankDetails', details: err })
     }
 }
-
 
 exports.createITDetails = async (req, res) => {
     const { it_name, it_type, description, bg_color } = req.body;
