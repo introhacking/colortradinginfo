@@ -1,23 +1,75 @@
 const researchModel = require('../../model/research/reSearchModel')
+const yahooFinance = require('yahoo-finance2').default;
+
+
+// exports.getResearchDetails = async (req, res) => {
+//     try {
+//         const researchDetails = await researchModel.find();
+//         res.status(200).json(researchDetails);
+//     } catch (err) {
+//         res.status(500).json({ error: 'Error fetching researchModel', details: err });
+//     }
+// };
 
 
 exports.getResearchDetails = async (req, res) => {
     try {
         const researchDetails = await researchModel.find();
-        res.status(200).json(researchDetails);
+
+        // Use Promise.all to fetch all quotes concurrently
+        const enrichedDetails = await Promise.all(
+            researchDetails.map(async (item) => {
+                const symbol = item.stockName;
+
+                try {
+                    const quote = await yahooFinance.quote(`${symbol}.NS`);
+                    const currentPrice = quote?.regularMarketPrice || null;
+                    const regularMarketChange = quote?.regularMarketChange || null;
+                    const regularMarketDayLow = quote?.regularMarketDayLow || null;
+
+                    return {
+                        ...item._doc, // spread existing item
+                        currentMarketPrice: currentPrice,
+                        regularMarketChange: regularMarketChange,
+                        regularMarketDayLow: regularMarketDayLow
+
+                    };
+                } catch (err) {
+                    console.error(`Error fetching quote for ${symbol}:`, err.message);
+                    return {
+                        ...item._doc,
+                        currentMarketPrice: null,
+                        regularMarketChange: regularMarketChange,
+                        regularMarketDayLow: regularMarketDayLow,
+                        quoteError: `Could not fetch quote for ${symbol}`
+                    };
+                }
+            })
+        );
+
+        res.status(200).json(enrichedDetails);
     } catch (err) {
-        res.status(500).json({ error: 'Error fetching researchModel', details: err });
+        console.error('Database fetch error:', err.message);
+        res.status(500).json({ error: 'Error fetching research data', details: err.message });
     }
 };
+
 
 // [ POST ]
 exports.postResearchItem = async (req, res) => {
     try {
         const { stockName, buy_sell, trigger_price, target_price, stop_loss, rationale } = req.body;
 
-        if (!req.file) {
-            return res.status(400).json({ error: 'Image (chart) is required' });
+        if (!stockName) {
+            return res.status(400).json({ error: 'Stock Name is required' });
         }
+
+        const chartData = req.file
+            ? {
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            }
+            : null;
 
         const newItem = new researchModel({
             stockName,
@@ -25,10 +77,7 @@ exports.postResearchItem = async (req, res) => {
             trigger_price,
             target_price,
             stop_loss,
-            chart: {
-                data: req.file.buffer,
-                contentType: req.file.mimetype
-            },
+            chart: chartData,
             rationale
         });
         await newItem.save();

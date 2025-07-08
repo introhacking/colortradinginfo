@@ -224,8 +224,16 @@ exports.fetchAndSortLiveNSEData = async () => {
 
 exports.getNSELiveData = async (req, res) => {
     try {
+        // const sortedResults = await exports.fetchAndSortLiveNSEData();
+        // return res.status(200).json(sortedResults);
+
+        const limit = parseInt(req.query.limit); // ?limit=20
         const sortedResults = await exports.fetchAndSortLiveNSEData();
-        return res.status(200).json(sortedResults);
+
+        const limitedResults = !isNaN(limit) ? sortedResults.slice(0, limit) : sortedResults;
+
+        return res.status(200).json(limitedResults);
+
     } catch (err) {
         console.error('Error in getNSELiveData:', err);
         return res.status(500).json({

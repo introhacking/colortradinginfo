@@ -109,6 +109,7 @@ const Research_Edit_Modal = ({ isOpen, onClose, isParamsData, refresh }) => {
             }
             const serverResponse = await bankingService.updatingById('research', _id, formData);
             toast.success(serverResponse.message)
+            onClose()
             refresh()
         } catch (error) {
             console.error('Error uploading:', error);

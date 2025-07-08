@@ -137,7 +137,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                         onChange={(e) => handleInputChange(e)}
                                         placeholder=''
                                     />
-                                    <label htmlFor="stock_name" className='for_label'>Stock Name</label>
+                                    <label htmlFor="stock_name" className='for_label'>Stock Name (Short Name)</label>
                                 </div>
                             </div>
                             <div className='w-1/2 flex items-center mt-2'>

@@ -55,6 +55,17 @@ const Research = () => {
         setIsPreviewModalOpen(true)
     }
 
+
+    // Optional helper for float comparison
+    const approxLessThanOrEqual = (a, b, tolerance = 0.01) => {
+        return a !== undefined && b !== undefined && (a < b || Math.abs(a - b) <= tolerance);
+    };
+
+    const approxGreaterThanOrEqual = (a, b, tolerance = 0.01) => {
+        return a !== undefined && b !== undefined && (a > b || Math.abs(a - b) <= tolerance);
+    };
+
+
     const [columnDefs] = useState([
         ...(isDashboardResearch ? [{
             headerName: "Action", field: 'action', pinned: 'left', maxWidth: 190,
@@ -104,20 +115,110 @@ const Research = () => {
             }
         ]),
         {
-            headerName: "Stock Name", filter: true, field: 'stockName'
+            headerName: "Stock Name", filter: true, field: 'stockName', cellStyle: { textAlign: 'center' }
         },
         {
-            headerName: "Buy-Sell", filter: true, field: 'buy_sell'
+            headerName: "Buy-Sell", filter: true, field: 'buy_sell', cellStyle: { textAlign: 'center' }
         },
         {
-            headerName: "Trigger Price", filter: true, field: 'trigger_price'
+            headerName: "Trigger Price", filter: true, field: 'trigger_price', cellStyle: { textAlign: 'center' }
         },
         {
-            headerName: "Target Price", filter: true, field: 'target_price'
+            headerName: "Target Price", filter: true, field: 'target_price', cellStyle: { textAlign: 'center' }
         },
         {
-            headerName: "Stop-Loss", filter: true, field: 'stop_loss'
+            headerName: "Stop-Loss", filter: true, field: 'stop_loss', cellStyle: { textAlign: 'center' }
         },
+        {
+            headerName: "CMP", filter: true, field: 'currentMarketPrice', cellStyle: { textAlign: 'center' }
+        },
+
+        {
+            headerName: "Active",
+            field: "",
+            filter: true,
+            cellStyle: (params) => {
+                const { trigger_price, stop_loss, regularMarketChange, regularMarketDayLow } = params.data;
+
+                if (approxLessThanOrEqual(trigger_price, regularMarketChange)) {
+                    return { backgroundColor: 'green', color: 'white', fontWeight: 'bold' };
+                } else if (approxGreaterThanOrEqual(stop_loss, regularMarketDayLow)) {
+                    return { backgroundColor: 'red', color: 'white', fontWeight: 'bold' };
+                } else {
+                    return { backgroundColor: 'black', color: 'white' };
+                }
+            },
+            cellRenderer: (params) => {
+                const { trigger_price, stop_loss, regularMarketChange, regularMarketDayLow } = params.data;
+
+                if (approxLessThanOrEqual(trigger_price, regularMarketChange)) {
+                    return "Active";
+                } else if (approxGreaterThanOrEqual(stop_loss, regularMarketDayLow)) {
+                    return "At Risk";
+                } else {
+                    return "Inactive";
+                }
+            }
+        },
+        {
+            headerName: "Status",
+            field: "",
+            filter: true,
+            cellRenderer: (params) => {
+                const { target_price, regularMarketChange } = params.data;
+
+                if (approxLessThanOrEqual(target_price, regularMarketChange)) {
+                    return '✅'; // Or use a styled tick icon
+                } else {
+                    return '❌';
+                }
+            },
+            cellStyle: { textAlign: 'center', fontSize: '18px' }
+        },
+
+        // {
+        //     headerName: "Active",
+        //     field: "", // No specific field
+        //     filter: true,
+        //     cellStyle: (params) => {
+        //         console.log(params.data)
+        //         const { trigger_price, regularMarketChange, stop_loss, regularMarketDayLow } = params.data;
+
+        //         if (trigger_price <= regularMarketChange) {
+        //             return { backgroundColor: 'green', color: 'white' };
+        //         } else if (stop_loss >= regularMarketDayLow) {
+        //             return { backgroundColor: 'red', color: 'white' };
+        //         } else {
+        //             return { backgroundColor: 'black', color: 'white' };
+        //         }
+        //     },
+        //     cellRenderer: (params) => {
+        //         const { trigger_price, regularMarketChange, stop_loss, regularMarketDayLow } = params.data;
+
+        //         if (trigger_price <= regularMarketChange) {
+        //             return "Active";
+        //         } else if (stop_loss >= regularMarketDayLow) {
+        //             return "At Risk";
+        //         } else {
+        //             return "Inactive";
+        //         }
+        //     }
+        // },
+        // {
+        //     headerName: "Status",
+        //     field: "", // No specific field
+        //     filter: true,
+        //     cellRenderer: (params) => {
+        //         const { target_price, regularMarketChange } = params.data;
+
+        //         if (target_price <= regularMarketChange) {
+        //             return '✅'; // Success tick emoji
+        //         } else {
+        //             return '❌'; // Or leave it empty or use dash '-'
+        //         }
+        //     }
+        // },
+
         {
             headerName: "Rationale", field: 'rationale', valueFormatter: (params) => {
                 const htmlString = params.value || '';
@@ -127,6 +228,20 @@ const Research = () => {
             }
         },
     ]);
+    const getRowStyle = (params) => {
+        const { target_price, regularMarketChange } = params.data;
+
+        if (target_price <= regularMarketChange) {
+            return {
+                backgroundColor: '#eeeeee',
+                color: '#999',
+                pointerEvents: 'none',
+                opacity: 0.6
+            };
+        }
+        return null;
+    };
+
     const defaultColDef = useMemo(() => ({
         sortable: true
     }), []);
@@ -169,7 +284,7 @@ const Research = () => {
                 {noDataFoundMsg && <div className='bg-gray-100 px-4 py-1 rounded text-center inline-block my-4'><span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span></div>}
                 {!isLoading && !errorLive && !noDataFoundMsg && (
                     <div className='ag-theme-alpine overflow-y-auto h-[70vh] w-full'>
-                        <AgGridReact rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
+                        <AgGridReact rowData={rowData} getRowStyle={getRowStyle} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
                     </div>
                 )}
             </div>

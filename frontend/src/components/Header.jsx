@@ -20,10 +20,11 @@ const Header = () => {
 
     const live20Data = async () => {
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data')
-            if (Array.isArray(serverResponse)) {
-                setTop20Stocks(serverResponse.slice(0, 20));
-            }
+            const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data?limit=20')
+            setTop20Stocks(serverResponse)
+            // if (Array.isArray(serverResponse)) {
+            //     setTop20Stocks(serverResponse.slice(0, 20));
+            // }
         } catch (err) {
             console.error('Live fetch error:', err);
         }
