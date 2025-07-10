@@ -2,6 +2,8 @@ const cron = require('node-cron');
 // const axios = require('axios');
 const readerFileService = require('../services/fileReadingServices');
 const { io } = require('../colorInfo');
+const yahooFinance = require('yahoo-finance2').default;
+const researchModel = require('../model/research/reSearchModel');
 
 
 cron.schedule('35 10 * * *', async () => {
@@ -45,6 +47,81 @@ cron.schedule('10 10 18 * *', () => {
     io.emit('scrape-announcement', annoucement);
     //   scrapeAllCaps(previousMonth);
 });
+
+
+// [ Research ]
+const approxLTE = (a, b, tol = 0.01) => a <= b || Math.abs(a - b) < tol;
+const approxGTE = (a, b, tol = 0.01) => a >= b || Math.abs(a - b) < tol;
+
+cron.schedule('* * * * * ', async () => {
+    // console.log("🔄 Running research data updater...");
+
+    const allItems = await researchModel.find({
+        isTargetHit: { $ne: true }
+    });
+
+    if (!allItems || allItems.length === 0) {
+        console.log("📉 No active research items left to update.");
+        return; // exit early
+    }
+
+    for (let item of allItems) {
+        try {
+            const symbol = item.stockName;
+            const quote = await yahooFinance.quote(`${symbol}.NS`);
+
+            const currentMarketPrice = quote?.regularMarketPrice ?? 0;
+            // const marketChange = quote?.regularMarketChange ?? 0;
+            const marketLow = quote?.regularMarketDayLow ?? 0;
+
+            const isTriggered = approxLTE(item.trigger_price, currentMarketPrice);
+            // const isAtRisk = approxGTE(item.stop_loss, item.trigger_price);
+            const isAtRisk = approxLTE(currentMarketPrice, item.stop_loss);
+            const isTargetHit = approxLTE(item.target_price, currentMarketPrice);
+
+            // await researchModel.findByIdAndUpdate(item._id, {
+            //     isTriggered,
+            //     isAtRisk,
+            //     isTargetHit
+            // });
+
+            const updatedResearchStock = await researchModel.findByIdAndUpdate(
+                item._id,
+                { isTriggered, isAtRisk, isTargetHit },
+                { new: true }  // returns the updated document
+            );
+
+            // Only emit selected fields
+            const payload = {
+                _id: updatedResearchStock._id,
+                stockName: updatedResearchStock.stockName,
+                currentMarketPrice: currentMarketPrice,
+                isTriggered: updatedResearchStock.isTriggered,
+                // isAtRisk: updatedResearchStock.isAtRisk,
+                isAtRisk,
+                isTargetHit: updatedResearchStock.isTargetHit,
+            };
+
+            // 🔁 Emit the update to all clients
+            io.emit('researchStockUpdate', payload);
+
+            // io.emit('researchStockUpdate', {
+            //     id: item._id,
+            //     stockName: symbol,
+            //     currentMarketPrice,
+            //     isTriggered,
+            //     isAtRisk,
+            //     isTargetHit
+            // });
+
+        } catch (err) {
+            console.error(`❌ Failed for ${item.stockName}:`, err.message);
+        }
+    }
+
+    // console.log("✅ Research data update completed.");
+});
+
 
 // Temporarily add for testing
 // setTimeout(() => {

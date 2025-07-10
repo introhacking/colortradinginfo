@@ -305,6 +305,7 @@ const MasterScreen = () => {
           field: key,
           sortable: true,
           filter: true,
+          pinned: true,
           resizable: true,
           maxWidth: 140,
           cellRenderer: (params) =>

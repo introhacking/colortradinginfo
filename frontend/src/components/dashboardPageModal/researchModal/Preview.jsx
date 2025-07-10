@@ -108,20 +108,21 @@ const Preview = ({ isOpen, onClose, isPreviewData }) => {
                     <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
                 </div>
                 <div className='h-[60vh] overflow-y-auto no-scrollbar py-2 px-4'>
-                    <div ref={printRef} className="w-full h-auto mx-auto pb-10 bg-white shadow-md text-sm text-gray-900 font-sans">
-                        <div className="mb-2">
-                            <div className='bg-gradient-to-r from-stone-100 to-blue-100  flex justify-end border-b-8 border-b-sky-300'>
-                                <div className='w-[20%]'>
-                                    <img className='w-full h-full' src={logo} alt="applied-trading-academyLogo" srcset="" />
+                    <div ref={printRef} className="w-full h-auto mx-auto pt-4 pb-10 bg-white shadow-md text-sm text-gray-900 font-sans">
+                        <div className="mb-2.5">
+                            <div className='p-2 bg-gradient-to-r from-blue-100 to-blue-100  flex justify-between items-center border-b-8 border-b-sky-300'>
+                                <p className='text-3xl font-bold italic'>Research</p>
+                                <div className='w-[25%] h-[20%]'>
+                                    <img className='w-full h-[20%]' src={logo} alt="applied-trading-academyLogo" srcset="" />
                                 </div>
-                                <div className='p-4'>
+                                {/* <div className='p-4'>
                                     <p className='text-2xl uppercase font-bold'>Applied Trading Academy</p>
                                     <span className='text-xl capitalize font-medium italic'>Research</span>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
-                        <div className='px-5'>
+                        <div className='px-3'>
                             <div className='w-full h-[70vh] mb-3'>
                                 <img className='w-full h-full' src={mktResearch} alt="mktResearch" />
                             </div>
@@ -134,6 +135,7 @@ const Preview = ({ isOpen, onClose, isPreviewData }) => {
                                 </div>
                             </div>
                             <div className='mb-6 p-2 flex justify-between items-center bg-gradient-to-l from-blue-50 to-blue-100 text-blue-500'>
+                                <div className='font-bold tracking-wider capitalize'><strong>Date:</strong> {new Date(createdAt).toLocaleDateString()}</div>
                                 <div className='font-bold tracking-wider capitalize'><strong>Action:</strong> {buy_sell}</div>
                                 {/* <p className="text-gray-600 capitalize">Action: {buy_sell}</p> */}
                                 <div className='font-bold tracking-wider'><strong>Trigger Price:</strong> ₹{trigger_price}</div>

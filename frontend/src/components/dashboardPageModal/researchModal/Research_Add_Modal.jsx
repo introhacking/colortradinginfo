@@ -88,9 +88,22 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
         [],
     );
 
+    const getUserInfo = async () => {
+        const loginInfoStr = localStorage.getItem('loginInfo');
+        if (loginInfoStr) {
+            try {
+                const loginInfo = JSON.parse(loginInfoStr);
+                return loginInfo?.user?.username || null;
+            } catch (e) {
+                console.error("Invalid loginInfo format");
+            }
+        }
+        return null;
+    };
 
     const handleUpload = async () => {
         try {
+            const createdBy = await getUserInfo();
             const formData = new FormData();
             formData.append('stockName', reSearchInfo.stock_name);
             formData.append('buy_sell', reSearchInfo.buy_sell);
@@ -99,6 +112,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
             formData.append('stop_loss', reSearchInfo.stop_loss);
             formData.append('rationale', reSearchInfo.rationale);
             formData.append('chart', reSearchInfo.chart);
+            formData.append('createdBy', createdBy);
             const serverResponse = await bankingService.postFormInfoToServer('research', formData)
             toast.success(serverResponse.message)
             refresh()

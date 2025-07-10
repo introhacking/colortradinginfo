@@ -27,9 +27,10 @@ exports.login = async (req, res) => {
             success: true,
             token,
             user: {
-                id: auth._id , // optionally include more info like role
+                id: auth._id, // optionally include more info like role
                 username: auth.username,
                 role: auth.role,
+                disclaimer: auth.disclaimer
             }
         });
     } catch (err) {
@@ -37,7 +38,6 @@ exports.login = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error' });
     }
 };
-
 
 exports.createLoginUser = async (req, res) => {
     const { username, password, role = 'user', admin_pin } = req.body;
@@ -65,5 +65,27 @@ exports.createLoginUser = async (req, res) => {
     } catch (err) {
         console.error('User creation error:', err);
         return res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+
+exports.updateUserDisclaimer = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        const updatedUser = await Auth.findByIdAndUpdate(
+            userId,
+            { disclaimer: true },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.json({ success: true, user: updatedUser });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };

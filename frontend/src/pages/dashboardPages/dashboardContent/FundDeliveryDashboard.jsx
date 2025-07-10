@@ -7,6 +7,7 @@ import { bankingService } from '../../../services/bankingService';
 import Loading from '../../../Loading';
 import Button from '../../../components/componentLists/Button';
 import MasterScreen from '../masterScreenCAPS/MasterScreen';
+import Disclaimer from '../../../components/dashboardPageModal/alertModal/Disclaimer';
 
 const FundDeliveryDashboard = () => {
     const [category, setCategory] = useState('');
@@ -23,7 +24,7 @@ const FundDeliveryDashboard = () => {
 
     const [chartData, setChartData] = useState(null);
     const [decision, setDecision] = useState(true);
-
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
     const customCellStyle = {
         display: 'flex',
@@ -458,6 +459,41 @@ const FundDeliveryDashboard = () => {
     const currentTab = tabs.find(tab => tab.id === activeTab);
 
 
+
+
+    const handleAcceptDisclaimer = async () => {
+        try {
+            const loginInfoStr = localStorage.getItem('loginInfo');
+            if (loginInfoStr) {
+                const loginInfo = JSON.parse(loginInfoStr);
+
+                // Update in backend
+                const response = await bankingService.postFormInfoToServer('disclaimer', {
+                    userId: loginInfo.user.id
+                });
+
+                // Update localStorage
+                loginInfo.hasSeenDisclaimer = true;
+                loginInfo.user.disclaimer = true;
+                localStorage.setItem('loginInfo', JSON.stringify(loginInfo));
+
+                setShowDisclaimer(false);
+            }
+        } catch (error) {
+            console.error('Failed to update disclaimer:', error);
+        }
+    };
+
+    useEffect(() => {
+        const loginInfoStr = localStorage.getItem('loginInfo');
+        if (loginInfoStr) {
+            const loginInfo = JSON.parse(loginInfoStr);
+            if (!loginInfo.user.disclaimer) {
+                setShowDisclaimer(true);
+            }
+        }
+    }, []);
+
     return (
         <>
             <div className="flex gap-2 mb-3 w-full">
@@ -514,6 +550,9 @@ const FundDeliveryDashboard = () => {
                     )}
                 </div>
             </div>
+
+            {showDisclaimer && <Disclaimer onClose={() => { setShowDisclaimer(false) }} onAccept={handleAcceptDisclaimer} />}
+
         </>
     )
 }

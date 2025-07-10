@@ -14,7 +14,12 @@ const authSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
-    }
+    },
+    disclaimer: {
+        type: Boolean,
+        default: false
+    },
+
 });
 
 module.exports = mongoose.model('Authlogin', authSchema);

@@ -12,11 +12,54 @@ const yahooFinance = require('yahoo-finance2').default;
 // };
 
 
+// exports.getResearchDetails = async (req, res) => {
+//     try {
+//         const researchDetails = await researchModel.find();
+
+//         // Use Promise.all to fetch all quotes concurrently
+//         const enrichedDetails = await Promise.all(
+//             researchDetails.map(async (item) => {
+//                 const symbol = item.stockName;
+
+//                 try {
+//                     const quote = await yahooFinance.quote(`${symbol}.NS`);
+//                     const currentPrice = quote?.regularMarketPrice || null;
+//                     const regularMarketChange = quote?.regularMarketChange || null;
+//                     const regularMarketDayLow = quote?.regularMarketDayLow || null;
+
+//                     return {
+//                         ...item._doc, // spread existing item
+//                         currentMarketPrice: currentPrice,
+//                         regularMarketChange: regularMarketChange,
+//                         regularMarketDayLow: regularMarketDayLow
+
+//                     };
+//                 } catch (err) {
+//                     console.error(`Error fetching quote for ${symbol}:`, err.message);
+//                     return {
+//                         ...item._doc,
+//                         currentMarketPrice: null,
+//                         regularMarketChange: regularMarketChange,
+//                         regularMarketDayLow: regularMarketDayLow,
+//                         quoteError: `Could not fetch quote for ${symbol}`
+//                     };
+//                 }
+//             })
+//         );
+
+//         res.status(200).json(enrichedDetails);
+//     } catch (err) {
+//         console.error('Database fetch error:', err.message);
+//         res.status(500).json({ error: 'Error fetching research data', details: err.message });
+//     }
+// };
+
+
+
 exports.getResearchDetails = async (req, res) => {
     try {
         const researchDetails = await researchModel.find();
 
-        // Use Promise.all to fetch all quotes concurrently
         const enrichedDetails = await Promise.all(
             researchDetails.map(async (item) => {
                 const symbol = item.stockName;
@@ -28,19 +71,24 @@ exports.getResearchDetails = async (req, res) => {
                     const regularMarketDayLow = quote?.regularMarketDayLow || null;
 
                     return {
-                        ...item._doc, // spread existing item
+                        ...item._doc,
                         currentMarketPrice: currentPrice,
-                        regularMarketChange: regularMarketChange,
-                        regularMarketDayLow: regularMarketDayLow
-
+                        regularMarketChange,
+                        regularMarketDayLow,
+                        // return backend-evaluated flags
+                        isTriggered: item.isTriggered,
+                        isAtRisk: item.isAtRisk,
+                        isTargetHit: item.isTargetHit
                     };
                 } catch (err) {
-                    console.error(`Error fetching quote for ${symbol}:`, err.message);
                     return {
                         ...item._doc,
                         currentMarketPrice: null,
-                        regularMarketChange: regularMarketChange,
-                        regularMarketDayLow: regularMarketDayLow,
+                        regularMarketChange: null,
+                        regularMarketDayLow: null,
+                        isTriggered: item.isTriggered,
+                        isAtRisk: item.isAtRisk,
+                        isTargetHit: item.isTargetHit,
                         quoteError: `Could not fetch quote for ${symbol}`
                     };
                 }
@@ -55,14 +103,23 @@ exports.getResearchDetails = async (req, res) => {
 };
 
 
+
 // [ POST ]
 exports.postResearchItem = async (req, res) => {
     try {
-        const { stockName, buy_sell, trigger_price, target_price, stop_loss, rationale } = req.body;
+        const { stockName, buy_sell, trigger_price, target_price, stop_loss, rationale, createdBy } = req.body;
 
         if (!stockName) {
             return res.status(400).json({ error: 'Stock Name is required' });
         }
+
+        // 🔍 Check for duplicate stockName
+        const existingItem = await researchModel.findOne({ stockName });
+
+        if (existingItem) {
+            return res.status(409).json({ error: 'Stock name already exists' });
+        }
+
 
         const chartData = req.file
             ? {
@@ -78,7 +135,8 @@ exports.postResearchItem = async (req, res) => {
             target_price,
             stop_loss,
             chart: chartData,
-            rationale
+            rationale,
+            createdBy
         });
         await newItem.save();
         res.status(201).json({
