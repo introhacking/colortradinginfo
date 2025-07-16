@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 import Button from '../../componentLists/Button';
 import DatePicker from "react-datepicker";
@@ -43,7 +43,7 @@ const FromURL_Info_Modal2 = ({ isOpen, onClose, fetchFileLists }) => {
             setError("");
 
             try {
-                const serverResponse = await bankingService.fetchCSV2('/csv/fetch-url-data', result);
+                const serverResponse = await apiService.fetchCSV2('/csv/fetch-url-data', result);
                 console.log(serverResponse)
                 fetchFileLists()
 
@@ -75,7 +75,7 @@ const FromURL_Info_Modal2 = ({ isOpen, onClose, fetchFileLists }) => {
         // const url = `https://archives.nseindia.com/products/content/sec_bhavdata_full_${date}.csv`;
 
         // try {
-        //     const csvData = await bankingService.fetchCSV(url, '/csv/fetch-url-data');
+        //     const csvData = await apiService.fetchCSV(url, '/csv/fetch-url-data');
 
         //     // Add timestamp to CSV data
         //     const newEntry = {
@@ -123,7 +123,7 @@ const FromURL_Info_Modal2 = ({ isOpen, onClose, fetchFileLists }) => {
     //             const url = `https://archives.nseindia.com/products/content/sec_bhavdata_full_${date}.csv`;
 
     //             try {
-    //                 const csvData = await bankingService.fetchCSV(url, '/csv/fetch-url-data');
+    //                 const csvData = await apiService.fetchCSV(url, '/csv/fetch-url-data');
 
     //                 // Add timestamp to CSV data
     //                 const newEntry = {

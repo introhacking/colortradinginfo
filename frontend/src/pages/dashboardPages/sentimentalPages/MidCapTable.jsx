@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 // import IT_Info_Form from '../../../components/dashboardPageModal/itModal/IT_Info_Form';
 // import IT_Edit_Form from '../../../components/dashboardPageModal/itModal/IT_Edit_Form';
@@ -107,7 +107,7 @@ const MidCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/mid-cap');
+            const serverResponse = await apiService.getInfoFromServer('/mid-cap');
             if (serverResponse.length > 0) {
                 setRowData(serverResponse)
             }
@@ -124,7 +124,7 @@ const MidCapTable = () => {
     const exportDataFromMidCapUrl = async () => {
         setScrubbingButtonStatus(true)
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'MIDCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'MIDCAP' })
             if (serverResponse.status) {
                 toast.success(serverResponse.message)
                 newFetchingAPI()
@@ -142,7 +142,7 @@ const MidCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'MIDCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'MIDCAP' })
             if (serverResponse.success && serverResponse.length > 0) {
                 setRowData1(serverResponse.data);
                 const dynamicColumns = Object.keys(serverResponse.data[0]).map(key => ({
@@ -209,7 +209,7 @@ const MidCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
             // console.log(serverResponse)
             const serverResponseData = serverResponse.response
             if (serverResponseData?.status === 500) {

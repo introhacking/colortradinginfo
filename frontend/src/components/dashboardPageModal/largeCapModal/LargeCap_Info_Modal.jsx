@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
 import Button from '../../componentLists/Button';
-// import { bankingService } from '../../../services/bankingService';
+// import { apiService } from '../../../services/apiService';
 
 const LargeCap_Info_Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;

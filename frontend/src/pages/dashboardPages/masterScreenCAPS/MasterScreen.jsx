@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Loading from '../../../Loading';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import { AgGridReact } from 'ag-grid-react';
 import Button from '../../../components/componentLists/Button';
 import Custom_AGFilter from '../../clientUI/daily_IO/Custom_AGFilter';
@@ -184,7 +184,7 @@ const MasterScreen = () => {
     setError('');
     setNoDataFoundMsg('');
     try {
-      const serverResponse = await bankingService.getInfoFromServer('/master-screen')
+      const serverResponse = await apiService.getInfoFromServer('/master-screen')
       console.log(serverResponse)
       setRowData(serverResponse);
       const today = new Date();
@@ -239,7 +239,7 @@ const MasterScreen = () => {
     setNoDataFoundMsg('');
 
     try {
-      const serverResponse = await bankingService.getInfoFromServer('/master-screen');
+      const serverResponse = await apiService.getInfoFromServer('/master-screen');
 
       const today = new Date();
       const currentMonth = today.toLocaleString('en-US', { month: 'short' });

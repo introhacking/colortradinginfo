@@ -2,9 +2,10 @@ import axios from 'axios'
 
 const BASE_URL = '/api/v1'
 
-export const BACKEND_URI = 'http://localhost:4500'
+// export const BACKEND_URI = 'http://localhost:4500'
+export const BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
-export const bankingService = {
+export const apiService = {
     // GET
     getBankManagementTypesList: async (endpoint) => {
         try {
@@ -101,8 +102,25 @@ export const bankingService = {
             throw Error(err.message)
         }
     },
-
-
+    updatingSpecificVideoById: async (fullEndpointWithId, body = {}) => {
+        try {
+            const serverResponse = await axios.put(`${BASE_URL}${fullEndpointWithId}`, body);
+            return serverResponse;
+        } catch (err) {
+            throw Error(err.message);
+        }
+    },
+    // DELETE SPECIFIC VIDEO BY ID
+    deletingSpecificVideoById: async (fullEndpointWithId, body = {}) => {
+        try {
+            const serverResponse = await axios.delete(`${BASE_URL}${fullEndpointWithId}`, {
+                data: body,
+            });
+            return serverResponse;
+        } catch (err) {
+            throw Error(err.message);
+        }
+    },
 
     //  FILE UPLOADING FOR TECHNICAL BANKING SG (SALE GROWTH)
     fileUploadingForField: async (endpoint, data, config) => {

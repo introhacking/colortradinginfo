@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Button from '../../componentLists/Button';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import JoditEditor from 'jodit-react';
 import { toast } from 'sonner';
 
@@ -107,7 +107,7 @@ const Research_Edit_Modal = ({ isOpen, onClose, isParamsData, refresh }) => {
             if (reSearchInfo.chart instanceof File) {
                 formData.append('chart', reSearchInfo.chart);
             }
-            const serverResponse = await bankingService.updatingById('research', _id, formData);
+            const serverResponse = await apiService.updatingById('research', _id, formData);
             toast.success(serverResponse.message)
             onClose()
             refresh()
@@ -163,7 +163,7 @@ const Research_Edit_Modal = ({ isOpen, onClose, isParamsData, refresh }) => {
                                         onChange={handleInputChange}
                                         placeholder=''
                                     />
-                                    <label htmlFor="stock_name" className='for_label'>Stock Name</label>
+                                    <label htmlFor="stock_name" className='for_label'>Stock Name (NSE Name)</label>
                                 </div>
                             </div>
                             <div className='w-1/2 flex items-center mt-2'>

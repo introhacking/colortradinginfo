@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
 const MidCapStock = () => {
@@ -75,7 +75,7 @@ const MidCapStock = () => {
     const fetchLargeStockLists = async () => {
         setIsLoading(true)
         try {
-            const midStocklists = await bankingService.getInfoFromServer('/mid-cap')
+            const midStocklists = await apiService.getInfoFromServer('/mid-cap')
             const customData = midStocklists.map(stock => ({
                 stockName: stock.stockName,
                 // Jan24: stock.monthlyData[0],
@@ -107,7 +107,7 @@ const MidCapStock = () => {
         setErrorMsg('');
         // setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
             const serverResponseData = serverResponse.response
 
             if (!serverResponseData?.length) {

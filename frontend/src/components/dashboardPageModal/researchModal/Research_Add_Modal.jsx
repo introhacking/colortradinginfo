@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import Button from '../../componentLists/Button';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import JoditEditor from 'jodit-react';
 import { toast } from 'sonner';
 
@@ -113,7 +113,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
             formData.append('rationale', reSearchInfo.rationale);
             formData.append('chart', reSearchInfo.chart);
             formData.append('createdBy', createdBy);
-            const serverResponse = await bankingService.postFormInfoToServer('research', formData)
+            const serverResponse = await apiService.postFormInfoToServer('research', formData)
             toast.success(serverResponse.message)
             refresh()
             setReSearchInfo({
@@ -151,7 +151,7 @@ const Research_Add_Modal = ({ isOpen, onClose, refresh }) => {
                                         onChange={(e) => handleInputChange(e)}
                                         placeholder=''
                                     />
-                                    <label htmlFor="stock_name" className='for_label'>Stock Name (Short Name)</label>
+                                    <label htmlFor="stock_name" className='for_label'>Stock Name (NSE Name)</label>
                                 </div>
                             </div>
                             <div className='w-1/2 flex items-center mt-2'>

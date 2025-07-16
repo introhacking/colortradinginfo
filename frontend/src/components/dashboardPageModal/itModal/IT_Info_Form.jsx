@@ -1,7 +1,7 @@
 import axios from 'axios';
 import JoditEditor from 'jodit-react';
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { bankingService } from '../../../services/bankingService.js'
+import { apiService } from '../../../services/apiService.js'
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner'
 
@@ -112,7 +112,7 @@ const IT_Info_Form = ({ isOpen, onClose }) => {
                 bg_color: ITInfo.color
             }
             try {
-                const ITInfoResp = await bankingService.postFormInfoToServer('/itCreate', customModifiedData)
+                const ITInfoResp = await apiService.postFormInfoToServer('/itCreate', customModifiedData)
                 toast.success('Create Successfully')
                 setITInfo({
                     name: '',

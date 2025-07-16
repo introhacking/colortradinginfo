@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import IT_Info_Form from '../../../components/dashboardPageModal/itModal/IT_Info_Form';
 import IT_Edit_Form from '../../../components/dashboardPageModal/itModal/IT_Edit_Form';
@@ -56,7 +56,7 @@ const ITTable = () => {
     }), []);
     const fetchingApi = async () => {
         try {
-            const getBankData = await bankingService.getInfoFromServer('/itCreate');
+            const getBankData = await apiService.getInfoFromServer('/itCreate');
             setRowData(getBankData)
             // setRowData(transformedData);
 

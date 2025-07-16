@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner';
 
@@ -25,7 +25,7 @@ const LargeCap_Edit_Modal = ({ isOpen, onClose, isParamsData }) => {
                 stockName: ITInfo.stockName,
                 monthlyData: monthlyDataArray
             }
-            await bankingService.updatingById('large-cap', _id, toUpdatingData)
+            await apiService.updatingById('large-cap', _id, toUpdatingData)
             toast.success(`${toUpdatingData.stockName} updated successfully`)
         } catch (err) {
             toast.error(err)

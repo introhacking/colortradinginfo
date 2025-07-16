@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, Children } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 import Bank_Cell_Info from '../../../../components/dashboardPageModal/bankingModal/Bank_Cell_Info';
 import { toast } from 'sonner';
 import Loading from '../../../../Loading';
@@ -39,7 +39,7 @@ const Banking = () => {
             bankName: cellData.colDef.field,
             managementName: cellData.data.management_name
         };
-        const bankDescription = await bankingService.getParamsData('q', customModified.bankName, customModified.managementName)
+        const bankDescription = await apiService.getParamsData('q', customModified.bankName, customModified.managementName)
         const convertToStringy = JSON.stringify(bankDescription.description)
         setModalData(convertToStringy);
         setIsModalOpen(true);
@@ -114,7 +114,7 @@ const Banking = () => {
     const fetchingApi = async () => {
         setIsLoading(true)
         try {
-            const getBankData = await bankingService.getInfoFromServer('/banking');
+            const getBankData = await apiService.getInfoFromServer('/banking');
             setGetBankDataDetails(getBankData)
             setErrorMsgStatus(false)
             setIsLoading(false)

@@ -3,7 +3,7 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import Button from '../../../components/componentLists/Button'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Loading from '../../../Loading';
 
 
@@ -18,7 +18,7 @@ const LiveExcelSheet = () => {
         setIsLoading(true);
         try {
 
-            const serverResponse = await bankingService.postFormInfoToServer('connect-to-excel', { excelUrl })
+            const serverResponse = await apiService.postFormInfoToServer('connect-to-excel', { excelUrl })
             // console.log(serverResponse)
             const sheets = serverResponse.sheets || {};
             setSheetData(sheets);

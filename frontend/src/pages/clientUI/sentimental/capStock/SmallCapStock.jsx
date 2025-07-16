@@ -3,7 +3,7 @@ import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 // import { smallCapTableHeading } from '../../../row_Column_Config/smallCaps';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
 
@@ -79,7 +79,7 @@ const SmallCapStock = () => {
     const fetchLargeStockLists = async () => {
         setIsLoading(true)
         try {
-            const midStocklists = await bankingService.getInfoFromServer('/small-cap')
+            const midStocklists = await apiService.getInfoFromServer('/small-cap')
             const customData = midStocklists.map(stock => ({
                 stockName: stock.stockName,
                 // Jan24: stock.monthlyData[0],
@@ -111,7 +111,7 @@ const SmallCapStock = () => {
         setErrorMsg('');
         // setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
             const serverResponseData = serverResponse.response
 
             if (!serverResponseData?.length) {

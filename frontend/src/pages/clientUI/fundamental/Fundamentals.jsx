@@ -8,10 +8,11 @@ const Fundamentals = () => {
     const tabs = [
         { id: 'tab1', title: 'BANKING', content: <Banking /> },
         { id: 'tab2', title: 'IT', content: <IT /> },
-        { id: 'tab3', title: 'FMCG', content: <FMCG/>},
-        { id: 'tab4', title: 'METALS', content: 'This is the content of Tab 4' },
-        { id: 'tab5', title: 'AUTO', content: 'This is the content of Tab 5' },
-        { id: 'tab6', title: 'ENERGY', content: 'This is the content of Tab 6' },
+        // { id: 'tab3', title: 'FMCG', content: <FMCG/>},
+        { id: 'tab3', title: 'FMCG', content: 'Data Not Found'},
+        { id: 'tab4', title: 'METALS', content: 'Data Not Found' },
+        { id: 'tab5', title: 'AUTO', content: 'Data Not Found' },
+        { id: 'tab6', title: 'ENERGY', content: 'Data Not Found' },
 
     ];
 

@@ -2,16 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { BACKEND_URI, bankingService } from '../../../services/bankingService';
+import { BACKEND_URI, apiService } from '../../../services/apiService';
 import * as RiIcons from 'react-icons/ri';
-import Button from '../../../components/componentLists/Button';
 import io from 'socket.io-client';
 import Loading from '../../../Loading';
 import DeleteLiveNSEDataModal from '../../../components/dashboardPageModal/liveNSEStockModal/DeleteLiveNSEDataModal';
-import DeleteModal from '../../../components/dashboardPageModal/alertModal/DeleteModal';
 import { useLocation } from 'react-router-dom';
 
-const socket = io(`${BACKEND_URI}`, { withCredentials: true });
+// const backendURL = import.meta.env.VITE_BACKEND_URI;
+const socket = io(BACKEND_URI, { withCredentials: true });
 
 const LiveData = () => {
     const [rowData, setRowData] = useState([]);
@@ -84,7 +83,7 @@ const LiveData = () => {
 
     const [columnDefs] = useState([
         ...(!isLiveData ? [{
-            headerName: "Action", pinned:'left', field: 'action', maxWidth: 100,
+            headerName: "Action", pinned: 'left', field: 'action', maxWidth: 100,
             cellRenderer: (params) => (
                 <div className="flex justify-between">
                     <div onClick={() => deleteOperation(params.data)} className="ag_table_delete py-1 my-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded">
@@ -94,7 +93,7 @@ const LiveData = () => {
             )
         }] : []),
         {
-            headerName: "StockName", field: 'stockName', pinned:'left', maxWidth: 160, filter: true
+            headerName: "StockName", field: 'stockName', pinned: 'left', maxWidth: 160, filter: true
         },
         {
             headerName: "Volume Percent", field: 'volumePercent', maxWidth: 140, filter: true, cellStyle: getCellStyle
@@ -156,7 +155,7 @@ const LiveData = () => {
     //     setNoDataFoundMsg('');
     //     try {
 
-    //         const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data')
+    //         const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data')
     //         if (serverResponse.length > 0) {
     //             setRowData(serverResponse)
     //         } else {
@@ -177,7 +176,7 @@ const LiveData = () => {
             setNoDataFoundMsg('');
 
             try {
-                const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data');
+                const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data');
                 if (isMounted) {
                     if (serverResponse.length > 0) {
                         setRowData(serverResponse);
@@ -235,7 +234,6 @@ const LiveData = () => {
             )}
 
             <DeleteLiveNSEDataModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} data={isDeletingId} />
-            {/* <DeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} /> */}
         </>
     )
 }

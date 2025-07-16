@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import Button from '../../componentLists/Button';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 
-// import { bankingService } from '../../../services/bankingService';
+// import { apiService } from '../../../services/apiService';
 
 const Sectorial_Info_Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
@@ -46,7 +46,7 @@ const Sectorial_Info_Modal = ({ isOpen, onClose }) => {
     //     const formData = new FormData();
     //     formData.append('techBankingFile_SG', fileRead);
     //     try {
-    //         const response = await bankingService.fileUploadingForField('/techBankingFile_SG', formData, {
+    //         const response = await apiService.fileUploadingForField('/techBankingFile_SG', formData, {
     //             onUploadProgress: (progressEvent) => {
     //                 const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
     //                 setProgress(percentage);
@@ -113,7 +113,7 @@ const Sectorial_Info_Modal = ({ isOpen, onClose }) => {
         if (sectorialData.day) formData.append('day', sectorialData.day);
 
         try {
-            const response = await bankingService.postFormInfoToServer('sector', formData, {
+            const response = await apiService.postFormInfoToServer('sector', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -141,7 +141,7 @@ const Sectorial_Info_Modal = ({ isOpen, onClose }) => {
         // formData.append(getApendFileTypes, file);
 
         // try {
-        //     const response = await bankingService.fileUploadingForField(endpoint, formData, {
+        //     const response = await apiService.fileUploadingForField(endpoint, formData, {
         //         onUploadProgress: (progressEvent) => {
         //             const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
         //             setProgress(prevState => ({ ...prevState, [imageKey]: percentage }));

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import LiveNSEModal from '../../../components/dashboardPageModal/liveNSEStockModal/LiveNSEModal';
 import LiveData from '../liveData/LiveData';
@@ -21,7 +21,7 @@ function StockPriceChecker() {
         setError('');
         setStockData(null);
         try {
-            const res = await bankingService.fetchCSVDataFromDateRequest(`/google-finanace`, { symbol })
+            const res = await apiService.fetchCSVDataFromDateRequest(`/google-finanace`, { symbol })
             console.log(res)
             setStockData(res);
         } catch (err) {

@@ -6,7 +6,7 @@ import 'ag-grid-enterprise';
 import Loading from '../../../Loading'
 import * as BiIcons from 'react-icons/bi';
 import * as RiIcons from 'react-icons/ri';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import { toast } from 'sonner';
 import Custom_AGFilter from './Custom_AGFilter';
@@ -57,7 +57,7 @@ const DailyIOMain = () => {
     //     setError('');
     //     setNoDataFoundMsg('');
     //     try {
-    //         const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
+    //         const serverResponse = await apiService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
     //         const data = serverResponse.mergedData;
 
     //         console.log(serverResponse)
@@ -244,7 +244,7 @@ const DailyIOMain = () => {
         setNoDataFoundMsg('');
 
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
             const data = serverResponse.mergedData || [];
 
             // setDateTabs(serverResponse.mainDateISO)
@@ -359,7 +359,7 @@ const DailyIOMain = () => {
     //         setIsLoading(true);
     //         setError('');
     //         setNoDataFoundMsg('');
-    //         const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
+    //         const serverResponse = await apiService.fetchCSVDataFromDateRequest('/request-date', updatedDateHandler);
     //         const mergedData = serverResponse.mergedData || [];
 
     //         if (mergedData.length === 0) {

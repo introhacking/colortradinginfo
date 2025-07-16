@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import * as BiIcons from 'react-icons/bi';
 import * as RiIcons from 'react-icons/ri';
@@ -60,7 +60,7 @@ const FromURLTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const response = await bankingService.getInfoFromServer(`/delivery`);
+            const response = await apiService.getInfoFromServer(`/delivery`);
             const data = response;
 
             //  1 METHOD

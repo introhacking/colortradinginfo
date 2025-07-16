@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as BiIcons from 'react-icons/bi'
 import * as RiIcons from 'react-icons/ri'
 import Button from '../../../components/componentLists/Button';
-import { BACKEND_URI, bankingService } from '../../../services/bankingService';
+import { BACKEND_URI, apiService } from '../../../services/apiService';
 import Loading from '../../../Loading';
 import Research_Add_Modal from '../../../components/dashboardPageModal/researchModal/Research_Add_Modal';
 import DeleteModal from '../../../components/dashboardPageModal/alertModal/DeleteModal';
@@ -14,8 +14,9 @@ import Research_Edit_Modal from '../../../components/dashboardPageModal/research
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
+// const backendURL = import.meta.env.VITE_BACKEND_URI;
 
-const socket = io(`${BACKEND_URI}`, { withCredentials: true });
+const socket = io(BACKEND_URI, { withCredentials: true });
 
 const Research = () => {
     const [rowData, setRowData] = useState([{}]);
@@ -132,7 +133,7 @@ const Research = () => {
             headerName: "Stop-Loss", filter: true, field: 'stop_loss', cellStyle: { textAlign: 'center' }
         },
         {
-            headerName: "Date",
+            headerName: "Created Date",
             field: "createdAt",
             filter: true,
             cellStyle: { textAlign: 'center' },
@@ -190,6 +191,20 @@ const Research = () => {
                 // if (value === true) return 'Success';       // Green checkmark
                 // if (value === false) return 'Fail';      // Red cross
                 // return '-';
+            }
+        },
+        {
+            headerName: "Status Updated Date",
+            field: "updatedAt",
+            filter: true,
+            cellStyle: { textAlign: 'center' },
+            valueFormatter: (params) => {
+                const { isTargetHit, updatedAt } = params.data;
+
+                if (!isTargetHit) return '-'; // ❌ Not hit → show "-"
+                if (!updatedAt) return '';     // ⚠️ No date available
+
+                return new Date(updatedAt).toLocaleDateString(); // ✅ Show formatted date
             }
         },
         { headerName: 'Created By', field: 'createdBy', cellStyle: { textAlign: 'center' } },
@@ -312,10 +327,10 @@ const Research = () => {
     const getRowStyle = (params) => {
         if (params.data.isTargetHit) {
             return {
-                backgroundColor: '#eeeeee',
-                color: '#999',
+                backgroundColor: 'gray',
+                color: '#ffffff',
                 pointerEvents: 'none',
-                opacity: 0.6
+                opacity: 0.7
             };
         }
         return null;
@@ -330,7 +345,7 @@ const Research = () => {
         setLiveError('');
         setNoDataFoundMsg('');
         try {
-            const getBankData = await bankingService.getInfoFromServer('/research');
+            const getBankData = await apiService.getInfoFromServer('/research');
             if (getBankData.length > 0) {
                 setRowData(getBankData)
             } else {

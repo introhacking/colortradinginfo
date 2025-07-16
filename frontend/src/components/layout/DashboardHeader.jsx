@@ -6,7 +6,9 @@ import HeaderSetting from '../../pages/dashboardPages/headerSetting/HeaderSettin
 import LogoutModal from '../dashboardPageModal/alertModal/LogoutModal';
 
 import { io } from 'socket.io-client';
-import { BACKEND_URI } from '../../services/bankingService';
+import { BACKEND_URI } from '../../services/apiService';
+
+// const backendURL = import.meta.env.VITE_BACKEND_URI;
 
 
 const DashboardHeader = () => {
@@ -44,7 +46,7 @@ const DashboardHeader = () => {
 
   // Setup socket connection and save announcements
   useEffect(() => {
-    const socket = io(`${BACKEND_URI}`, { withCredentials: true });
+    const socket = io(BACKEND_URI, { withCredentials: true });
 
     socket.on('connect', () => {
       // console.log('🟢 Connected to WebSocket server');

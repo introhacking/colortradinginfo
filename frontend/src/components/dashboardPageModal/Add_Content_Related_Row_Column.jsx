@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import JoditRichTextEditor from '../JoditRichTextEditor';
 import JoditEditor from 'jodit-react';
 import Button from '../componentLists/Button';
-import { bankingService } from '../../services/bankingService';
+import { apiService } from '../../services/apiService';
 
 
 
@@ -104,7 +104,7 @@ const Add_Content_Related_Row_Column = ({ updateModalData, setUpdateModalStatus 
         setPostTitle(updateModalData.postTitle)
         setCellTitle(updateModalData.cellTitle)
 
-        // bankingService.getInfoFromServer('/itCreate')
+        // apiService.getInfoFromServer('/itCreate')
     }, [])
 
     return (

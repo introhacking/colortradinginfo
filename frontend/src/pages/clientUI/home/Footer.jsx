@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 const Footer = () => {
+  const [currentYear, setCurrentYear] = useState(null)
+
+  useEffect(() => {
+    const year = new Date().getFullYear();
+    setCurrentYear(year);
+  }, []);
+
   return (
     <>
       <div className='text-white p-4 bg-gradient-to-l from-[#376683] to-[#3d6e8c]'>
@@ -12,7 +19,7 @@ const Footer = () => {
               </svg>
               {/* <p className='text-sm'>Registration No IN006541264</p> */}
             </div>
-            <p className='font-medium text-sm'>By connecting students all over the world to the best instructors, we helping individuals reach their goals and pursue their dreams.</p>
+            {/* <p className='font-medium text-sm'>By connecting students all over the world to the best instructors, we helping individuals reach their goals and pursue their dreams.</p> */}
           </div>
           <div className='flex flex-col gap-2 w-1/4 pt-2'>
             <div className='flex flex-col gap-1'>
@@ -45,7 +52,7 @@ const Footer = () => {
         </div>
       </div>
       <div className='bg-[#3376a0] p-2 text-white text-center'>
-        <p>Copyright © 2025 All Rights Reserved.</p>
+        <p>Copyright © 2025 - {currentYear}  All Rights Reserved.</p>
       </div>
     </>
   );

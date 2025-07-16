@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import * as AiIcons from "react-icons/ai";
 import * as ImIcons from 'react-icons/im'
 import loginImg from '../../assets/images/login-img.png'
-import { bankingService } from '../../services/bankingService'
+import { apiService } from '../../services/apiService'
 import { toast } from 'sonner';
 
 
@@ -49,7 +49,7 @@ const AdminLogin = () => {
         }
 
         try {
-            const serverResponse = await bankingService.postFormInfoToServer('login', loginCredential);
+            const serverResponse = await apiService.postFormInfoToServer('login', loginCredential);
             const { success, user } = serverResponse;
             if (serverResponse.success === true) {
                 setRedirectStatus(true);
@@ -100,7 +100,7 @@ const AdminLogin = () => {
             return;
         }
         try {
-            const serverResponse = await bankingService.postFormInfoToServer('create-auth', registrationCredential);
+            const serverResponse = await apiService.postFormInfoToServer('create-auth', registrationCredential);
             const { success, message } = serverResponse;
             if (success === true) {
                 toast.success(message);

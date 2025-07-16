@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import * as BiIcons from 'react-icons/bi';
 import * as RiIcons from 'react-icons/ri';
@@ -57,7 +57,7 @@ const FromURLTable2 = () => {
     //     setNoDataFoundMsg('');
 
     //     try {
-    //         const serverResponse = await bankingService.getInfoFromServer(`/csv/read-csv-data?file=${fileName}`);
+    //         const serverResponse = await apiService.getInfoFromServer(`/csv/read-csv-data?file=${fileName}`);
     //         const data = serverResponse;
 
     //         if (data.length > 0) {
@@ -138,7 +138,7 @@ const FromURLTable2 = () => {
         setNoDataFoundMsg('');
 
         try {
-            const serverResponse = await bankingService.getInfoFromServer(`/csv/read-csv-data?file=${fileName}`);
+            const serverResponse = await apiService.getInfoFromServer(`/csv/read-csv-data?file=${fileName}`);
             const data = serverResponse;
 
             if (data.length > 0) {
@@ -235,7 +235,7 @@ const FromURLTable2 = () => {
 
     const fetchFileLists = async () => {
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/csv-files')
+            const serverResponse = await apiService.getInfoFromServer('/csv-files')
             setFileList(serverResponse.files)
 
         } catch (err) {
@@ -266,7 +266,7 @@ const FromURLTable2 = () => {
 
     const exportDataFromUrl = async () => {
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/export-data')
+            const serverResponse = await apiService.getInfoFromServer('/export-data')
             // console.log(serverResponse)
 
         } catch (err) {

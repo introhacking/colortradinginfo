@@ -21,8 +21,7 @@ const cookieParser = require("cookie-parser");
 const io = new Server(server, {
     path: "/socket.io", // Default
     cors: {
-        origin: process.env.FRONTEND_URL, // e.g., http://localhost:3000
-        // origin: 'http://localhost:5173', // e.g., http://localhost:3000
+        origin: process.env.FRONTEND_URL,
         methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
         credentials: true
     }
@@ -42,9 +41,9 @@ io.on('connection', (socket) => {
 
 app.use(cors({
     origin: process.env.FRONTEND_URL,
-    // origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
-    credentials: true
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type' , 'Authorization'],
 }));
 module.exports.io = io;
 

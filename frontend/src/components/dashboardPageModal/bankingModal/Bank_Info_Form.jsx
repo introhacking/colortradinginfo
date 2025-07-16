@@ -1,7 +1,7 @@
 import axios from 'axios';
 import JoditEditor from 'jodit-react';
 import React, { useMemo, useRef, useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner'
 
@@ -73,7 +73,7 @@ const Bank_Info_Form = ({ isOpen, onClose }) => {
             setErrors(newErrors);
         } else {
             try {
-                const bankInfoResp = await bankingService.postFormInfoToServer('banking', bankInfo)
+                const bankInfoResp = await apiService.postFormInfoToServer('banking', bankInfo)
                 toast.success('Create Successfully')
                 setBankInfo({
                     bank_name: '',

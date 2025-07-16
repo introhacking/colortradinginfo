@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Loading from '../../../Loading';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 
 const DeliveryDashboard = () => {
@@ -66,7 +66,7 @@ const DeliveryDashboard = () => {
     useEffect(() => {
         const fetchDeliveryData = async () => {
             try {
-                const serverResponse = await bankingService.getInfoFromServer('/delivery/cards')
+                const serverResponse = await apiService.getInfoFromServer('/delivery/cards')
                 const data = serverResponse
                 // console.log(data)
                 if (data.status) {

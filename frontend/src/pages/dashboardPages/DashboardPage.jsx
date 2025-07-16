@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 // import AgTable from './dashboardContent/AgTable'
 // import Add_Column_Row_Modal from '../../components/dashboardPageModal/Add_Column_Row_Modal'
-import DeliveryDashboard from './dashboardContent/DeliveryDashboard'
+// import DeliveryDashboard from './dashboardContent/DeliveryDashboard'
 import FundDeliveryDashboard from './dashboardContent/FundDeliveryDashboard'
 
 const DashboardPage = () => {

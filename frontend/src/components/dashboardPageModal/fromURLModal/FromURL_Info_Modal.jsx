@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 import Button from '../../componentLists/Button';
 import DatePicker from "react-datepicker";
@@ -48,7 +48,7 @@ const FromURL_Info_Modal = ({ isOpen, onClose, refresh }) => {
                 const url = `https://archives.nseindia.com/content/nsccl/fao_participant_oi_${date}.csv`;
 
                 try {
-                    const csvData = await bankingService.fetchCSV(url, '/csv/fetch-url');
+                    const csvData = await apiService.fetchCSV(url, '/csv/fetch-url');
 
                     // Add timestamp to CSV data
                     const newEntry = {
@@ -91,7 +91,7 @@ const FromURL_Info_Modal = ({ isOpen, onClose, refresh }) => {
     //     }
     //     try {
     //         setError('');
-    //         const csvData = await bankingService.fetchCSV(url);
+    //         const csvData = await apiService.fetchCSV(url);
     //         const newRecord = {
     //             data: csvData,
     //             createdAt: new Date().toISOString(),

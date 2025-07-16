@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Loading from '../../../Loading';
 import Button from '../../../components/componentLists/Button';
 import MasterScreen from '../masterScreenCAPS/MasterScreen';
@@ -92,7 +92,7 @@ const FundDeliveryDashboard = () => {
             if (type) queryParams.type = type;
             if (to_date) queryParams.to_date = to_date;
 
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/fetch-data', queryParams);
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/fetch-data', queryParams);
             // console.log(serverResponse);
 
             if (type === 'large-cap' || type === 'mid-cap' || type === 'small-cap') {
@@ -468,7 +468,7 @@ const FundDeliveryDashboard = () => {
                 const loginInfo = JSON.parse(loginInfoStr);
 
                 // Update in backend
-                const response = await bankingService.postFormInfoToServer('disclaimer', {
+                const response = await apiService.postFormInfoToServer('disclaimer', {
                     userId: loginInfo.user.id
                 });
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { bankingService } from '../../../services/bankingService.js'
+import { apiService } from '../../../services/apiService.js'
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner'
 
@@ -11,7 +11,7 @@ const AlertModal = ({ isOpen, onClose, deletingRoute, tableName , callFunction }
     console.log(deletingRoute , tableName)
     const deleteTableData = async () => {
         try {
-            const serverResponse = await bankingService.truncateTable(deletingRoute)
+            const serverResponse = await apiService.truncateTable(deletingRoute)
             if (serverResponse.status === 200) toast.success(serverResponse.data)
             onClose();
             callFunction()

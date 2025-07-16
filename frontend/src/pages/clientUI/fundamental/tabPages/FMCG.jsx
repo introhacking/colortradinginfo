@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
 
@@ -37,7 +37,7 @@ const FMCG = () => {
     const fetchingApi = async () => {
         setIsLoading(true)
         try {
-            const getBankData = await bankingService.getInfoFromServer('/fmcg');
+            const getBankData = await apiService.getInfoFromServer('/fmcg');
             setRowData(getBankData)
             setErrorMsgStatus(false)
             setIsLoading(false)

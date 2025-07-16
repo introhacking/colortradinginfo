@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { column_Data, row_Data } from '../../row_Column_Config/row_column_config';
 import axios from 'axios'
 import Button from '../componentLists/Button';
-import { bankingService } from '../../services/bankingService';
+import { apiService } from '../../services/apiService';
 
 const Add_Column_Row_Modal = ({ createTableModal }) => {
     const [rows, setRows] = useState(5);
@@ -43,7 +43,7 @@ const Add_Column_Row_Modal = ({ createTableModal }) => {
         }]
         // setTableData(newData);
         try {
-            const creatingResponse = await bankingService.postFormInfoToServer('/itCreate', customModifiedData)
+            const creatingResponse = await apiService.postFormInfoToServer('/itCreate', customModifiedData)
             console.log(creatingResponse)
             toast.success('Create Successfully')
 

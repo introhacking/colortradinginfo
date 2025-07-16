@@ -3,7 +3,7 @@ import AgTable from '../dashboardContent/AgTable';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Bank_Edit_Form from '../../../components/dashboardPageModal/bankingModal/Bank_Edit_Form';
 import Button from '../../../components/componentLists/Button';
 import Bank_Info_Form from '../../../components/dashboardPageModal/bankingModal/Bank_Info_Form';
@@ -72,7 +72,7 @@ const BankingTable = () => {
   }), []);
   const fetchingApi = async () => {
     try {
-      const getBankData = await bankingService.getInfoFromServer('/banking');
+      const getBankData = await apiService.getInfoFromServer('/banking');
       setRowData(getBankData)
       // setRowData(transformedData);
 

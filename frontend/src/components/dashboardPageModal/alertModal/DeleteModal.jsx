@@ -1,5 +1,5 @@
 import React from 'react'
-import { bankingService } from '../../../services/bankingService.js'
+import { apiService } from '../../../services/apiService.js'
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner'
 
@@ -11,7 +11,7 @@ const DeleteModal = ({ isOpen, onClose, isDeletingId }) => {
 
     const deleteTableRowsData = async () => {
         try {
-            const serverResponse = await bankingService.deletingById(`/${deletingPath}`, _id)
+            const serverResponse = await apiService.deletingById(`/${deletingPath}`, _id)
             toast.success(serverResponse.data)
             onClose();
         } catch (err) {

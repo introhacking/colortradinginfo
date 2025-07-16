@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from './componentLists/Button'
-import { bankingService } from '../services/bankingService';
+import { apiService } from '../services/apiService';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Header = () => {
 
     const live20Data = async () => {
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/google-finanace-live-data?limit=20')
+            const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20')
             setTop20Stocks(serverResponse)
             // if (Array.isArray(serverResponse)) {
             //     setTop20Stocks(serverResponse.slice(0, 20));

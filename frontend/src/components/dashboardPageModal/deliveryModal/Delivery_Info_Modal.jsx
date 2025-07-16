@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 import Button from '../../componentLists/Button';
 
@@ -34,7 +34,7 @@ const Delivery_Info_Modal = ({ isOpen, onClose }) => {
         formData.append('deliveryCSVFile', selectedFiles);
 
         try {
-            const response = await bankingService.fileUploadingForField('/deliveryCSVFile', formData, {
+            const response = await apiService.fileUploadingForField('/deliveryCSVFile', formData, {
                 onUploadProgress: (progressEvent) => {
                     const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
                     setProgress(percentage);

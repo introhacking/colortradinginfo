@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Button from '../../componentLists/Button';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 
 const LiveNSEModal = ({ isOpen, onClose, data }) => {
@@ -30,7 +30,7 @@ const LiveNSEModal = ({ isOpen, onClose, data }) => {
 
         // Now POST to your backend API
         try {
-            const serverResponse = await bankingService.postFormInfoToServer('add-live-stock', { stockNames: stockArray })
+            const serverResponse = await apiService.postFormInfoToServer('add-live-stock', { stockNames: stockArray })
             if (serverResponse.success) {
                 const { message, skipped = [] } = serverResponse;
 

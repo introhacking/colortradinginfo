@@ -4,7 +4,7 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { toast } from 'sonner';
 import Loading from '../../../../Loading';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 
 const DeliveryPage = () => {
 
@@ -38,7 +38,7 @@ const DeliveryPage = () => {
   const fetchApiData = async () => {
     setIsLoading(true)
     try {
-      const serverResponse = await bankingService.getInfoFromServer('/delivery')
+      const serverResponse = await apiService.getInfoFromServer('/delivery')
       const maxVolumnDeliveryLength = Math.max(...serverResponse.map(stock => stock.volumnDeliveryData.length));
       const dynamicCols = [];
       for (let i = 0; i < maxVolumnDeliveryLength; i += 2) {

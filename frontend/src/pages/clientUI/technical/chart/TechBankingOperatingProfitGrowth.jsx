@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 // import Chart from "react-apexcharts";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { Chart as chartJS, CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js/auto';
-// import { bankingService } from '../../../../services/bankingService';
+// import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
 chartJS.register(CategoryScale, LinearScale, LineElement, BarElement, Title, Tooltip, Legend)

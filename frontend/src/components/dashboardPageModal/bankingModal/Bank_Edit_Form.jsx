@@ -1,6 +1,6 @@
 import JoditEditor from 'jodit-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner';
 
@@ -45,7 +45,7 @@ const Bank_Edit_Form = ({ isOpen, onClose, isParamsData }) => {
         // setBankInfo({...bankInfo , [name]:value})
         setManagementName(value)
         try {
-            const getDescription = await bankingService.getParamsData('/q', bankInfo.bank_name, value)
+            const getDescription = await apiService.getParamsData('/q', bankInfo.bank_name, value)
             bankInfo.description = getDescription.description
             bankInfo.color = getDescription.bgColor
             setBankInfo({ ...bankInfo })
@@ -71,7 +71,7 @@ const Bank_Edit_Form = ({ isOpen, onClose, isParamsData }) => {
             color: bankInfo.color
         }
         try {
-            const updatedData = await bankingService.updatingDescriptionAndColorByName('/banking', toUpdatingData)
+            const updatedData = await apiService.updatingDescriptionAndColorByName('/banking', toUpdatingData)
             if (updatedData) return toast.success(`${toUpdatingData.bank_name} bank --> ${toUpdatingData.management_type} updated successfully`)
             onClose()
         } catch (err) {

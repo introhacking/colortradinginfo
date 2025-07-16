@@ -4,7 +4,7 @@ import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the 
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import Add_Content_Related_Row_Column from '../../../components/dashboardPageModal/Add_Content_Related_Row_Column';
 // import { Toaster } from 'sonner'
-import { bankingService } from '../../../services/bankingService.js'
+import { apiService } from '../../../services/apiService.js'
 
 
 const AgTable = () => {
@@ -19,7 +19,7 @@ const AgTable = () => {
 
     const getTableDataFromServer = async () => {
       try {
-        await bankingService.getInfoFromServer('/itCreate')
+        await apiService.getInfoFromServer('/itCreate')
       } catch (err) {
         console.log(err)
 

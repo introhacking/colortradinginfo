@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 // import IT_Info_Form from '../../../components/dashboardPageModal/itModal/IT_Info_Form';
 // import IT_Edit_Form from '../../../components/dashboardPageModal/itModal/IT_Edit_Form';
@@ -108,7 +108,7 @@ const LargeCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/large-cap');
+            const serverResponse = await apiService.getInfoFromServer('/large-cap');
             if (serverResponse.length > 0) {
                 setRowData(serverResponse)
             }
@@ -124,7 +124,7 @@ const LargeCapTable = () => {
 
     // const fetchData = async () => {
     //     try {
-    //         const getBankData = await bankingService.getInfoFromServer('/large-cap');
+    //         const getBankData = await apiService.getInfoFromServer('/large-cap');
     //         setRowData(getBankData);
 
     //         if (getBankData.length > 0) {
@@ -177,7 +177,7 @@ const LargeCapTable = () => {
     const exportDataFromLargeCapUrl = async () => {
         setScrubbingButtonStatus(true)
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'LARGECAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'LARGECAP' })
             if (serverResponse.status) {
                 toast.success(serverResponse.message)
                 newFetchingAPI()
@@ -196,7 +196,7 @@ const LargeCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'LARGECAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'LARGECAP' })
             if (serverResponse.success && serverResponse.length > 0) {
                 setRowData1(serverResponse.data);
                 const dynamicColumns = Object.keys(serverResponse.data[0]).map(key => ({
@@ -266,7 +266,7 @@ const LargeCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
             const serverResponseData = serverResponse.response
             if (serverResponseData?.length > 0) {
                 setRowData(serverResponseData)

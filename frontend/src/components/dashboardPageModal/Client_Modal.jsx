@@ -14,7 +14,7 @@ const Client_Modal = ({ cellDataTransfer, setClientModalStatus }) => {
 
     }, [])
 
-    console.log(cellDataTransfer.paragraph)
+    // console.log(cellDataTransfer.paragraph)
     return (
         <div className='absolute inset-0 bg-black/60 z-20 backdrop-blur-sm flex justify-center items-center'>
             <div className='w-3/5 mx-auto bg-white p-2'>

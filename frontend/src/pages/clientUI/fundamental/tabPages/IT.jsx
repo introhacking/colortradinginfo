@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, Children } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../../services/bankingService';
+import { apiService } from '../../../../services/apiService';
 import IT_Cell_Info from '../../../../components/dashboardPageModal/itModal/IT_Cell_Info';
 import Loading from '../../../../Loading';
 
@@ -36,7 +36,7 @@ const IT = () => {
             itName: cellData.colDef.field,
             itType: cellData.data.it_type
         };
-        const bankDescription = await bankingService.getITParamsData('itq', customModified.itName, customModified.itType)
+        const bankDescription = await apiService.getITParamsData('itq', customModified.itName, customModified.itType)
         const convertToStringy = JSON.stringify(bankDescription.description)
         setModalData(convertToStringy);
         setIsModalOpen(true);
@@ -111,7 +111,7 @@ const IT = () => {
     const fetchingApi = async () => {
         setIsLoading(true)
         try {
-            const getBankData = await bankingService.getInfoFromServer('/itCreate');
+            const getBankData = await apiService.getInfoFromServer('/itCreate');
             setGetBankDataDetails(getBankData)
             setErrorMsgStatus(false)
             setIsLoading(false)

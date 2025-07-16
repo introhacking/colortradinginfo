@@ -23,36 +23,36 @@ const Preview = ({ isOpen, onClose, isPreviewData }) => {
     const [pdfGeneratingStatus, setPdfGeneratingStatus] = useState(false)
 
     const printRef = useRef(null)
-    const handleGeneratePdf1 = async () => {
-        setPdfGeneratingStatus(true)
-        const element = printRef.current;
-        if (!element) return;
+    // const handleGeneratePdf1 = async () => {
+    //     setPdfGeneratingStatus(true)
+    //     const element = printRef.current;
+    //     if (!element) return;
 
-        const canvas = await html2canvas(element, {
-            scale: 2, // Higher scale for better quality
-            useCORS: true,
-            allowTaint: true,
-            logging: false
-        })
+    //     const canvas = await html2canvas(element, {
+    //         scale: 2, // Higher scale for better quality
+    //         useCORS: true,
+    //         allowTaint: true,
+    //         logging: false
+    //     })
 
-        const data = canvas.toDataURL('image/png')
+    //     const data = canvas.toDataURL('image/png')
 
-        // Portrait export
-        const pdf = new jsPDF({
-            orientation: "portrait",
-            unit: "px",
-            format: 'a4'
-        });
+    //     // Portrait export
+    //     const pdf = new jsPDF({
+    //         orientation: "portrait",
+    //         unit: "px",
+    //         format: 'a4'
+    //     });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(data, "PNG", 0, 0, pdfWidth, pdfHeight)
-        pdf.save(`${stockName}-stock-preview.pdf`)
+    //     const pdfWidth = pdf.internal.pageSize.getWidth();
+    //     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    //     pdf.addImage(data, "PNG", 0, 0, pdfWidth, pdfHeight)
+    //     pdf.save(`${stockName}-stock-preview.pdf`)
 
-        setTimeout(() => {
-            setPdfGeneratingStatus(false)
-        }, 1500);
-    }
+    //     setTimeout(() => {
+    //         setPdfGeneratingStatus(false)
+    //     }, 1500);
+    // }
 
     const handleGeneratePdf = async () => {
         setPdfGeneratingStatus(true);

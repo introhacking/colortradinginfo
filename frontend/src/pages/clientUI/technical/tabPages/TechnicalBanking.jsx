@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense, useState, useMemo, startTransition } from 'react'
-import { bankingService } from '../../../../services/bankingService'
+import { apiService } from '../../../../services/apiService'
 import Loading from '../../../../Loading'
 import TechBankingOperatingProfitGrowth from '../chart/TechBankingOperatingProfitGrowth'
 import TechBankingNetProfitGrowth from '../chart/TechBankingNetProfitGrowth'
@@ -41,7 +41,7 @@ const TechnicalBanking = () => {
     // const fetchData = async () => {
     //     setIsLoading(true)
     //     try {
-    //         const technicalBanking = await bankingService.getInfoFromServer('/technical-banking',
+    //         const technicalBanking = await apiService.getInfoFromServer('/technical-banking',
     //             { params: { banks: selectedBanks } }
     //         )
     //         setSelectedBanks(technicalBanking)
@@ -79,7 +79,7 @@ const TechnicalBanking = () => {
         setIsLoading(true)
         startTransition(async () => {
             try {
-                const technicalBanking = await bankingService.getInfoFromServer('/technical-banking_sale_growth')
+                const technicalBanking = await apiService.getInfoFromServer('/technical-banking_sale_growth')
                 setTechnicalBankName(technicalBanking)
 
                 if (technicalBanking.length === 0) {
@@ -99,7 +99,7 @@ const TechnicalBanking = () => {
         setIsLoading(true)
         startTransition(async () => {
             try {
-                const technicalBanking = await bankingService.getInfoFromServer('/technical-banking_opg')
+                const technicalBanking = await apiService.getInfoFromServer('/technical-banking_opg')
                 setTechnicalBankNameOPG(technicalBanking)
 
                 if (technicalBanking.length === 0) {
@@ -119,7 +119,7 @@ const TechnicalBanking = () => {
         setIsLoading(true)
         startTransition(async () => {
             try {
-                const technicalBanking = await bankingService.getInfoFromServer('/technical-banking_NPG')
+                const technicalBanking = await apiService.getInfoFromServer('/technical-banking_NPG')
                 setTechnicalBankNameNPG(technicalBanking)
 
                 if (technicalBanking.length === 0) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../componentLists/Button';
 import { toast } from 'sonner';
 
@@ -26,7 +26,7 @@ const FromURL_Edit_Form2 = ({ isOpen, onClose, isParamsData, fetchData }) => {
                 stockName: deliveryInfo.stockName,
                 volumnDeliveryData: monthlyDataArray
             }
-            await bankingService.updatingById('delivery', _id, toUpdatingData)
+            await apiService.updatingById('delivery', _id, toUpdatingData)
             onClose()
             fetchData()
             toast.success(`${toUpdatingData.stockName} updated successfully`)

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { bankingService } from '../../../services/bankingService';
+import { apiService } from '../../../services/apiService';
 import Button from '../../../components/componentLists/Button';
 import AlertModal from '../../../components/dashboardPageModal/alertModal/AlertModal';
 import * as BiIcons from 'react-icons/bi'
@@ -99,7 +99,7 @@ const SmallCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.getInfoFromServer('/small-cap');
+            const serverResponse = await apiService.getInfoFromServer('/small-cap');
             if (serverResponse.length > 0) {
                 setRowData(serverResponse)
             }
@@ -117,7 +117,7 @@ const SmallCapTable = () => {
     const exportDataFromSmallCapUrl = async () => {
         setScrubbingButtonStatus(true)
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'SMALLCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/exports-data', { cap: 'SMALLCAP' })
             if (serverResponse.status) {
                 toast.success(serverResponse.message)
                 newFetchingAPI()
@@ -134,7 +134,7 @@ const SmallCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'SMALLCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap-file', { cap: 'SMALLCAP' })
             if (serverResponse.success && serverResponse.length > 0) {
                 setRowData1(serverResponse.data);
                 const dynamicColumns = Object.keys(serverResponse.data[0]).map(key => ({
@@ -198,7 +198,7 @@ const SmallCapTable = () => {
         setError('');
         setNoDataFoundMsg('');
         try {
-            const serverResponse = await bankingService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
             // console.log(serverResponse)
             const serverResponseData = serverResponse.response
             if (serverResponseData?.status === 500) {

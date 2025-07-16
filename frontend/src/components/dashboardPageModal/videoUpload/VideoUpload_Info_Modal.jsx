@@ -1,122 +1,226 @@
-import React, { useState } from 'react'
-import { bankingService } from '../../../services/bankingService';
+import React, { useState } from 'react';
+import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 import Button from '../../componentLists/Button';
+import CircularProgress from '../../../components/componentLists/CircularProgress'
 
 const VideoUpload_Info_Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
-    // const [progress, setProgress] = useState(0);
-
-    const [videoInfo, setVideoInfo] = useState({ video_name: '' });
-    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [video_name, setVideoName] = useState('');
+    const [modules, setModules] = useState([
+        {
+            moduleName: '',
+            chapters: [
+                {
+                    chapterName: '',
+                    videos: [
+                        { title: '', file: null }
+                    ]
+                }
+            ]
+        }
+    ]);
     const [progress, setProgress] = useState(null);
-    const [error, setError] = useState('');
 
-    const validateFile = (file) => {
-        const validTypes = ['video/mp4'];
-        if (!validTypes.includes(file.type)) {
-            toast.error('Invalid file type. Please upload a Valid format.');
-            return false;
-        }
-        return true;
+    // Add functions to handle input changes
+    const handleModuleChange = (index, value) => {
+        const updatedModules = [...modules];
+        updatedModules[index].moduleName = value;
+        setModules(updatedModules);
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files;
-        if (validateFile(file[0])) {
-            setSelectedFiles(file);
-        }
-        return false
+    const handleChapterChange = (mIndex, cIndex, value) => {
+        const updatedModules = [...modules];
+        updatedModules[mIndex].chapters[cIndex].chapterName = value;
+        setModules(updatedModules);
     };
 
-    const videoInfoChange = (e) => {
-        const { name, value } = e.target
-        setVideoInfo({ ...videoInfo, [name]: value })
-    }
+    const handleVideoTitleChange = (mIndex, cIndex, vIndex, value) => {
+        const updatedModules = [...modules];
+        updatedModules[mIndex].chapters[cIndex].videos[vIndex].title = value;
+        setModules(updatedModules);
+    };
+
+    const handleVideoFileChange = (mIndex, cIndex, vIndex, file) => {
+        const updatedModules = [...modules];
+        updatedModules[mIndex].chapters[cIndex].videos[vIndex].file = file;
+        setModules(updatedModules);
+    };
+
+    const addModule = () => {
+        setModules([...modules, {
+            moduleName: '',
+            chapters: [
+                {
+                    chapterName: '',
+                    videos: [{ title: '', file: null }]
+                }
+            ]
+        }]);
+    };
+
+    const addChapter = (mIndex) => {
+        const updatedModules = [...modules];
+        updatedModules[mIndex].chapters.push({
+            chapterName: '',
+            videos: [{ title: '', file: null }]
+        });
+        setModules(updatedModules);
+    };
+
+    const addVideo = (mIndex, cIndex) => {
+        const updatedModules = [...modules];
+        updatedModules[mIndex].chapters[cIndex].videos.push({ title: '', file: null });
+        setModules(updatedModules);
+    };
 
     const handleUpload = async () => {
-        if (!videoInfo) {
-            toast.error('Please Choose Video file');
-            return;
-        }
-
-        let formData = new FormData()
-        for (let key in selectedFiles) {
-            formData.append('videos', selectedFiles[key])
-        }
-        formData.append('video_name', videoInfo.video_name)
         try {
-            setError('');
-            setProgress(0);
-            await bankingService.postFormInfoToServer('media', formData, {
-                onUploadProgress: (data) => {
-                    const percentage = Math.round((data.loaded / data.total) * 100);
-                    setProgress(percentage);
-                }
+            const formData = new FormData();
+            formData.append('video_name', video_name);
 
+            // Serialize structure with only title, no file
+            const structuredModules = modules.map(module => ({
+                moduleName: module.moduleName,
+                chapters: module.chapters.map(chapter => ({
+                    chapterName: chapter.chapterName,
+                    videos: chapter.videos.map(video => video.title)
+                }))
+            }));
+
+            formData.append('modules', JSON.stringify(structuredModules));
+
+            // Append all files
+            modules.forEach(module => {
+                module.chapters.forEach(chapter => {
+                    chapter.videos.forEach(video => {
+                        if (video.file) {
+                            formData.append('videos', video.file);
+                        }
+                    });
+                });
             });
-            setProgress(100);
 
-            // ⏰ Optional delay before hiding progress bar
-            setTimeout(() => setProgress(0), 1000);
-            
-            toast.success(`Data successfully uploaded`);
-            // console.log(data?.data && JSON.stringify(csvData))
+            setProgress(0);
+
+            await apiService.postFormInfoToServer('media', formData, {
+                onUploadProgress: (data) => {
+                    const percent = Math.round((data.loaded / data.total) * 100);
+                    setProgress(percent);
+                    setTimeout(() => setProgress(null), 1000);
+                }
+            });
+
+            toast.success("Videos uploaded successfully");
+            onClose();
         } catch (error) {
-            setError('Error fetching CSV data. Please try again.');
-            // toast.error('File upload failed. Please try again.');
+            toast.error("Upload failed. Please try again.");
         }
     };
 
     return (
         <div className='absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
-            <div className='w-3/5 mx-auto bg-white rounded'>
-                <div className='flex w-full justify-between items-center font-medium text-xl text-white p-2 shadow'>
-                    <p className='text-xl text-black'>Upload Video</p>
-                    <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
+            <div className='w-3/5 overflow-y-auto bg-white rounded p-6'>
+                <div className='flex justify-between items-center mb-4'>
+                    <h2 className='text-xl font-bold text-black'>Upload Video</h2>
+                    <button onClick={onClose} className='button button_cancel'>X</button>
                 </div>
-                <div className='max-h-[60vh] overflow-y-auto no-scrollbar py-4 px-4'>
-                    <form action="POST" className='space-y-4'>
-                        <div className='flex gap-2'>
-                            <div className='w-full flex items-end gap-0.5'>
-                                <div className='w-full flex justify-content-between items-center gap-2 '>
-                                    <div className='w-full relative'>
-                                        <input onChange={(e) => videoInfoChange(e)} value={videoInfo.video_name} className='for_input p-2 peer focus:ring-0 text-gray-500' type="text" id='video_name' name='video_name' placeholder='' />
-                                        <label className='for_label'>Video name</label>
-                                    </div>
-                                    <div className='w-full relative'>
-                                        <input onChange={(e) => handleFileChange(e)} className='for_input peer focus:ring-0 text-gray-500' type="file" id='videos' name='videos' accept='.mkv, .mp4' placeholder='' />
-                                        <label htmlFor='videos' className='for_label'>Video path</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {progress > 0 &&
-                            <div className="w-full bg-gray-200 rounded-full dark:bg-gray-200">
-                                <div className="bg-green-800 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" aria-valuenow={progress} aria-valuemax={100} style={{ width: `${progress}%` }} >{progress}%</div>
-                            </div>
-                        }
+                <div className='max-h-[60vh] overflow-y-auto no-scrollbar p-1'>
+                    <div className='mb-4'>
+                        <label className='font-medium'>Video Collection Name</label>
+                        <input
+                            className='w-full p-2 border rounded'
+                            type='text'
+                            name='video_name'
+                            value={video_name}
+                            onChange={e => setVideoName(e.target.value)}
+                            placeholder='e.g., React Course'
+                        />
+                    </div>
 
-                        {/* {progress > 0 && <div className='text-sm'>processing: <span className='text-green-800'>{progress}%</span></div>} */}
-                        <div className='w-full flex justify-end'>
-                            <Button
-                                onClick={() => handleUpload()}
-                                className={`button ${!videoInfo ? 'bg-cyan-500/50' : 'bg-cyan-500 hover:bg-cyan-400'} text-white`}
-                                children={'Upload'}
-                                type={'button'}
-                                disabled={!videoInfo}
+                    {modules.map((module, mIndex) => (
+                        <div key={mIndex} className='border p-4 mb-4 rounded'>
+                            <h3 className='font-semibold mb-2'>Module {mIndex + 1}</h3>
+                            <input
+                                className='w-full p-2 border mb-2 rounded'
+                                placeholder='Module Name'
+                                value={module.moduleName}
+                                onChange={e => handleModuleChange(mIndex, e.target.value)}
                             />
+                            {module.chapters.map((chapter, cIndex) => (
+                                <div key={cIndex} className='border p-3 mb-2 rounded bg-gray-50'>
+                                    <h4 className='font-semibold'>Chapter {cIndex + 1}</h4>
+                                    <input
+                                        className='w-full p-2 border mb-2 rounded'
+                                        placeholder='Chapter Name'
+                                        value={chapter.chapterName}
+                                        onChange={e => handleChapterChange(mIndex, cIndex, e.target.value)}
+                                    />
+                                    {chapter.videos.map((video, vIndex) => (
+                                        <div key={vIndex} className='flex gap-2 mb-2'>
+                                            <input
+                                                className='w-1/2 p-2 border rounded'
+                                                placeholder='Video Title'
+                                                value={video.title}
+                                                onChange={e => handleVideoTitleChange(mIndex, cIndex, vIndex, e.target.value)}
+                                            />
+                                            <input
+                                                className='w-1/2 p-2 border rounded'
+                                                type='file'
+                                                accept='.mp4, .mkv'
+                                                onChange={e => handleVideoFileChange(mIndex, cIndex, vIndex, e.target.files[0])}
+                                            />
+                                        </div>
+                                    ))}
+                                    <Button onClick={() => addVideo(mIndex, cIndex)} type={'button'} children={'+ Add another Video'} className={'button border border-blue-600 text-blue-700'} />
+                                    {/* <button
+                                        onClick={() => addVideo(mIndex, cIndex)}
+                                        className='text-sm text-blue-600 underline'
+                                    >
+                                        + Add another video
+                                    </button> */}
+                                </div>
+                            ))}
+                            <Button onClick={() => addChapter(mIndex)} type={'button'} children={'+ Add another Chapter'} className={'button border border-green-600 text-green-700'} />
+                            {/* <button
+                                onClick={() => addChapter(mIndex)}
+                                className='text-sm text-green-600 underline'
+                            >
+                                + Add another chapter
+                            </button> */}
                         </div>
+                    ))}
 
-                    </form>
+                    <Button onClick={addModule} type={'button'} children={'+ Add another Module'} className={'button border border-indigo-600 text-indigo-700'} />
+
+                    {/* <button onClick={addModule} className='text-sm text-indigo-600 underline mb-4'>
+                        + Add another module
+                    </button> */}
                 </div>
-                <div className='flex gap-2 justify-end p-2'>
-                    <Button onClick={onClose} className={'button button_cancel'} type={'button'} children={'Cancel'} />
+                <div className='flex justify-between gap-4'>
+                    <div>
+                        {progress &&
+                            <CircularProgress
+                                progress={progress}
+                                size={65}
+                                strokeWidth={5}
+                                circleColor="#e5e7eb"
+                                progressColor="#16a34a"
+                                textColor="#15803d"
+                                textSize="0.9rem"
+                                text='uploding...'
+                            />
+                        }
+                    </div>
+                    <div className='flex justify-end items-end w-full gap-2'>
+                        <Button onClick={handleUpload} className='button bg-cyan-600 text-white'>Upload</Button>
+                        <Button onClick={onClose} className='button button_cancel'>Cancel</Button>
+                    </div>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default VideoUpload_Info_Modal
+export default VideoUpload_Info_Modal;
