@@ -3,7 +3,7 @@ import axios from 'axios'
 const BASE_URL = '/api/v1'
 
 // export const BACKEND_URI = 'http://localhost:4500'
-export const BACKEND_URI = import.meta.env.VITE_BACKEND_URI || 'https://fingin.onrender.com';
+export const BACKEND_URI = import.meta.env.VITE_BACKEND_URI || 'http://localhost:4500';
 
 export const apiService = {
     // GET
