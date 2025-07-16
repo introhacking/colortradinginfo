@@ -18,35 +18,79 @@ const Header = () => {
     const [top20Stocks, setTop20Stocks] = useState([]);
 
 
+    // const live20Data = async () => {
+    //     try {
+    //         const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20')
+    //         setTop20Stocks(serverResponse)
+    //         // if (Array.isArray(serverResponse)) {
+    //         //     setTop20Stocks(serverResponse.slice(0, 20));
+    //         // }
+    //     } catch (err) {
+    //         console.error('Live fetch error:', err);
+    //     }
+    // }
+
+
     const live20Data = async () => {
         try {
-            const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20')
-            setTop20Stocks(serverResponse)
-            // if (Array.isArray(serverResponse)) {
-            //     setTop20Stocks(serverResponse.slice(0, 20));
-            // }
+            const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20');
+
+            const stocks = serverResponse?.data; // ✅ Extract the array
+
+            if (Array.isArray(stocks)) {
+                setTop20Stocks(stocks);
+            } else {
+                console.error("Expected array in serverResponse.data, got:", stocks);
+                setTop20Stocks([]); // fallback
+            }
+
         } catch (err) {
             console.error('Live fetch error:', err);
+            setTop20Stocks([]); // fallback in error case
         }
-    }
+    };
 
-    const displayText = top20Stocks
-        .sort((a, b) => b.volumePercent - a.volumePercent) // 🔽 descending order
-        .slice(0, 20).map(stock => {
-            const isPositive = stock.regularMarketChange >= 0;
-            const sign = isPositive ? '+' : '';
-            const color = isPositive ? 'limegreen' : 'red';
-            return (
-                `<span>
-      <strong>${stock.stockName}\u00A0</strong>\u00A0₹${stock.currentMarketPrice.toFixed(2)} 
-      <span style="color:${color};">
-         \u00A0${sign}${stock.regularMarketChange.toFixed(2)}\u00A0(${sign}${stock.regularMarketChangePercent}%)
-      </span>
-    <span style="color:#ccc;">\u00A0|\u00A0 Vol: ${stock.volumePercent}%</span>
 
-    </span>`
-            );
-        }).join(' \u00A0\u00A0 | \u00A0\u00A0');
+    // const displayText = top20Stocks
+    //     .sort((a, b) => b.volumePercent - a.volumePercent) // 🔽 descending order
+    //     .slice(0, 20).map(stock => {
+    //         const isPositive = stock.regularMarketChange >= 0;
+    //         const sign = isPositive ? '+' : '';
+    //         const color = isPositive ? 'limegreen' : 'red';
+    //         return (
+    //             `<span>
+    //   <strong>${stock.stockName}\u00A0</strong>\u00A0₹${stock.currentMarketPrice.toFixed(2)} 
+    //   <span style="color:${color};">
+    //      \u00A0${sign}${stock.regularMarketChange.toFixed(2)}\u00A0(${sign}${stock.regularMarketChangePercent}%)
+    //   </span>
+    // <span style="color:#ccc;">\u00A0|\u00A0 Vol: ${stock.volumePercent}%</span>
+
+    // </span>`
+    //         );
+    //     }).join(' \u00A0\u00A0 | \u00A0\u00A0');
+
+
+    const displayText = Array.isArray(top20Stocks)
+        ? top20Stocks
+            .sort((a, b) => b.volumePercent - a.volumePercent)
+            .slice(0, 20)
+            .map(stock => {
+                const isPositive = stock.regularMarketChange >= 0;
+                const sign = isPositive ? '+' : '';
+                const color = isPositive ? 'limegreen' : 'red';
+                return `
+          <span>
+            <strong>${stock.stockName}\u00A0</strong>\u00A0₹${stock.currentMarketPrice.toFixed(2)} 
+            <span style="color:${color};">
+              \u00A0${sign}${stock.regularMarketChange.toFixed(2)}\u00A0(${sign}${stock.regularMarketChangePercent}%)
+            </span>
+            <span style="color:#ccc;">\u00A0|\u00A0 Vol: ${stock.volumePercent}%</span>
+          </span>
+        `;
+            })
+            .join(' \u00A0\u00A0 | \u00A0\u00A0')
+        : ''; // or fallback string
+
 
     useEffect(() => {
         live20Data()
