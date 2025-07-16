@@ -35,7 +35,7 @@ const Header = () => {
         try {
             const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20');
 
-            const stocks = serverResponse?.data; // ✅ Extract the array
+            const stocks = serverResponse; // ✅ Extract the array
 
             if (Array.isArray(stocks)) {
                 setTop20Stocks(stocks);
