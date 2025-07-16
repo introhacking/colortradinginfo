@@ -1,3 +1,7 @@
+# Ignore node modules
 /node_modules
-/uploads
+
+# Ignore env files
 .env
+.env.local
+.env.*.local
