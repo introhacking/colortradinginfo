@@ -19,7 +19,13 @@ const authSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    verify: {
+        type: Boolean,
+        default: false
+    },
 
+}, {
+    timestamps: true // This adds `createdAt` and `updatedAt` fields
 });
 
 module.exports = mongoose.model('Authlogin', authSchema);

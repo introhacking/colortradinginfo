@@ -387,7 +387,7 @@ const readerFileService = {
     },
 
 
-    getMasterMergeCSVFileBasedUponCaps: async (cap) => {
+    getMasterMergeCSVFileBasedUponCaps: async (cap, weightType) => {
         const capKey = cap?.toUpperCase();
         try {
             const { data } = await readerFileService.mergeCSVFile(capKey);
@@ -419,7 +419,12 @@ const readerFileService = {
             const modifiedKeyRecord = [];
 
 
-            function getWeight(percentageStr) {
+            function getWeight(percentageStr, weightType) {
+
+                if (weightType === 'none') {
+                    return 1; // all weights equal to 1
+                }
+
                 if (typeof percentageStr === 'string' && percentageStr.trim().toLowerCase() === 'new') {
                     return 1;
                 }
@@ -537,7 +542,7 @@ const readerFileService = {
                             const year = match[3].slice(2);
                             const formattedMonth = `${month}${year}`;
 
-                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent);
+                            const weight = getWeight(modifiedKey.monthChangeInSharesPercent, weightType);
                             // const dynamicPercentKey = `monthChangeInSharesPercent${month}${year}`;
                             // const weight = getWeight(modifiedKey[dynamicPercentKey] ?? modifiedKey.monthChangeInSharesPercent);
 

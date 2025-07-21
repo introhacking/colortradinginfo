@@ -69,7 +69,7 @@ const VideoDelivery = () => {
                                                                     src={`${BACKEND_URI}${video.url}`}
                                                                     controls
                                                                 />
-                                                                <p className='mt-1 text-sm text-center text-gray-800 font-medium'>
+                                                                <p className='mt-1 text-sm text-center text-gray-800 font-medium uppercase'>
                                                                     {video.title}
                                                                 </p>
                                                             </div>

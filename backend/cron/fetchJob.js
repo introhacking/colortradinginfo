@@ -6,7 +6,7 @@ const yahooFinance = require('yahoo-finance2').default;
 const researchModel = require('../model/research/reSearchModel');
 
 
-cron.schedule('35 10 * * *', async () => {
+cron.schedule('42 11 * * *', async () => {
     const today = new Date();
     today.setDate(today.getDate() - 1);
     const yyyy = today.getFullYear();

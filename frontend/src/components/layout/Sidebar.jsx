@@ -169,6 +169,15 @@ const Sidebar = () => {
               >Upload Videos</button>
             </NavLink>
           </li>
+          <li className="p-2 hover:bg-gray-700">
+            <NavLink to="/dashboard/users-list" className={({ isActive }) =>
+              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
+            }>
+              <button
+                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
+              >Users</button>
+            </NavLink>
+          </li>
           {/* <li className="p-2 hover:bg-gray-700">
             <NavLink to="/dashboard/master-screen" className={({ isActive }) =>
               `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`

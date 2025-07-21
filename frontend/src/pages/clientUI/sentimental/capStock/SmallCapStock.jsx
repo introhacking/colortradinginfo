@@ -7,7 +7,7 @@ import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
 
-const SmallCapStock = () => {
+const SmallCapStock = ({ useWeight }) => {
     const [smallCapStockLists, setSmallCapStockLists] = useState([])
     const [columnDefs, setColumnDefs] = useState([])
 
@@ -110,8 +110,14 @@ const SmallCapStock = () => {
         setIsLoading(true);
         setErrorMsg('');
         // setNoDataFoundMsg('');
+
+        const params = { cap: 'SMALLCAP' };
+
+        if (!useWeight) {
+            params.weightType = 'none'; // 🔥 only when unchecked
+        }
         try {
-            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'SMALLCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', params)
             const serverResponseData = serverResponse.response
 
             if (!serverResponseData?.length) {
@@ -133,7 +139,7 @@ const SmallCapStock = () => {
 
             if (serverResponse.monthsHeader.length > 0) {
                 const monthlyChildren = serverResponse.monthsHeader
-                  .sort((a, b) => {
+                    .sort((a, b) => {
                         // Always keep 'stockName' first
                         if (a === 'stockName') return -1;
                         if (b === 'stockName') return 1;
@@ -152,20 +158,20 @@ const SmallCapStock = () => {
 
                         return parse(a) - parse(b); // Descending order
                     }).map((month) => ({
-                    headerName: month,
-                    field: month.replace(/-/g, ''),
-                    sortable: true,
-                    filter: true,
-                    maxWidth: 120,
-                    cellStyle: params => getCellStyle(params),
-                    valueFormatter: (params) => {
-                        const value = params.value;
-                        if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
-                            return 'New';
+                        headerName: month,
+                        field: month.replace(/-/g, ''),
+                        sortable: true,
+                        filter: true,
+                        maxWidth: 120,
+                        cellStyle: params => getCellStyle(params),
+                        valueFormatter: (params) => {
+                            const value = params.value;
+                            if (typeof value === 'string' && value.trim().toLowerCase() === 'new') {
+                                return 'New';
+                            }
+                            return value; // fallback
                         }
-                        return value; // fallback
-                    }
-                }));
+                    }));
 
                 dynamicCols.push({
                     headerName: 'Monthly Data',
@@ -175,7 +181,7 @@ const SmallCapStock = () => {
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [
-                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                { headerName: 'STOCKNAME', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
                 ...dynamicCols,
             ];
 
@@ -200,14 +206,14 @@ const SmallCapStock = () => {
     useEffect(() => {
         // fetchLargeStockLists()
         getCapMergeFile()
-    }, [])
+    }, [useWeight])
 
 
     if (isLoading) { return <div><Loading msg={'Loading... please wait'} /></div> }
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
         <>
-            <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
+            <div className='ag-theme-alpine shadow w-full h-[70vh] overflow-y-auto'>
                 <AgGridReact rowData={smallCapStockLists} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
             </div>
 

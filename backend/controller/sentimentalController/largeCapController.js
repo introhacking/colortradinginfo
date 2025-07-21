@@ -65,7 +65,6 @@ exports.deleteLargeCapStockById = async (req, resp) => {
             return resp.status(404).json({ err: 'Document not found' });
         }
         const deleteStatus = await largeCapSchema.deleteOne({ _id: id })
-        console.log(deleteStatus)
         resp.status(200).json('Deleted successfully');
     } catch (err) {
         resp.status(500).json({ err: 'Internal server error' });
@@ -254,7 +253,8 @@ exports.getMergeCSVFileBasedUponCaps_first = async (req, resp) => {
 }
 
 exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
-    const { cap } = req.query;
+    const { cap, weightType = 'default' } = req.query;
+
     const capKey = cap?.toUpperCase();
 
     if (!capKey) {
@@ -262,13 +262,13 @@ exports.getMergeCSVFileBasedUponCaps = async (req, resp) => {
     }
 
     try {
-        const result = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey);
+        const result = await readerFileService.getMasterMergeCSVFileBasedUponCaps(capKey, weightType);
 
         if (!result || !result.success) {
             return resp.status(500).json({ success: false, message: 'Error fetching data.' });
         }
 
-        const { newModifiedKeyRecord, modifiedKeyRecord , monthsHeader } = result;
+        const { newModifiedKeyRecord, modifiedKeyRecord, monthsHeader } = result;
 
 
         function getScore(stock, monthKeys) {

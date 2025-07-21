@@ -94,7 +94,7 @@ const Banking = () => {
             // Define column definitions
             const generatedColumnDefs = [
                 {
-                    headerName: 'Paramaters',
+                    headerName: 'PARAMATERS',
                     field: 'management_name',
                     sortable: true,
                     filter: true,

@@ -102,6 +102,16 @@ export const apiService = {
             throw Error(err.message)
         }
     },
+    deletingByIdByAdmin: async (fullEndpointWithId, body = {}) => {
+        try {
+            const serverResponse = await axios.delete(`${BASE_URL}${fullEndpointWithId}`, {
+                data: body // ✅ Correct way to send DELETE body
+            });
+            return serverResponse.data;
+        } catch (err) {
+            throw err.response?.data || new Error(err.message);
+        }
+    },
     updatingSpecificVideoById: async (fullEndpointWithId, body = {}) => {
         try {
             const serverResponse = await axios.put(`${BASE_URL}${fullEndpointWithId}`, body);

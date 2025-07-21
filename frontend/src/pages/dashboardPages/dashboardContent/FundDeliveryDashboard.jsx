@@ -124,7 +124,7 @@ const FundDeliveryDashboard = () => {
                         return parse(a) - parse(b); // Descending order
                     })
                     .map(key => ({
-                        headerName: key,
+                        headerName: key.toUpperCase(),
                         field: key,
                         sortable: true,
                         filter: true,

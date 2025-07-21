@@ -22,7 +22,7 @@ function StockPriceChecker() {
         setStockData(null);
         try {
             const res = await apiService.fetchCSVDataFromDateRequest(`/google-finanace`, { symbol })
-            console.log(res)
+            // console.log(res)
             setStockData(res);
         } catch (err) {
             setError(err.response?.data?.error || 'Something went wrong!');

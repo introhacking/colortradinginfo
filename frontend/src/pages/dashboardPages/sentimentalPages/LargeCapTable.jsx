@@ -80,7 +80,7 @@ const LargeCapTable = () => {
         //     },
         // },
         {
-            headerName: "Stock Name", field: 'stockName', filter: true, flex: 1, maxWidth: 350
+            headerName: "STOCKNAME", field: 'stockName', filter: true, flex: 1, maxWidth: 350
         },
         {
             headerName: "Monthly Data", field: 'monthlyData', flex: 1

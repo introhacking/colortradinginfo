@@ -74,12 +74,17 @@ const AdminLogin = () => {
                 setCurrentError('Login failed. Please check your credentials.');
             }
         } catch (err) {
-            if (err.response?.status === 401) {
+            console.log(err)
+
+            if (err.status === 401) {
                 setErrorStatus(true);
                 setCurrentError('Invalid username or password.');
+            } else if (err.status === 403) {
+                setErrorStatus(true);
+                setCurrentError(err.message || 'User not verified by admin');
             } else {
                 setErrorStatus(true);
-                setCurrentError('An unexpected error occurred. Please try again later.');
+                setCurrentError(err.message);
             }
         }
     };
@@ -206,9 +211,9 @@ const AdminLogin = () => {
                                             )}
 
                                             {errorStatus && (
-                                                <span className="text-sm text-red-600 font-semibold">
+                                                <p className="text-sm text-red-600 font-semibold tracking-widest">
                                                     {currentError}
-                                                </span>
+                                                </p>
                                             )}
 
                                             <p className='text-sm flex justify-end items-end text-gray-400 hover:underline'>

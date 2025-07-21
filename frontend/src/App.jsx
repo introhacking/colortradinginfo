@@ -38,6 +38,7 @@ import LiveData from './pages/dashboardPages/liveData/LiveData';
 import Footer from './pages/clientUI/home/Footer';
 import ClientLayout from './components/layout/ClientLayout';
 import Research from './pages/dashboardPages/reSearch/Research';
+import RegistrationUser from './pages/dashboardPages/userList/RegistrationUser';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -145,6 +146,7 @@ function App() {
               <Route path="stock-price-checker" element={<ErrorBoundary><StockPriceChecker /></ErrorBoundary>} />
               <Route path="research" element={<ErrorBoundary><Research /></ErrorBoundary>} />
               <Route path="upload-video" element={<ErrorBoundary><VideoUploadTable /></ErrorBoundary>} />
+              <Route path="users-list" element={<ErrorBoundary><RegistrationUser /></ErrorBoundary>} />
               {/* <Route path="master-screen" element={<ErrorBoundary><MasterScreen /></ErrorBoundary>} /> */}
               <Route path="*" element={<ErrorPageComponent />} />
             </Route>

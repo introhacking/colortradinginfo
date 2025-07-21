@@ -34,7 +34,7 @@ const Footer = () => {
               <p className='uppercase font-semibold'>More</p>
               <ul className='flex flex-col gap-1 text-sm'>
                 <li>Terms Of Use</li>
-                <li>Privcy Policy</li>
+                <li>Privacy Policy</li>
               </ul>
             </div>
           </div>
@@ -47,9 +47,9 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        <div className='mt-2'>
+        {/* <div className='mt-2'>
           <p className='font-semibold text-center'>Fingin India has partnered with Tradingview for a Chartin solution</p>
-        </div>
+        </div> */}
       </div>
       <div className='bg-[#3376a0] p-2 text-white text-center'>
         <p>Copyright © 2025 - {currentYear}  All Rights Reserved.</p>

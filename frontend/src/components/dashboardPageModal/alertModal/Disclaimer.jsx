@@ -24,7 +24,7 @@ const Disclaimer = ({onClose, onAccept }) => {
                 </div>
                 <div className='flex justify-end items-center gap-2 p-2'>
                     <Button onClick={onAccept} className={'button button_ac'} type="button" children={'I Accept'} />
-                    <Button onClick={onClose} className={'button button_cancel'} type="button" children={'Cancel'} />
+                    {/* <Button onClick={onClose} className={'button button_cancel'} type="button" children={'Cancel'} /> */}
                 </div>
             </div>
         </div>

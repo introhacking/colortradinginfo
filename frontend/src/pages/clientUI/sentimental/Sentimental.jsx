@@ -3,16 +3,35 @@ import LargeCapStock from './capStock/LargeCapStock';
 import MidCapStock from './capStock/MidCapStock';
 import SmallCapStock from './capStock/SmallCapStock';
 import MasterScreen from '../../dashboardPages/masterScreenCAPS/MasterScreen';
+import { useEffect } from 'react';
 
 const Sentimental = () => {
     const [activeTab, setActiveTab] = useState('tab1');
+    const [useWeight, setUseWeight] = useState(true);
+
+    // const [capData, setCapData] = useState(null);
+
+
+    // ERROR HANDLING
+    // const [errorMsg, setErrorMsg] = useState('')
+    // const [errorMsgStatus, setErrorMsgStatus] = useState(false)
+    // const [isLoading, setIsLoading] = useState(false)
+
     const tabs = [
-        { id: 'tab1', title: 'Large Cap', content: <LargeCapStock /> },
-        { id: 'tab2', title: 'Mid Cap', content: <MidCapStock /> },
-        { id: 'tab3', title: 'Small Cap', content: <SmallCapStock /> },
+        { id: 'tab1', title: 'Large Cap', content: <LargeCapStock useWeight={useWeight} /> },
+        { id: 'tab2', title: 'Mid Cap', content: <MidCapStock useWeight={useWeight} /> },
+        { id: 'tab3', title: 'Small Cap', content: <SmallCapStock useWeight={useWeight} /> },
         // { id: 'tab4', title: 'Master Screen', content: <MasterScreen /> },
 
     ];
+
+    const handleToggleWeight = () => {
+        setUseWeight(prev => {
+            const newWeight = !prev;
+            return newWeight;
+        });
+    };
+
     return (
         <>
             <div className="w-[98%] mx-auto mt-6 bg-gray-50">
@@ -30,6 +49,18 @@ const Sentimental = () => {
                         ))}
                     </div>
                     <div className="p-4 pr-0 h-[85vh] w-full overflow-hidden">
+                        <label className="max-w-[20%] mb-1 relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={!useWeight}
+                                onChange={handleToggleWeight}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
+                            <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-full transition-transform duration-300"></div>
+                            <span className='ml-3 font-semibold'>{useWeight ? 'No Weight Mode' : 'Weight Mode'}</span>
+                        </label>
+
                         {tabs.map((tab) =>
                             activeTab === tab.id ? <div key={tab.id}>{tab.content}</div> : null
                         )}

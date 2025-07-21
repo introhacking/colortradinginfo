@@ -5,7 +5,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
-const MidCapStock = () => {
+const MidCapStock = ({ useWeight }) => {
     const [midCapStockLists, setMidCapStockLists] = useState([])
     // ERROR HANDLING
     const [errorMsg, setErrorMsg] = useState('')
@@ -106,8 +106,14 @@ const MidCapStock = () => {
         setIsLoading(true);
         setErrorMsg('');
         // setNoDataFoundMsg('');
+
+        const params = { cap: 'MIDCAP' };
+
+        if (!useWeight) {
+            params.weightType = 'none'; // 🔥 only when unchecked
+        }
         try {
-            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'MIDCAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', params)
             const serverResponseData = serverResponse.response
 
             if (!serverResponseData?.length) {
@@ -172,7 +178,7 @@ const MidCapStock = () => {
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [
-                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                { headerName: 'STOCKNAME', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
                 ...dynamicCols,
             ];
 
@@ -196,12 +202,12 @@ const MidCapStock = () => {
         // fetchLargeStockLists()
 
         getCapMergeFile()
-    }, [])
+    }, [useWeight])
     if (isLoading) { return <div><Loading msg={'Loading... please wait'} /></div> }
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
         <>
-            <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
+            <div className='ag-theme-alpine shadow w-full h-[70vh] overflow-y-auto'>
                 <AgGridReact rowData={midCapStockLists} columnDefs={columnDefs} defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100} />
             </div>
         </>

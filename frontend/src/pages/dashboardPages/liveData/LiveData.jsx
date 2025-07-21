@@ -93,16 +93,16 @@ const LiveData = () => {
             )
         }] : []),
         {
-            headerName: "StockName", field: 'stockName', pinned: 'left', maxWidth: 160, filter: true
+            headerName: "STOCKNAME", field: 'stockName', pinned: 'left', maxWidth: 160, filter: true
         },
         {
-            headerName: "Volume Percent", field: 'volumePercent', maxWidth: 140, filter: true, cellStyle: getCellStyle
+            headerName: "Volume(%)", field: 'volumePercent', maxWidth: 140, filter: true, cellStyle: getCellStyle
         },
         {
-            headerName: "Regular Market Volume", field: 'regularMarketVolume', maxWidth: 180
+            headerName: "Regular Market(%)", field: 'regularMarketVolume', maxWidth: 180
         },
         {
-            headerName: "Average Daily Volume 10Day", field: 'averageDailyVolume10Day', maxWidth: 180
+            headerName: "Average Daily 10Day(%)", field: 'averageDailyVolume10Day', maxWidth: 180
         },
         {
             headerName: "Current Price", field: 'currentMarketPrice', maxWidth: 180

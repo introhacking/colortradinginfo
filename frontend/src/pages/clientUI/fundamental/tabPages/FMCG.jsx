@@ -20,7 +20,7 @@ const FMCG = () => {
         {
             headerName: 'FMCG Product Name',
             children: [
-                { headerName: 'Product Name', field: 'productName' },
+                { headerName: 'PRODUCT NAME', field: 'productName' },
             ],
         },
         {

@@ -5,7 +5,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
 
-const LargeCapStock = () => {
+const LargeCapStock = ({ useWeight }) => {
     const [largeCapStockLists, setLargeCapStockLists] = useState([])
     // ERROR HANDLING
     const [errorMsg, setErrorMsg] = useState('')
@@ -92,8 +92,15 @@ const LargeCapStock = () => {
         setIsLoading(true);
         setErrorMsg('');
         // setNoDataFoundMsg('');
+
+        const params = { cap: 'LARGECAP' };
+
+        if (!useWeight) {
+            params.weightType = 'none'; // 🔥 only when unchecked
+        }
+
         try {
-            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', { cap: 'LARGECAP' })
+            const serverResponse = await apiService.fetchCSVDataFromDateRequest('/cap', params)
             const serverResponseData = serverResponse.response
 
             if (!serverResponseData?.length) {
@@ -107,7 +114,7 @@ const LargeCapStock = () => {
             setLargeCapStockLists(serverResponseData)
 
             const dynamicCols = []
-            
+
             const today = new Date();
             const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
             const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
@@ -157,7 +164,7 @@ const LargeCapStock = () => {
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [
-                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                { headerName: 'STOCKNAME', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
                 ...dynamicCols,
             ];
 
@@ -179,13 +186,13 @@ const LargeCapStock = () => {
     useEffect(() => {
         // fetchLargeStockLists()
         getCapMergeFile()
-    }, [])
+    }, [useWeight])
 
     if (isLoading) { return <div><Loading msg={'Loading... please wait'} /></div> }
     if (errorMsgStatus) { return <div className='bg-red-100 px-4 py-1 inline-block rounded'><span className='font-medium text-red-500 inline-block'>Error: {errorMsg}</span></div> }
     return (
         <>
-            <div className='ag-theme-alpine shadow w-full h-[80vh] overflow-y-auto'>
+            <div className='ag-theme-alpine shadow w-full h-[70vh] overflow-y-auto'>
                 <AgGridReact rowData={largeCapStockLists} columnDefs={columnDefs}
                     defaultColDef={defaultColDef} animateRows={true} pagination={true} paginationPageSize={100}
                     groupDisplayType='groupRows' />
