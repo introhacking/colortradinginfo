@@ -78,7 +78,8 @@ exports.getResearchDetails = async (req, res) => {
                         // return backend-evaluated flags
                         isTriggered: item.isTriggered,
                         isAtRisk: item.isAtRisk,
-                        isTargetHit: item.isTargetHit
+                        isTargetHit: item.isTargetHit,
+                        wasActive: item.wasActive
                     };
                 } catch (err) {
                     return {
@@ -89,6 +90,7 @@ exports.getResearchDetails = async (req, res) => {
                         isTriggered: item.isTriggered,
                         isAtRisk: item.isAtRisk,
                         isTargetHit: item.isTargetHit,
+                        wasActive: item.wasActive,
                         quoteError: `Could not fetch quote for ${symbol}`
                     };
                 }

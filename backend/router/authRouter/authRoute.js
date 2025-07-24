@@ -17,4 +17,7 @@ router.delete('/user/:userId', authController.deleteUserByAdmin);
 // [ POST ]
 router.post('/disclaimer', authController.updateUserDisclaimer);
 
+// [ PUT ]
+router.put('/user/screens/:id', authController.allowedScreensUpdate);
+
 module.exports = router;

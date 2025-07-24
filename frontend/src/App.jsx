@@ -39,6 +39,7 @@ import Footer from './pages/clientUI/home/Footer';
 import ClientLayout from './components/layout/ClientLayout';
 import Research from './pages/dashboardPages/reSearch/Research';
 import RegistrationUser from './pages/dashboardPages/userList/RegistrationUser';
+import Unauthorized from './pages/dashboardPages/Unauthorized';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -68,44 +69,84 @@ function App() {
       <Router>
         <Routes>
           {/* CLIENT UI  */}
-          <Route path='/' element={
-            <>
-              {/* <Header />
-              <Outlet />
-              <Footer/> */}
-              <ClientLayout />
-            </>
-          }>
-            <Route index={true} path="/" element={<Home />} />
-            <Route path="user-dashboard" element={
-              <div className='py-8 px-6 h-[85vh]'>
-                {/* <DeliveryDashboard /> */}
-                <FundDeliveryDashboard />
-              </div>
-            } />
-            <Route path="fundamentals" element={<Fundamentals />} />
-            <Route path="sentimental" element={<Sentimental />} />
-            {/* <Route path="technical" element={<TechnicalUI />} /> */}
-            {/* <Route path="delivery" element={<DeliveryMain />} /> */}
-            {/* <Route path="sectorial" element={<DeliveryMain />} /> */}
-            <Route path="daily-spurts" element={<DailyIOMain />} />
-            <Route path="live-data" element={
-              <div className='flex justify-center items-end p-4'>
-                <LiveData />
-              </div>
-            } />
-            <Route path="research" element={
-              <div className='p-4'>
-                <Research />
-              </div>
-            } />
-            <Route path="video" element={<VideoDelivery />} />
-            <Route path="*" element={<ErrorPageComponent />} />
+          <Route>
+            {/* Public login */}
+            <Route path='/login' element={<AdminLogin />} />
+
+            {/* Client UI with Protected Routes */}
+            <Route path='/' element={<ClientLayout />}>
+              <Route index element={<Home />} />
+
+              {/* Protect routes individually based on screen key */}
+              <Route element={<ProtectedRoutes requiredScreen="dashboard" />}>
+                <Route path="user-dashboard" element={
+                  <div className='py-8 px-6 h-[85vh]'>
+                    <FundDeliveryDashboard />
+                  </div>
+                } />
+              </Route>
+
+              <Route element={<ProtectedRoutes requiredScreen="fundamentals" />}>
+                <Route path="fundamentals" element={<Fundamentals />} />
+              </Route>
+
+              <Route element={<ProtectedRoutes requiredScreen="sentimental" />}>
+                <Route path="sentimental" element={<Sentimental />} />
+              </Route>
+
+              {/* Uncomment when enabled in permission list */}
+              {/* 
+    <Route element={<ProtectedRoutes requiredScreen="technical" />}>
+      <Route path="technical" element={<TechnicalUI />} />
+    </Route>
+
+    <Route element={<ProtectedRoutes requiredScreen="delivery" />}>
+      <Route path="delivery" element={<DeliveryMain />} />
+    </Route>
+
+    <Route element={<ProtectedRoutes requiredScreen="sectorial" />}>
+      <Route path="sectorial" element={<DeliveryMain />} />
+    </Route>
+    */}
+
+              <Route element={<ProtectedRoutes requiredScreen="daily-spurts" />}>
+                <Route path="daily-spurts" element={<DailyIOMain />} />
+              </Route>
+
+              <Route element={<ProtectedRoutes requiredScreen="live-data" />}>
+                <Route path="live-data" element={
+                  <div className='flex justify-center items-end p-4'>
+                    <LiveData />
+                  </div>
+                } />
+              </Route>
+
+              <Route element={<ProtectedRoutes requiredScreen="research" />}>
+                <Route path="research" element={
+                  <div className='p-4'>
+                    <Research />
+                  </div>
+                } />
+              </Route>
+
+              <Route element={<ProtectedRoutes requiredScreen="video" />}>
+                <Route path="video" element={<VideoDelivery />} />
+              </Route>
+              <Route path="/unauthorized" element={<Unauthorized />} />
+
+
+              <Route path="*" element={<ErrorPageComponent />} />
+            </Route>
+
           </Route>
 
 
+
+
+
           {/* ADMIN DASHBOARD  */}
-          <Route path='/login' element={<AdminLogin />} />
+          {/* <Route path='/login' element={<AdminLogin />} /> */}
+
           {/* <Route path='/dashboard' element={
             <ErrorBoundary>
               <AdminLayout />

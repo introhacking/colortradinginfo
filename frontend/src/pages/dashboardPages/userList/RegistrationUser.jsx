@@ -3,10 +3,12 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import * as RiIcons from 'react-icons/ri';
+import * as MdIcons from 'react-icons/md';
 import { BACKEND_URI, apiService } from '../../../services/apiService';
 import Loading from '../../../Loading';
 import { toast } from 'sonner';
 import UserDelete from './UserDelete';
+import UserPermissionAccessPanelModal from './UserPermissionAccessPanelModal';
 
 const RegistrationUser = () => {
     const [rowData, setRowData] = useState([]);
@@ -17,6 +19,14 @@ const RegistrationUser = () => {
     // DELETING HANDLING
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeletingId, setIsDeletingId] = useState({});
+
+    // SCREEN ALLOWED PERMISSION 
+    const [isAllowedScreenModalOpen, setIsAllowedScreenModalOpen] = useState(false);
+    const [isAllowedScreenData, setIsAllowedScreenData] = useState({});
+    const allowedScreenOperation = (paramData) => {
+        setIsAllowedScreenData({ ...paramData })
+        setIsAllowedScreenModalOpen(true)
+    }
 
     const deleteOperation = (paramData) => {
         const deletingPath = 'user'
@@ -37,7 +47,7 @@ const RegistrationUser = () => {
             toast.success(serverResponse.message); // ✅ now this works correctly
 
         } catch (err) {
-            console.error("Failed to update verify status", err);
+            // console.error("Failed to update verify status", err);
             alert('Could not update user verification status.');
         }
     };
@@ -45,11 +55,14 @@ const RegistrationUser = () => {
 
     const [columnDefs] = useState([
         {
-            headerName: "Action", pinned: 'left', field: 'action', maxWidth: 100,
+            headerName: "Action", pinned: 'left', field: 'action', maxWidth: 150,
             cellRenderer: (params) => (
                 <div className="flex justify-between">
                     <div onClick={() => deleteOperation(params.data)} className="ag_table_delete py-1 my-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded">
                         <RiIcons.RiDeleteBin3Line className="text-2xl" />
+                    </div>
+                    <div title='Screen Permission' onClick={() => allowedScreenOperation(params.data)} className="bg-sky-600 py-1 my-1 px-2 text-sm text-center text-white tracking-wider cursor-pointer rounded">
+                        <MdIcons.MdOutlineScreenSearchDesktop className="text-2xl" />
                     </div>
                 </div>
             )
@@ -132,6 +145,7 @@ const RegistrationUser = () => {
 
             )}
             <UserDelete isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} refresh={fetchInitialData} />
+            <UserPermissionAccessPanelModal isOpen={isAllowedScreenModalOpen} onClose={() => setIsAllowedScreenModalOpen(false)} userInfo={isAllowedScreenData} refresh={fetchInitialData} />
         </>
     )
 }

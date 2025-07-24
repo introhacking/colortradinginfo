@@ -14,7 +14,9 @@ const researchSchema = new mongoose.Schema({
     createdBy: { type: String },
     isTriggered: { type: Boolean, default: null },
     isAtRisk: { type: Boolean, default: null },
-    isTargetHit: { type: Boolean, default: null }
+    isTargetHit: { type: Boolean, default: null },
+    wasActive: { type: Boolean, default: false }
+
 },
     { timestamps: true });
 

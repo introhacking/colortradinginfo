@@ -123,15 +123,7 @@ const Research = () => {
         {
             headerName: "Buy-Sell", filter: true, field: 'buy_sell', cellStyle: { textAlign: 'center' }
         },
-        {
-            headerName: "Trigger Price", filter: true, field: 'trigger_price', cellStyle: { textAlign: 'center' }
-        },
-        {
-            headerName: "Target Price", filter: true, field: 'target_price', cellStyle: { textAlign: 'center' }
-        },
-        {
-            headerName: "Stop-Loss", filter: true, field: 'stop_loss', cellStyle: { textAlign: 'center' }
-        },
+
         {
             headerName: "Created Date",
             field: "createdAt",
@@ -143,6 +135,16 @@ const Research = () => {
             }
         },
         {
+            headerName: "Stop-Loss", filter: true, field: 'stop_loss', cellStyle: { textAlign: 'center' }
+        },
+        {
+            headerName: "Trigger Price", filter: true, field: 'trigger_price', cellStyle: { textAlign: 'center' }
+        },
+        {
+            headerName: "Target Price", filter: true, field: 'target_price', cellStyle: { textAlign: 'center' }
+        },
+
+        {
             headerName: "CMP", filter: true, field: 'currentMarketPrice', cellStyle: { textAlign: 'center' }
         },
         {
@@ -150,22 +152,45 @@ const Research = () => {
             field: "",
             filter: true,
             cellStyle: (params) => {
-                const { isTriggered, isAtRisk } = params.data;
-                if (isTriggered) {
+                const data = params.data;
+
+                if (data.wasActive) {
                     return { backgroundColor: 'green', color: 'white', fontWeight: 'bold', textAlign: 'center' };
-                } else if (isAtRisk) {
+                } else if (data.isAtRisk) {
                     return { backgroundColor: 'red', color: 'white', fontWeight: 'bold', textAlign: 'center' };
                 } else {
                     return { backgroundColor: 'black', color: 'white', textAlign: 'center' };
                 }
             },
             cellRenderer: (params) => {
-                const { isTriggered, isAtRisk } = params.data;
-                if (isTriggered) return "Active";
-                if (isAtRisk) return "At Risk";
+                const data = params.data;
+
+                if (data.wasActive) return "Active";
+                if (data.isAtRisk) return "At Risk";
                 return "Inactive";
             }
         },
+        // {
+        //     headerName: "Active",
+        //     field: "",
+        //     filter: true,
+        //     cellStyle: (params) => {
+        //         const { isTriggered, isAtRisk } = params.data;
+        //         if (isTriggered) {
+        //             return { backgroundColor: 'green', color: 'white', fontWeight: 'bold', textAlign: 'center' };
+        //         } else if (isAtRisk) {
+        //             return { backgroundColor: 'red', color: 'white', fontWeight: 'bold', textAlign: 'center' };
+        //         } else {
+        //             return { backgroundColor: 'black', color: 'white', textAlign: 'center' };
+        //         }
+        //     },
+        //     cellRenderer: (params) => {
+        //         const { isTriggered, isAtRisk } = params.data;
+        //         if (isTriggered) return "Active";
+        //         if (isAtRisk) return "At Risk";
+        //         return "Inactive";
+        //     }
+        // },
         {
             headerName: "Status",
             field: "",
@@ -346,6 +371,7 @@ const Research = () => {
         setNoDataFoundMsg('');
         try {
             const getBankData = await apiService.getInfoFromServer('/research');
+            console.log(getBankData)
             if (getBankData.length > 0) {
                 setRowData(getBankData)
             } else {
@@ -410,7 +436,7 @@ const Research = () => {
 
     return (
         <>
-            <div className='flex justify-between flex-col gap-3'>
+            {/* <div className='flex justify-between flex-col gap-3'>
 
                 {isDashboardResearch &&
                     <div className='flex justify-end'>
@@ -430,7 +456,76 @@ const Research = () => {
             <Research_Add_Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} refresh={fetchingApi} />
             <DeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} isDeletingId={isDeletingId} refresh={fetchingApi} />
             <Preview isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} isPreviewData={isPreviewData} />
-            <Research_Edit_Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} isParamsData={isParamsData} refresh={fetchingApi} />
+            <Research_Edit_Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} isParamsData={isParamsData} refresh={fetchingApi} /> */}
+
+            <div className='flex flex-col gap-4 w-full px-4 sm:px-6 md:px-8'>
+
+                {/* Add Button */}
+                {isDashboardResearch && (
+                    <div className='flex justify-end'>
+                        <Button
+                            onClick={() => setIsModalOpen(true)}
+                            children={'Add Research Details'}
+                            className='bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded text-sm sm:text-base'
+                        />
+                    </div>
+                )}
+
+                {/* Loading, Error, and Message */}
+                {isLoading && <Loading msg='Loading... please wait' />}
+
+                {errorLive && (
+                    <div className='bg-red-100 px-4 py-2 rounded w-full text-center'>
+                        <span className='font-medium text-red-500'>Error: {errorLive}</span>
+                    </div>
+                )}
+
+                {noDataFoundMsg && (
+                    <div className='bg-gray-100 px-4 py-2 rounded w-full text-center'>
+                        <span className='font-medium text-gray-400'>Message: {noDataFoundMsg}</span>
+                    </div>
+                )}
+
+                {/* Data Grid */}
+                {!isLoading && !errorLive && !noDataFoundMsg && (
+                    <div className='ag-theme-alpine w-full overflow-x-auto h-[70vh]'>
+                        <AgGridReact
+                            rowData={rowData}
+                            getRowStyle={getRowStyle}
+                            columnDefs={columnDefs}
+                            defaultColDef={defaultColDef}
+                            animateRows={true}
+                            pagination={true}
+                            paginationPageSize={100}
+                        />
+                    </div>
+                )}
+
+                {/* Modals */}
+                <Research_Add_Modal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    refresh={fetchingApi}
+                />
+                <DeleteModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    isDeletingId={isDeletingId}
+                    refresh={fetchingApi}
+                />
+                <Preview
+                    isOpen={isPreviewModalOpen}
+                    onClose={() => setIsPreviewModalOpen(false)}
+                    isPreviewData={isPreviewData}
+                />
+                <Research_Edit_Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    isParamsData={isParamsData}
+                    refresh={fetchingApi}
+                />
+            </div>
+
 
         </>
     )

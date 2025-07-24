@@ -132,18 +132,18 @@ const AdminLogin = () => {
     return (
 
         <div className='bg-gradient-to-r from-amber-300/20 to-amber-100 min-h-screen h-screen'>
-            <div className='flex justify-center items-center h-full'>
-                <div className='flex bg-white shadow-sm rounded px-8 py-10 w-2/3 mx-auto'>
-                    <div className='overflow-y-auto space-y-4 w-1/2 py-2 px-3'>
+            <div className='flex justify-center items-center h-full p-4 sm:p-0'>
+                <div className='flex bg-white shadow-sm rounded px-4 py-5 sm:px-8 sm:py-10 w-full sm:w-2/3 mx-auto'>
+                    <div className='hidden md:block overflow-y-auto space-y-4 w-1/2 py-2 px-3'>
                         <h2 className="font-bold">Welcome to FINGIN</h2>
                         <div className="p-2">
                             <img src={loginImg} className="w-full h-full" />
                         </div>
                     </div>
-                    <div className='flex flex-1 w-1/2 px-3 py-2 overflow-y-auto border border-slate-50'>
+                    <div className='flex flex-1 w-full sm:w-1/2 p-1 sm:px-3 py-2 overflow-y-auto border border-slate-50'>
                         <div className='flex flex-col justify-center items-center w-full'>
                             {signIn_UpStatus ?
-                                <div className='w-full p-4'>
+                                <div className='w-full p-0 sm:p-4'>
                                     <p className="font-semibold mb-2">Registration</p>
                                     <p className="text-sm mb-2 text-red-600 text-left w-full font-semibold">
                                         Required *
@@ -231,7 +231,7 @@ const AdminLogin = () => {
                                         </Button>
                                     </div>
                                 </div> :
-                                <div className='w-full p-4'>
+                                <div className='w-full p-0 sm:p-4'>
                                     <p className="font-semibold mb-2">Security authentication Admin </p>
                                     <p className="text-sm mb-2 text-red-600 text-left w-full font-semibold">
                                         Required *

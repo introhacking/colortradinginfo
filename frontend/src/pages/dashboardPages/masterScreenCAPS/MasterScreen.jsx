@@ -233,6 +233,172 @@ const MasterScreen = () => {
       setIsLoading(false);
     }
   }
+
+  // const getCapMergeFile = async () => {
+  //   setIsLoading(true);
+  //   setError('');
+  //   setNoDataFoundMsg('');
+
+  //   try {
+  //     const serverResponse = await apiService.getInfoFromServer('/master-screen');
+
+  //     console.log(serverResponse)
+
+
+  //     const today = new Date();
+  //     const currentMonth = today.toLocaleString('en-US', { month: 'short' });
+  //     const currentYear = String(today.getFullYear()).slice(2);
+  //     const currentKey = `${currentMonth}${currentYear}`;
+
+  //     const getMonthValue = (key) => {
+  //       if (!/^[A-Za-z]{3}\d{2}$/.test(key)) return -Infinity;
+  //       const monthAbbr = key.slice(0, 3);
+  //       const year = parseInt(key.slice(3), 10);
+  //       const month = new Date(`${monthAbbr} 1, 2000`).getMonth();
+  //       return year * 12 + month;
+  //     };
+
+  //     const normalizeSymbol = (str) =>
+  //       str?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+  //     const rawStocks = serverResponse.stocks || [];
+
+  //     // Step 1: Build pivot map from spurt data
+  //     const pivotMap = {};
+  //     const allDates = new Set();
+
+  //     const dates = serverResponse.data?.monthsHeader || [];
+
+  //     rawStocks.forEach(stock => {
+  //       const symbol = normalizeSymbol(stock.stockName);
+  //       const spurt = stock.spurt;
+  //       const pivotRow = {};
+
+  //       if (spurt && typeof spurt === 'object') {
+  //         for (const [date, stats] of Object.entries(spurt)) {
+  //           allDates.add(date);
+  //           pivotRow[`deliv_${date}`] = `${stats.DELIV_QTY_avg} / ${stats.DELIV_QTY_percent}`;
+  //           pivotRow[`ttd_${date}`] = `${stats.TTL_TRD_QNTY_avg} / ${stats.TTL_TRD_QNTY_percent}`;
+  //         }
+  //       }
+
+  //       pivotMap[symbol] = pivotRow;
+  //     });
+
+  //     // Step 2: Merge spurt data into each stock row, remove `spurt` field to avoid React error
+  //     const mergedRows = rawStocks.map(stock => {
+  //       const symbol = normalizeSymbol(stock.stockName);
+  //       const { spurt, ...rest } = stock; // REMOVE spurt object
+  //       return {
+  //         ...rest,
+  //         ...pivotMap[symbol]
+  //       };
+  //     });
+
+  //     // Step 3: Extract dynamic stock keys (months) and skip any object fields
+  //     const sampleStock = rawStocks.find(s => typeof s === 'object') || {};
+  //     const dynamicColumns = Object.keys(sampleStock).filter(key => typeof sampleStock[key] !== 'object') // skip objects like `spurt`
+  //       .sort((a, b) => {
+  //         if (a.toLowerCase() === 'stockname') return -1;
+  //         if (b.toLowerCase() === 'stockname') return 1;
+  //         if (a === currentKey) return -1;
+  //         if (b === currentKey) return 1;
+  //         return getMonthValue(a) - getMonthValue(b);
+  //       })
+  //       .map(key => ({
+  //         headerName: key.toUpperCase(),
+  //         field: key,
+  //         sortable: true,
+  //         filter: true,
+  //         // pinned: true,
+  //         resizable: true,
+  //         maxWidth: 140,
+  //         cellRenderer: (params) =>
+  //           params.value === null || params.value === undefined ? '-' : params.value,
+  //         cellStyle: getCellStyle
+  //       }));
+
+
+  //     // Step 4: Format grouped date columns (for spurt)
+  //     const formatDateToHeader = (dateStr) => {
+  //       const [day, month, year] = dateStr.split('/');
+  //       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  //         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  //       return `${day}-${monthNames[parseInt(month, 10) - 1]}-${year}`;
+  //     };
+
+  //     const dateColumns = Array.from(allDates).sort((a, b) => {
+  //       const [dayA, monthA, yearA] = a.split('/').map(Number);
+  //       const [dayB, monthB, yearB] = b.split('/').map(Number);
+  //       return new Date(yearB, monthB - 1, dayB) - new Date(yearA, monthA - 1, dayA);
+  //     }).map(date => ({
+  //       headerName: `Date: ${formatDateToHeader(date)}`,
+  //       marryChildren: true,
+  //       headerClass: 'cs_ag-center-header',
+  //       children: [
+  //         {
+  //           field: `deliv_${date}`,
+  //           headerName: 'Deliv Avg / Deliv %',
+  //           tooltipField: `deliv_${date}`,
+  //           filter: 'agNumberColumnFilter',
+  //           valueGetter: (params) => {
+  //             const raw = params.data?.[`deliv_${date}`];
+
+  //             if (typeof raw !== 'string') return null;
+
+  //             const parts = raw.split('/');
+  //             if (!parts[1]) return null;
+
+  //             const percentStr = parts[1].trim().replace('%', '');
+  //             const percent = parseFloat(percentStr);
+  //             return isNaN(percent) ? null : percent;
+  //           },
+  //           valueFormatter: (params) => {
+  //             const raw = params.data?.[`deliv_${date}`];
+  //             return typeof raw === 'string' ? raw : '-';
+  //           },
+  //           cellStyle: getCellStyles
+  //         },
+  //         {
+  //           field: `ttd_${date}`,
+  //           headerName: 'TTD Avg / TTD %',
+  //           tooltipField: `ttd_${date}`,
+  //           filter: 'agNumberColumnFilter',
+  //           valueGetter: (params) => {
+  //             const raw = params.data?.[`deliv_${date}`];
+  //             if (typeof raw !== 'string') return null;
+
+  //             const parts = raw.split('/');
+  //             if (!parts[1]) return null;
+
+  //             const percentStr = parts[1].trim().replace('%', '');
+  //             const percent = parseFloat(percentStr);
+  //             return isNaN(percent) ? null : percent;
+  //           },
+  //           valueFormatter: (params) => {
+  //             const raw = params.data?.[`deliv_${date}`];
+  //             return typeof raw === 'string' ? raw : '-';
+  //           },
+  //           cellStyle: getCellStyles
+  //         }
+  //       ]
+  //     }));
+
+  //     // Step 5: Apply to grid
+  //     setRowData(mergedRows);
+  //     setColumnDefs([
+  //       ...dynamicColumns,
+  //       ...dateColumns
+  //     ]);
+
+
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const getCapMergeFile = async () => {
     setIsLoading(true);
     setError('');
@@ -241,6 +407,7 @@ const MasterScreen = () => {
     try {
       const serverResponse = await apiService.getInfoFromServer('/master-screen');
 
+      // console.log(serverResponse);
       const today = new Date();
       const currentMonth = today.toLocaleString('en-US', { month: 'short' });
       const currentYear = String(today.getFullYear()).slice(2);
@@ -262,6 +429,7 @@ const MasterScreen = () => {
       // Step 1: Build pivot map from spurt data
       const pivotMap = {};
       const allDates = new Set();
+      const dates = serverResponse.monthsHeader || [];
 
       rawStocks.forEach(stock => {
         const symbol = normalizeSymbol(stock.stockName);
@@ -279,39 +447,42 @@ const MasterScreen = () => {
         pivotMap[symbol] = pivotRow;
       });
 
-      // Step 2: Merge spurt data into each stock row, remove `spurt` field to avoid React error
+      // Step 2: Merge spurt data into each stock row, remove `spurt` field
       const mergedRows = rawStocks.map(stock => {
         const symbol = normalizeSymbol(stock.stockName);
-        const { spurt, ...rest } = stock; // REMOVE spurt object
+        const { spurt, ...rest } = stock;
         return {
           ...rest,
           ...pivotMap[symbol]
         };
       });
 
-      // Step 3: Extract dynamic stock keys (months) and skip any object fields
-      const sampleStock = rawStocks.find(s => typeof s === 'object') || {};
-      const dynamicColumns = Object.keys(sampleStock)
-        .filter(key => typeof sampleStock[key] !== 'object') // skip objects like `spurt`
-        .sort((a, b) => {
-          if (a.toLowerCase() === 'stockname') return -1;
-          if (b.toLowerCase() === 'stockname') return 1;
-          if (a === currentKey) return -1;
-          if (b === currentKey) return 1;
-          return getMonthValue(a) - getMonthValue(b);
-        })
-        .map(key => ({
-          headerName: key.toUpperCase(),
-          field: key,
+      // Step 3: Build sorted dynamic month columns from monthsHeader
+      const monthIndex = (key) => {
+        const [mon, yearSuffix] = key.split('-');
+        const monthAbbrs = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthNum = monthAbbrs.indexOf(mon);
+        const year = 2000 + parseInt(yearSuffix);
+        return year * 12 + monthNum;
+      };
+
+      const sortedMonths = [...dates].sort((a, b) => monthIndex(a) - monthIndex(b));
+
+      const dynamicColumns = sortedMonths.map(key => {
+        const cleanKey = key.replace(/-/g, '');
+        return {
+          headerName: cleanKey.toUpperCase(),
+          field: cleanKey,
           sortable: true,
           filter: true,
-          pinned: true,
           resizable: true,
           maxWidth: 140,
           cellRenderer: (params) =>
             params.value === null || params.value === undefined ? '-' : params.value,
           cellStyle: getCellStyle
-        }));
+        };
+      });
 
       // Step 4: Format grouped date columns (for spurt)
       const formatDateToHeader = (dateStr) => {
@@ -324,7 +495,9 @@ const MasterScreen = () => {
       const dateColumns = Array.from(allDates).sort((a, b) => {
         const [dayA, monthA, yearA] = a.split('/').map(Number);
         const [dayB, monthB, yearB] = b.split('/').map(Number);
-        return new Date(yearB, monthB - 1, dayB) - new Date(yearA, monthA - 1, dayA);
+        const dateObjA = new Date(yearA, monthA - 1, dayA);
+        const dateObjB = new Date(yearB, monthB - 1, dayB);
+        return dateObjB - dateObjA;
       }).map(date => ({
         headerName: `Date: ${formatDateToHeader(date)}`,
         marryChildren: true,
@@ -337,13 +510,8 @@ const MasterScreen = () => {
             filter: 'agNumberColumnFilter',
             valueGetter: (params) => {
               const raw = params.data?.[`deliv_${date}`];
-
-              if (typeof raw !== 'string') return null;
-
-              const parts = raw.split('/');
-              if (!parts[1]) return null;
-
-              const percentStr = parts[1].trim().replace('%', '');
+              const parts = raw?.split('/') || [];
+              const percentStr = parts[1]?.trim().replace('%', '');
               const percent = parseFloat(percentStr);
               return isNaN(percent) ? null : percent;
             },
@@ -359,18 +527,14 @@ const MasterScreen = () => {
             tooltipField: `ttd_${date}`,
             filter: 'agNumberColumnFilter',
             valueGetter: (params) => {
-              const raw = params.data?.[`deliv_${date}`];
-              if (typeof raw !== 'string') return null;
-
-              const parts = raw.split('/');
-              if (!parts[1]) return null;
-
-              const percentStr = parts[1].trim().replace('%', '');
+              const raw = params.data?.[`ttd_${date}`];
+              const parts = raw?.split('/') || [];
+              const percentStr = parts[1]?.trim().replace('%', '');
               const percent = parseFloat(percentStr);
               return isNaN(percent) ? null : percent;
             },
             valueFormatter: (params) => {
-              const raw = params.data?.[`deliv_${date}`];
+              const raw = params.data?.[`ttd_${date}`];
               return typeof raw === 'string' ? raw : '-';
             },
             cellStyle: getCellStyles
@@ -381,6 +545,15 @@ const MasterScreen = () => {
       // Step 5: Apply to grid
       setRowData(mergedRows);
       setColumnDefs([
+        {
+          headerName: 'Stock Name',
+          field: 'stockName',
+          pinned: 'left',
+          sortable: true,
+          filter: true,
+          resizable: true,
+          cellStyle: getCellStyle
+        },
         ...dynamicColumns,
         ...dateColumns
       ]);
@@ -391,6 +564,9 @@ const MasterScreen = () => {
       setIsLoading(false);
     }
   };
+
+
+
 
 
   const defaultColDef = useMemo(() => ({

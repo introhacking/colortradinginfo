@@ -74,8 +74,11 @@ cron.schedule('* * * * * ', async () => {
             // const marketChange = quote?.regularMarketChange ?? 0;
             const marketLow = quote?.regularMarketDayLow ?? 0;
 
-            const isTriggered = approxLTE(item.trigger_price, currentMarketPrice);
+            // const isTriggered = approxLTE(item.trigger_price, currentMarketPrice);
             // const isAtRisk = approxGTE(item.stop_loss, item.trigger_price);
+            const isTriggered = item.isTriggered || approxLTE(item.trigger_price, currentMarketPrice);
+            const wasActive = item.wasActive || isTriggered; // persist true once
+
             const isAtRisk = approxLTE(currentMarketPrice, item.stop_loss);
             const isTargetHit = approxLTE(item.target_price, currentMarketPrice);
 
@@ -87,7 +90,7 @@ cron.schedule('* * * * * ', async () => {
 
             const updatedResearchStock = await researchModel.findByIdAndUpdate(
                 item._id,
-                { isTriggered, isAtRisk, isTargetHit },
+                { isTriggered, isAtRisk, isTargetHit, wasActive },
                 { new: true }  // returns the updated document
             );
 
@@ -97,8 +100,9 @@ cron.schedule('* * * * * ', async () => {
                 stockName: updatedResearchStock.stockName,
                 currentMarketPrice: currentMarketPrice,
                 isTriggered: updatedResearchStock.isTriggered,
-                // isAtRisk: updatedResearchStock.isAtRisk,
-                isAtRisk,
+                wasActive: updatedResearchStock.wasActive,
+                isAtRisk: updatedResearchStock.isAtRisk,
+                // isAtRisk,
                 isTargetHit: updatedResearchStock.isTargetHit,
             };
 

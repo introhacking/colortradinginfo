@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.getUsers = async (req, res) => {
     try {
-        const users = await Auth.find().select('_id username role verify createdAt updatedAt');;
+        const users = await Auth.find().select('_id username role allowedScreens verify createdAt updatedAt');;
         return res.status(200).json({ success: true, users });
     } catch (err) {
         return res.status(500).json({ success: false, message: 'Server error' });
@@ -44,6 +44,7 @@ exports.login = async (req, res) => {
                 id: auth._id, // optionally include more info like role
                 username: auth.username,
                 role: auth.role,
+                allowedScreens: auth.allowedScreens,
                 disclaimer: auth.disclaimer
             }
         });
@@ -155,6 +156,21 @@ exports.deleteUserByAdmin = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+
+exports.allowedScreensUpdate = async (req, res) => {
+    const { allowedScreens } = req.body;
+    try {
+        const updatedUser = await Auth.findByIdAndUpdate(
+            req.params.id,
+            { allowedScreens },
+            { new: true }
+        );
+        res.json({ message: 'Permissions updated', data: updatedUser });
+    } catch (error) {
+        res.status(500).json({ error: 'Update failed' });
+    }
+}
 
 
 // exports.deleteUserByAdmin = async (req, res) => {

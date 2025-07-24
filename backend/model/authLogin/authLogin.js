@@ -23,6 +23,7 @@ const authSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    allowedScreens: [{ type: String }] // NEW: list of allowed screens for this user
 
 }, {
     timestamps: true // This adds `createdAt` and `updatedAt` fields

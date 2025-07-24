@@ -8,23 +8,22 @@ Markets are inherently volatile, and investing in equities or any other financia
 We shall not be held liable or responsible for any direct, indirect, incidental, or consequential loss or damage incurred by anyone as a result of using or relying on the information provided herein.
 By accessing our content, you acknowledge and agree to this disclaimer and assume full responsibility for your investment decisions.`
 
-const Disclaimer = ({onClose, onAccept }) => {
+const Disclaimer = ({ onClose, onAccept }) => {
     // if (!isOpen) return null;
     return (
-        <div className='absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
-            <div className='w-1/2 rounded mx-auto bg-white'>
+        <div className='p-4 sm:p-0 absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
+            <div className='w-full sm:w-3/4 lg:w-1/2 rounded mx-auto bg-white'>
                 <div className='flex w-full items-center justify-between font-medium text-xl bg-gradient-to-r from-blue-500 to-red-100 rounded-t px-2 py-1'>
                     <p className='font-medium text-white '>Disclaimer</p>
                     <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
                 </div>
                 <div className='p-2'>
-                    <div className='bg-blue-100 px-4 py-2 rounded'>
+                    <div className='max-h-[50vh] overflow-auto bg-blue-100 px-4 py-2 rounded'>
                         <p className='text-[12px]'>{message}</p>
                     </div>
                 </div>
                 <div className='flex justify-end items-center gap-2 p-2'>
                     <Button onClick={onAccept} className={'button button_ac'} type="button" children={'I Accept'} />
-                    {/* <Button onClick={onClose} className={'button button_cancel'} type="button" children={'Cancel'} /> */}
                 </div>
             </div>
         </div>

@@ -84,13 +84,24 @@ export const apiService = {
 
     updatingById: async (endpoint, id, updatingData) => {
         try {
-            const serverResponse = await axios.put(`${BASE_URL}/${endpoint}/${id}`, updatingData)
-            return serverResponse.data
+            const serverResponse = await axios.put(`${BASE_URL}/${endpoint}/${id}`, updatingData);
+            return serverResponse.data;
         } catch (err) {
-            throw Error('Something went wrong!')
-
+            const errorMessage = err.response?.data?.message || err.message || 'Something went wrong!';
+            throw new Error(errorMessage);
         }
     },
+
+
+    // updatingById: async (endpoint, id, updatingData) => {
+    //     try {
+    //         const serverResponse = await axios.put(`${BASE_URL}/${endpoint}/${id}`, updatingData)
+    //         return serverResponse.data
+    //     } catch (err) {
+    //         throw Error('Something went wrong!')
+
+    //     }
+    // },
 
     // DELETE BY ID
     deletingById: async (endpoint, id) => {
