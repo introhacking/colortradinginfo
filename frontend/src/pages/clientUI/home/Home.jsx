@@ -6,7 +6,7 @@ const Home = () => {
 
     return (
         <>
-            <div style={{ backgroundImage: `url(${bgGroundImage})` }} className='bg-[70%_30%] relative bg-no-repeat w-full h-[90vh] bg-cover'>
+            <div style={{ backgroundImage: `url(${bgGroundImage})` }} className='bg-[50%_50%] sm:bg-[70%_30%] relative bg-no-repeat w-full h-[90vh] bg-cover'>
                 {/* <div className='absolute bg-black/20 inset-0'>
                     <div className='relative h-full p-4'>
                         <div className='flex justify-between items-center gap-4 h-full'>

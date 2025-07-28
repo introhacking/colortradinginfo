@@ -88,7 +88,7 @@ const Add_Content_Related_Row_Column = ({ updateModalData, setUpdateModalStatus 
             }
         }
         // Save the updated array back to local storage
-        console.log(updatingDataArray)
+       // console.log(updatingDataArray)
         localStorage.setItem('tableData', JSON.stringify(updatingDataArray));
         toast.success('Update Successfully!')
     }

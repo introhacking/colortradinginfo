@@ -53,7 +53,7 @@ const DashboardHeader = () => {
     });
 
     socket.on('scrape-announcement', (message) => {
-      console.log('📩 Received announcement:', message);
+     // console.log('📩 Received announcement:', message);
 
       const expiry = Date.now() + 3 * 24 * 60 * 60 * 1000; // 3 days in ms
       localStorage.setItem('announcement', JSON.stringify({ message, expiry }));

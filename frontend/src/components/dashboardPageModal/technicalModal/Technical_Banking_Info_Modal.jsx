@@ -65,7 +65,7 @@ const Technical_Banking_Info_Modal = ({ isOpen, onClose }) => {
     const [selectedFiles, setSelectedFiles] = useState({ SG: null, OPG: null, NPG: null });
     const [progress, setProgress] = useState({ SG: 0, OPG: 0, NPG: 0 });
     const [serverResponseData, setServerResponseData] = useState({ file1: null, file2: null, file3: null });
-    console.log(selectedFiles)
+   // console.log(selectedFiles)
 
     const validateFile = (file) => {
         const validTypes = ['csv', 'text/csv'];

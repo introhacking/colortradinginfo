@@ -3,7 +3,7 @@ import axios from 'axios';
 import { apiService } from '../../../services/apiService';
 import { toast } from 'sonner';
 
-const screenOptions = ['dashboard', 'fundamentals', 'sentimental', 'daily-spurts', 'live-data', 'research', 'video',];
+const screenOptions = ['user-dashboard', 'fundamentals', 'sentimental', 'daily-spurts', 'live-data', 'research', 'video',];
 
 const UserPermissionAccessPanelModal = ({ isOpen, userInfo, onClose, refresh }) => {
     const [allowedScreens, setAllowedScreens] = useState([]);

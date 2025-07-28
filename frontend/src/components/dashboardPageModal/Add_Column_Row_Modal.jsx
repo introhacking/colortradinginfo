@@ -43,8 +43,7 @@ const Add_Column_Row_Modal = ({ createTableModal }) => {
         }]
         // setTableData(newData);
         try {
-            const creatingResponse = await apiService.postFormInfoToServer('/itCreate', customModifiedData)
-            console.log(creatingResponse)
+            await apiService.postFormInfoToServer('/itCreate', customModifiedData)
             toast.success('Create Successfully')
 
         } catch (err) {

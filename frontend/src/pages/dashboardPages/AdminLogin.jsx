@@ -58,17 +58,39 @@ const AdminLogin = () => {
                 })
                 window.localStorage.setItem('loginInfo', JSON.stringify({ ...serverResponse, isLoginStatus: true }))
 
+                // if (user.role === 'admin') {
+                //     setTimeout(() => {
+                //         setRedirectStatus(false);
+                //         navigate('/dashboard')
+                //     }, 1300);
+                // } else {
+                //     setTimeout(() => {
+                //         setRedirectStatus(false);
+                //         navigate('/user-dashboard')
+                //     }, 1300);
+                // }
+
                 if (user.role === 'admin') {
-                    setTimeout(() => {
-                        setRedirectStatus(false);
-                        navigate('/dashboard')
-                    }, 1300);
-                } else {
+                    setRedirectStatus(false)
+                    navigate('/dashboard');
+                } else if (user.allowedScreens.includes('user-dashboard')) {
                     setTimeout(() => {
                         setRedirectStatus(false);
                         navigate('/user-dashboard')
                     }, 1300);
+                } else if (user.allowedScreens.length > 0) {
+                    setRedirectStatus(false)
+                    navigate(`/${user.allowedScreens[0]}`);
+                } else if (user.role === 'user' && user.allowedScreens.length === 0) {
+                    setTimeout(() => {
+                        setRedirectStatus(false);
+                        navigate('/default-page')
+                    }, 1300);
+                } else {
+                    setRedirectStatus(false)
+                    navigate('/unauthorized');
                 }
+
             } else {
                 setErrorStatus(true);
                 setCurrentError('Login failed. Please check your credentials.');

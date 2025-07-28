@@ -94,15 +94,15 @@ const Bank_Info_Form = ({ isOpen, onClose }) => {
     }
     return (
 
-        <div className='absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
-            <div className='w-3/5 mx-auto bg-white'>
+        <div className='p-4 sm:p-0 absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex justify-center items-center'>
+            <div className='w-full sm:w-4/5 md:w-11/12 lg:w-3/5 mx-auto bg-white'>
                 <div className='flex w-full items-center justify-end font-medium text-xl mb-2 p-2'>
                     <p onClick={onClose} className='cursor-pointer button_cancel button'>X</p>
                 </div>
                 <div className='max-h-[60vh] overflow-y-auto no-scrollbar p-2'>
                     <form action="POST" className='space-y-4'>
-                        <div className='flex justify-center items-center gap-4'>
-                            <div className='w-1/2 flex items-center'>
+                        <div className='flex flex-wrap sm:flex-nowrap justify-center items-center gap-4'>
+                            <div className='w-full sm:w-1/2 flex items-center'>
                                 <div className='w-full'>
                                     {/* <label htmlFor="bank_name" className='mb-1 inline-block'>Choose Bank name</label> */}
                                     <select name="bank_name" id="bank_name" onChange={(e) => { bankInfoOnchangeHandler(e) }}>
@@ -118,7 +118,7 @@ const Bank_Info_Form = ({ isOpen, onClose }) => {
                                     {/* <input className='' type="select" id='bank_name' name='bank_name' onChange={fileOnchange} /> */}
                                 </div>
                             </div>
-                            <div className='w-1/2 flex items-center'>
+                            <div className='w-full sm:w-1/2 flex items-center'>
                                 <div className='w-full'>
                                     <select name="management_type" id="management_type" onChange={(e) => { bankInfoOnchangeHandler(e) }}>
                                         <option value="">--Choose Management type--</option>
@@ -138,7 +138,7 @@ const Bank_Info_Form = ({ isOpen, onClose }) => {
                             </div>
                         </div>
                         <div className='flex justify-start items-center gap-4'>
-                            <div className='w-1/2 flex items-center'>
+                            <div className='w-full sm:w-1/2 flex items-center'>
                                 <div className='w-full flex items-center gap-1'>
                                     <input type="text" value={bankInfo.color} disabled />
                                     <input type="color" name='color' onChange={(e) => { bankInfoOnchangeHandler(e) }} className='w-10 h-10 p-1' />

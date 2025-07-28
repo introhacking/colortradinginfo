@@ -97,7 +97,7 @@ const Header = () => {
 
 
     const menuItems = [
-        { label: 'Dashboard', path: '/user-dashboard', key: 'dashboard' },
+        { label: 'Dashboard', path: '/user-dashboard', key: 'user-dashboard' },
         { label: 'Fundamentals', path: '/fundamentals', key: 'fundamentals' },
         { label: 'Sentimental', path: '/sentimental', key: 'sentimental' },
         { label: 'Technical', path: '/technical', key: 'technical' },

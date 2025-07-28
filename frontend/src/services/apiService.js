@@ -210,7 +210,7 @@ export const apiService = {
     truncateTable: async (endpoint) => {
         try {
             const serverResponse = await axios.post(`${BASE_URL}/${endpoint}`)
-            console.log(serverResponse.data)
+           // console.log(serverResponse.data)
             return serverResponse
         } catch (err) {
             throw Error('Something went wrong!')

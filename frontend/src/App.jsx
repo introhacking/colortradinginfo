@@ -40,6 +40,7 @@ import ClientLayout from './components/layout/ClientLayout';
 import Research from './pages/dashboardPages/reSearch/Research';
 import RegistrationUser from './pages/dashboardPages/userList/RegistrationUser';
 import Unauthorized from './pages/dashboardPages/Unauthorized';
+import DefaultPage from './pages/dashboardPages/DefaultPage';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -78,13 +79,22 @@ function App() {
               <Route index element={<Home />} />
 
               {/* Protect routes individually based on screen key */}
-              <Route element={<ProtectedRoutes requiredScreen="dashboard" />}>
+              {/* <Route element={<ProtectedRoutes requiredScreen="dashboard" />}>
+                <Route path="user-dashboard" element={
+                  <div className='py-8 px-6 h-[85vh]'>
+                    <FundDeliveryDashboard />
+                  </div>
+                } />
+              </Route> */}
+
+              <Route element={<ProtectedRoutes requiredScreen="user-dashboard" />}>
                 <Route path="user-dashboard" element={
                   <div className='py-8 px-6 h-[85vh]'>
                     <FundDeliveryDashboard />
                   </div>
                 } />
               </Route>
+
 
               <Route element={<ProtectedRoutes requiredScreen="fundamentals" />}>
                 <Route path="fundamentals" element={<Fundamentals />} />
@@ -132,6 +142,7 @@ function App() {
               <Route element={<ProtectedRoutes requiredScreen="video" />}>
                 <Route path="video" element={<VideoDelivery />} />
               </Route>
+              <Route path="/default-page" element={<DefaultPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
 
 

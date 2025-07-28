@@ -174,7 +174,7 @@ const SectorialTable = () => {
         try {
             const response = await apiService.getInfoFromServer(`/sector`);
             const storeSectorsData = response;
-            console.log(storeSectorsData)
+           // console.log(storeSectorsData)
 
             // Convert ArrayBuffer to Base64 for each image
             // const processedSectors = await Promise.all(sectorsData.map(async (sector) => {

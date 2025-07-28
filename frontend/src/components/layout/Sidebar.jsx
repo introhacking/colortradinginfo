@@ -6,187 +6,153 @@ import Button from '../componentLists/Button';
 
 const Sidebar = () => {
   const [dropdownOpen, setDropdownOpen] = useState({});
+
   const toggleDropdown = (menu) => {
     setDropdownOpen((prev) => ({
       ...prev,
-      [menu]: !prev[menu]
+      [menu]: !prev[menu],
     }));
   };
+
+  // const menuItemClass = ({ isActive }) =>
+  //   `block w-full text-sm px-4 py-2 rounded ${isActive ? 'bg-gray-400' : 'bg-gray-700 hover:bg-gray-600'
+  //   }`;
+
+  const menuItemClass = ({ isActive }) =>
+    `relative block w-full text-sm px-4 py-2 rounded pl-5 transition-all duration-300 ease-in-out
+   ${isActive ? 'bg-gray-400 before:content-[""] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1.5 before:bg-red-500 before:rounded-r-md'
+      : 'bg-gray-700 hover:bg-gray-600'}`;
+
+
+  const dropdownItemClass = ({ isActive }) =>
+    `block px-4 py-2 text-sm rounded hover:bg-gray-600 ${isActive ? 'bg-gray-600' : ''
+    }`;
 
   return (
     <div className="w-52 h-full bg-gray-800 text-white">
       <div className="p-4">
         <h1 className="text-xl font-bold">Admin Dashboard</h1>
       </div>
-      <nav className='px-2 h-[88vh] overflow-y-auto'>
-        <ul>
-          <li className="p-2 hover:bg-gray-700">
-            <Link to="/dashboard" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Dashboard</button>
-              {/* <Button type={'button'} children={'Dashboard'} className={'px-4 py-2 '} /> */}
-
-            </Link>
-          </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/fundamentals/banking" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                onClick={() => toggleDropdown('menu1')}
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >
-                <span>Fundamentals</span>
-                {dropdownOpen['menu1'] ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
-              </button>
+      <nav className="px-2 h-[88vh] overflow-y-auto">
+        <ul className="space-y-2">
+          {/* Single Link */}
+          <li>
+            <NavLink to="/dashboard" end className={menuItemClass}>
+              Dashboard
             </NavLink>
-            {dropdownOpen['menu1'] && (
-              <div className="mt-0.5 bg-gray-700 rounded">
-                <NavLink to="/dashboard/fundamentals/banking" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>Banking</NavLink>
-                {/* <li><NavLink to="/dashboard/bank" className="block px-4 py-2 hover:bg-gray-600">Banking</NavLink></li> */}
-                <NavLink to="/dashboard/fundamentals/it" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>IT</NavLink>
-              </div>
-            )}
-            {/* </NavLink> */}
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <Link to="/dashboard/sentimental/large-cap" className='block'>
-              <button
-                onClick={() => toggleDropdown('menu2')}
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >
-                <span>Sentimentals</span>
-                {dropdownOpen['menu2'] ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
-              </button>
-            </Link>
-            {dropdownOpen['menu2'] && (
-              <ul className="mt-0.5 bg-gray-700 rounded">
-                <li><NavLink to="/dashboard/sentimental/large-cap" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>Large Cap</NavLink></li>
-                <li><NavLink to="/dashboard/sentimental/mid-cap" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>Mid Cap</NavLink></li>
-                <li><NavLink to="/dashboard/sentimental/small-cap" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>Small Cap</NavLink></li>
-              </ul>
-            )}
 
-
-          </li>
-          <li className="p-2 hover:bg-gray-700">
-            <Link to="/dashboard/technical/banking" className='block'>
-              <button
-                onClick={() => toggleDropdown('menu3')}
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >
-                <span>Technical</span>
-                {dropdownOpen['menu3'] ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
-              </button>
-            </Link>
-            {dropdownOpen['menu3'] && (
+          {/* Dropdown - Fundamentals */}
+          <li>
+            <div
+              onClick={() => toggleDropdown('menu1')}
+              className="flex items-center justify-between w-full text-sm px-4 py-2 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded"
+            >
+              <span>Fundamentals</span>
+              {dropdownOpen.menu1 ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
+            </div>
+            {dropdownOpen.menu1 && (
               <ul className="mt-0.5 bg-gray-700 rounded">
-                <li><NavLink to="/dashboard/technical/banking" className={({ isActive }) =>
-                  `block px-4 py-2 hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-600' : ''}`
-                }>Banking</NavLink></li>
-                {/* <li><NavLink to="/dashboard/sentimental/mid-cap" className={({ isActive }) =>
-                    `block px-4 py-2 hover:bg-gray-600 ${isActive ? 'bg-gray-600' : ''}`
-                  }>Mid Cap</NavLink></li>
-                  <li><NavLink to="/dashboard/sentimental/small-cap" className={({ isActive }) =>
-                    `block px-4 py-2 hover:bg-gray-600 ${isActive ? 'bg-gray-600' : ''}`
-                  }>Small Cap</NavLink></li> */}
+                <li>
+                  <NavLink to="/dashboard/fundamentals/banking" className={dropdownItemClass}>
+                    Banking
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/dashboard/fundamentals/it" className={dropdownItemClass}>
+                    IT
+                  </NavLink>
+                </li>
               </ul>
             )}
           </li>
-          {/* <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/delivery" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Delivery</button>
-            </NavLink>
-          </li> */}
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/sectorial" className={({ isActive }) =>
-              `block hover:bg-gray-600 text-sm ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Sectorial</button>
+
+          {/* Dropdown - Sentimentals */}
+          <li>
+            <div
+              onClick={() => toggleDropdown('menu2')}
+              className="flex items-center justify-between w-full text-sm px-4 py-2 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded"
+            >
+              <span>Sentimentals</span>
+              {dropdownOpen.menu2 ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
+            </div>
+            {dropdownOpen.menu2 && (
+              <ul className="mt-0.5 bg-gray-700 rounded">
+                <li>
+                  <NavLink to="/dashboard/sentimental/large-cap" className={dropdownItemClass}>
+                    Large Cap
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/dashboard/sentimental/mid-cap" className={dropdownItemClass}>
+                    Mid Cap
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/dashboard/sentimental/small-cap" className={dropdownItemClass}>
+                    Small Cap
+                  </NavLink>
+                </li>
+              </ul>
+            )}
+          </li>
+
+          {/* Dropdown - Technical */}
+          <li>
+            <div
+              onClick={() => toggleDropdown('menu3')}
+              className="flex items-center justify-between w-full text-sm px-4 py-2 cursor-pointer bg-gray-700 hover:bg-gray-600 rounded"
+            >
+              <span>Technical</span>
+              {dropdownOpen.menu3 ? <TiIcons.TiArrowSortedUp /> : <TiIcons.TiArrowSortedDown />}
+            </div>
+            {dropdownOpen.menu3 && (
+              <ul className="mt-0.5 bg-gray-700 rounded">
+                <li>
+                  <NavLink to="/dashboard/technical/banking" className={dropdownItemClass}>
+                    Banking
+                  </NavLink>
+                </li>
+              </ul>
+            )}
+          </li>
+
+          {/* More Single Items */}
+          <li>
+            <NavLink to="/dashboard/sectorial" className={menuItemClass}>
+              Sectorial
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/fii-data" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Fetch FII data</button>
+          <li>
+            <NavLink to="/dashboard/fii-data" className={menuItemClass}>
+              Fetch FII Data
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/daily-spurt" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Fetch Daily Stocks Data</button>
+          <li>
+            <NavLink to="/dashboard/daily-spurt" className={menuItemClass}>
+              Fetch Daily Stocks Data
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/stock-price-checker" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Stock Price Checker</button>
+          <li>
+            <NavLink to="/dashboard/stock-price-checker" className={menuItemClass}>
+              Stock Price Checker
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/research" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Research</button>
+          <li>
+            <NavLink to="/dashboard/research" className={menuItemClass}>
+              Research
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/upload-video" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Upload Videos</button>
+          <li>
+            <NavLink to="/dashboard/upload-video" className={menuItemClass}>
+              Upload Videos
             </NavLink>
           </li>
-          <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/users-list" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Users</button>
+          <li>
+            <NavLink to="/dashboard/users-list" className={menuItemClass}>
+              Users
             </NavLink>
           </li>
-          {/* <li className="p-2 hover:bg-gray-700">
-            <NavLink to="/dashboard/master-screen" className={({ isActive }) =>
-              `block hover:bg-gray-600 ${isActive ? 'bg-gray-400 rounded' : 'bg-gray-700 rounded'}`
-            }>
-              <button
-                className="flex items-center justify-between w-full text-sm text-left px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-              >Master Screen</button>
-            </NavLink>
-          </li> */}
         </ul>
       </nav>
     </div>

@@ -119,7 +119,7 @@ const Sectorial_Info_Modal = ({ isOpen, onClose }) => {
                 }
             })
             toast.success(response.message);
-            console.log(sectorialData)
+          //  console.log(sectorialData)
         } catch (error) {
             // console.error(error);
             toast.error(error.message);
