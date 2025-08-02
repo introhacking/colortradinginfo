@@ -108,28 +108,153 @@ exports.addLiveNSEStockName = async (req, res) => {
     }
 };
 
+// exports.fetchAndSortLiveNSEData = async () => {
+//     try {
+//         const folderPath = path.join(__dirname, `../../uploads/liveData`);
+
+//         // Check if folder exists
+//         if (!fs.existsSync(folderPath)) {
+//             console.warn('⚠️ Folder does not exist:', folderPath);
+//             return []; // or return some default structure
+//         }
+
+//         const files = await fsp.readdir(folderPath);
+//         const csvFiles = files.filter(f => f.endsWith('.csv'));
+
+//         if (csvFiles.length === 0) {
+//             console.warn('⚠️ No CSV files found in:', folderPath);
+//             return [];
+//         }
+
+//         const readPromises = csvFiles.map(file =>
+//             fsp.readFile(path.join(folderPath, file), 'utf8')
+//         );
+//         const fileContents = await Promise.all(readPromises);
+
+//         let allRows = [];
+//         for (const content of fileContents) {
+//             const parsed = papa.parse(content.trim(), {
+//                 header: true,
+//                 skipEmptyLines: true
+//             });
+//             allRows.push(...parsed.data);
+//         }
+//         const results = [];
+
+//         for (const name of allRows) {
+//             const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
+//             try {
+//                 const data = await yahooFinance.quote(symbol);
+
+//                 const currentMarketPrice = data?.regularMarketPrice ?? 0;
+//                 const previousMarketClosePrice = data?.regularMarketPreviousClose ?? 0;
+//                 const fiftyTwoWeekLow = data?.fiftyTwoWeekLow ?? 0;
+//                 const fiftyTwoWeekHigh = data?.fiftyTwoWeekHigh ?? 0;
+
+//                 const regularMarketChange = data?.regularMarketChange ?? 0;
+//                 const regularMarketChangePercent = data?.regularMarketChangePercent != null
+//                     ? Number(data.regularMarketChangePercent.toFixed(2))
+//                     : 0;
+
+//                 const fiftyTwoWeekLowChange = data?.fiftyTwoWeekLowChange ?? 0;
+//                 const fiftyTwoWeekLowChangePercent = data?.fiftyTwoWeekLowChangePercent != null
+//                     ? Number(data.fiftyTwoWeekLowChangePercent.toFixed(2))
+//                     : 0;
+
+//                 const fiftyTwoWeekHighChange = data?.fiftyTwoWeekHighChange ?? 0;
+//                 const fiftyTwoWeekHighChangePercent = data?.fiftyTwoWeekHighChangePercent != null
+//                     ? Number(data.fiftyTwoWeekHighChangePercent.toFixed(2))
+//                     : 0;
+
+//                 const fiftyTwoWeekChangePercent = data?.fiftyTwoWeekChangePercent != null
+//                     ? Number(data.fiftyTwoWeekChangePercent.toFixed(2))
+//                     : 0;
+
+//                 const regularMarketDayLow = data?.regularMarketDayLow ?? 0;
+//                 const regularMarketOpen = data?.regularMarketOpen ?? 0;
+
+//                 const volume = data?.regularMarketVolume ?? 0;
+//                 const avgVolume = data?.averageDailyVolume10Day || 1; // Prevent divide-by-zero
+//                 const volumePercent = Number(((volume / avgVolume) * 100).toFixed(2));
+
+//                 results.push({
+//                     stockName: name?.StockName.trim(),
+//                     regularMarketVolume: volume,
+//                     averageDailyVolume10Day: avgVolume,
+//                     volumePercent,
+//                     currentMarketPrice,
+//                     previousMarketClosePrice,
+//                     fiftyTwoWeekHigh,
+//                     fiftyTwoWeekLow,
+//                     regularMarketChangePercent,
+//                     regularMarketChange,
+//                     fiftyTwoWeekLowChange,
+//                     fiftyTwoWeekLowChangePercent,
+//                     fiftyTwoWeekHighChange,
+//                     fiftyTwoWeekHighChangePercent,
+//                     fiftyTwoWeekChangePercent,
+//                     regularMarketDayLow,
+//                     regularMarketOpen
+//                 });
+
+//             } catch (stockErr) {
+//                 console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
+//             }
+//         }
+
+//         const sortedResults = results.sort((a, b) => {
+//             const getPriority = (val) => {
+//                 const num = Number(val);
+//                 if (isNaN(num)) return 999;
+//                 if (num >= 60) return 1;
+//                 if (num > 30 && num < 60) return 2;
+//                 if (num <= 30) return 3;
+//                 return 999;
+//             };
+//             return getPriority(a.volumePercent) - getPriority(b.volumePercent);
+//         });
+
+//         return sortedResults;
+
+//     } catch (err) {
+//         console.error('❌ Error in fetchAndSortLiveNSEData:', err.message);
+//         throw new Error('Failed to read live stock data.');
+//     }
+// };
+
+
+// Retry wrapper
+async function retry(fn, retries = 3, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            if (i === retries - 1) throw err;
+            await new Promise(res => setTimeout(res, delay * (i + 1)));
+        }
+    }
+}
+
 exports.fetchAndSortLiveNSEData = async () => {
     try {
-        const folderPath = path.join(__dirname, `../../uploads/liveData`);
+        const folderPath = path.join(__dirname, '../../uploads/liveData');
 
-        // Check if folder exists
         if (!fs.existsSync(folderPath)) {
             console.warn('⚠️ Folder does not exist:', folderPath);
-            return []; // or return some default structure
+            return [];
         }
 
         const files = await fsp.readdir(folderPath);
-        const csvFiles = files.filter(f => f.endsWith('.csv'));
+        const csvFiles = files.filter(file => file.endsWith('.csv'));
 
         if (csvFiles.length === 0) {
             console.warn('⚠️ No CSV files found in:', folderPath);
             return [];
         }
 
-        const readPromises = csvFiles.map(file =>
-            fsp.readFile(path.join(folderPath, file), 'utf8')
+        const fileContents = await Promise.all(
+            csvFiles.map(file => fsp.readFile(path.join(folderPath, file), 'utf8'))
         );
-        const fileContents = await Promise.all(readPromises);
 
         let allRows = [];
         for (const content of fileContents) {
@@ -139,12 +264,17 @@ exports.fetchAndSortLiveNSEData = async () => {
             });
             allRows.push(...parsed.data);
         }
+
         const results = [];
 
         for (const name of allRows) {
-            const symbol = `${name?.StockName.trim().toUpperCase()}.NS`;
+            const stockName = name?.StockName?.trim();
+            if (!stockName) continue;
+
+            const symbol = `${stockName.toUpperCase()}.NS`;
+
             try {
-                const data = await yahooFinance.quote(symbol);
+                const data = await retry(() => yahooFinance.quote(symbol), 3);
 
                 const currentMarketPrice = data?.regularMarketPrice ?? 0;
                 const previousMarketClosePrice = data?.regularMarketPreviousClose ?? 0;
@@ -152,33 +282,37 @@ exports.fetchAndSortLiveNSEData = async () => {
                 const fiftyTwoWeekHigh = data?.fiftyTwoWeekHigh ?? 0;
 
                 const regularMarketChange = data?.regularMarketChange ?? 0;
-                const regularMarketChangePercent = data?.regularMarketChangePercent != null
-                    ? Number(data.regularMarketChangePercent.toFixed(2))
-                    : 0;
+                const regularMarketChangePercent =
+                    data?.regularMarketChangePercent != null
+                        ? Number(data.regularMarketChangePercent.toFixed(2))
+                        : 0;
 
                 const fiftyTwoWeekLowChange = data?.fiftyTwoWeekLowChange ?? 0;
-                const fiftyTwoWeekLowChangePercent = data?.fiftyTwoWeekLowChangePercent != null
-                    ? Number(data.fiftyTwoWeekLowChangePercent.toFixed(2))
-                    : 0;
+                const fiftyTwoWeekLowChangePercent =
+                    data?.fiftyTwoWeekLowChangePercent != null
+                        ? Number(data.fiftyTwoWeekLowChangePercent.toFixed(2))
+                        : 0;
 
                 const fiftyTwoWeekHighChange = data?.fiftyTwoWeekHighChange ?? 0;
-                const fiftyTwoWeekHighChangePercent = data?.fiftyTwoWeekHighChangePercent != null
-                    ? Number(data.fiftyTwoWeekHighChangePercent.toFixed(2))
-                    : 0;
+                const fiftyTwoWeekHighChangePercent =
+                    data?.fiftyTwoWeekHighChangePercent != null
+                        ? Number(data.fiftyTwoWeekHighChangePercent.toFixed(2))
+                        : 0;
 
-                const fiftyTwoWeekChangePercent = data?.fiftyTwoWeekChangePercent != null
-                    ? Number(data.fiftyTwoWeekChangePercent.toFixed(2))
-                    : 0;
+                const fiftyTwoWeekChangePercent =
+                    data?.fiftyTwoWeekChangePercent != null
+                        ? Number(data.fiftyTwoWeekChangePercent.toFixed(2))
+                        : 0;
 
                 const regularMarketDayLow = data?.regularMarketDayLow ?? 0;
                 const regularMarketOpen = data?.regularMarketOpen ?? 0;
 
                 const volume = data?.regularMarketVolume ?? 0;
-                const avgVolume = data?.averageDailyVolume10Day || 1; // Prevent divide-by-zero
+                const avgVolume = data?.averageDailyVolume10Day || 1;
                 const volumePercent = Number(((volume / avgVolume) * 100).toFixed(2));
 
                 results.push({
-                    stockName: name?.StockName.trim(),
+                    stockName,
                     regularMarketVolume: volume,
                     averageDailyVolume10Day: avgVolume,
                     volumePercent,
@@ -197,8 +331,11 @@ exports.fetchAndSortLiveNSEData = async () => {
                     regularMarketOpen
                 });
 
-            } catch (stockErr) {
-                console.error(`❌ Error fetching data for ${symbol}:`, stockErr.message);
+                // Optional: add delay between requests (e.g., 300ms)
+                await new Promise(res => setTimeout(res, 300));
+
+            } catch (err) {
+                console.error(`❌ Error fetching data for ${symbol}:`, err.message);
             }
         }
 
@@ -222,12 +359,15 @@ exports.fetchAndSortLiveNSEData = async () => {
     }
 };
 
+
 exports.getNSELiveData = async (req, res) => {
     try {
         // const sortedResults = await exports.fetchAndSortLiveNSEData();
         // return res.status(200).json(sortedResults);
 
-        const limit = parseInt(req.query.limit); // ?limit=20
+        // const limit = parseInt(req.query.limit); // ?limit=20
+
+        const limit = Math.max(1, parseInt(req.query.limit) || 20);
         const sortedResults = await exports.fetchAndSortLiveNSEData();
 
         const limitedResults = !isNaN(limit) ? sortedResults.slice(0, limit) : sortedResults;

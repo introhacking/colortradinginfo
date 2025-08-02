@@ -484,6 +484,14 @@ const FundDeliveryDashboard = () => {
         }
     };
 
+    const [useWeight, setUseWeight] = useState(true);
+    const handleToggleWeight = () => {
+        setUseWeight(prev => {
+            const newWeight = !prev;
+            return newWeight;
+        });
+    };
+
     useEffect(() => {
         const loginInfoStr = localStorage.getItem('loginInfo');
         if (loginInfoStr) {
@@ -498,24 +506,36 @@ const FundDeliveryDashboard = () => {
         <>
             <div className="flex gap-2 mb-3 w-full">
                 {/* Sidebar Tabs */}
-                <div className="shadow-md p-2 rounded mt-5 w-1/6 bg-white">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            className={`py-2 px-4 text-sm w-full font-medium border-b-2 ${activeTab === tab.id
-                                ? 'border-blue-500 text-white bg-blue-400 rounded'
-                                : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
-                                }`}
-                            onClick={() => {
-                                setActiveTab(tab.id);
-                                handleTypeChange(tab.key);
-                                if (tab.onClick) tab.onClick(); // call any additional action like toggling visibility
-                            }}
-                        >
-                            {tab.title}
-                        </button>
+                <div className='gap-2 flex flex-col w-1/6'>
+                    <div className="shadow-md p-2 rounded mt-5">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                className={`py-2 px-4 text-sm w-full font-medium border-b-2 ${activeTab === tab.id
+                                    ? 'border-blue-500 text-white bg-blue-400 rounded'
+                                    : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
+                                    }`}
+                                onClick={() => {
+                                    setActiveTab(tab.id);
+                                    handleTypeChange(tab.key);
+                                    if (tab.onClick) tab.onClick(); // call any additional action like toggling visibility
+                                }}
+                            >
+                                {tab.title}
+                            </button>
 
-                    ))}
+                        ))}
+                    </div>
+                    <label className="mb-1 relative space-y-2 bg-gray-100 rounded p-1 cursor-pointer">
+                        <span className='ml-1 font-semibold'>{useWeight ? 'No Weight Mode' : 'Weight Mode'}</span>
+                        <input
+                            type="checkbox"
+                            checked={!useWeight}
+                            onChange={handleToggleWeight}
+                            className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
+                        <div className="absolute left-[6px] top-[29px] w-5 h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-full transition-transform duration-300"></div>
+                    </label>
                 </div>
 
                 {/* Right Content Area */}

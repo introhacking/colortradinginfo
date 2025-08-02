@@ -123,7 +123,7 @@ const Header = () => {
 
 
             <header className="text-gray-600 body-font bg-white shadow-md sticky top-0 z-20">
-                <div className="w-[90%] mx-auto flex flex-wrap py-3 md:flex-col lg:flex-row items-center justify-between">
+                <div className="w-[90%] mx-auto flex flex-wrap py-3 lg:flex-row items-center justify-between">
                     {/* Logo Section */}
                     <Link to='/' className="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0">
                         <svg xmlns="#" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"

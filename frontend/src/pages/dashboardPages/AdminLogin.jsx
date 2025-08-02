@@ -25,6 +25,7 @@ const AdminLogin = () => {
     const [eye, setEye] = useState(false);
     const [redirectStatus, setRedirectStatus] = useState(false)
     const [signIn_UpStatus, setSignIn_UpStatus] = useState(false)
+    const [contactAdminMsg, setContactAdminMsg] = useState(false)
 
 
     const onChangeHandler = (e) => {
@@ -57,6 +58,8 @@ const AdminLogin = () => {
                     username: '', password: ''
                 })
                 window.localStorage.setItem('loginInfo', JSON.stringify({ ...serverResponse, isLoginStatus: true }))
+
+                setContactAdminMsg(false)
 
                 // if (user.role === 'admin') {
                 //     setTimeout(() => {
@@ -137,6 +140,8 @@ const AdminLogin = () => {
                     role: 'user',
                     admin_pin: '',
                 })
+
+                setContactAdminMsg(true)
             } else {
                 toast.error(message || 'Registration failed');
             }
@@ -153,7 +158,7 @@ const AdminLogin = () => {
 
     return (
 
-        <div className='bg-gradient-to-r from-amber-300/20 to-amber-100 min-h-screen h-screen'>
+        <div className='bg-gradient-to-t from-[#376683]/50 to-[#3d6e8c]/90 min-h-screen h-screen'>
             <div className='flex justify-center items-center h-full p-4 sm:p-0'>
                 <div className='flex bg-white shadow-sm rounded px-4 py-5 sm:px-8 sm:py-10 w-full sm:w-2/3 mx-auto'>
                     <div className='hidden md:block overflow-y-auto space-y-4 w-1/2 py-2 px-3'>
@@ -235,6 +240,11 @@ const AdminLogin = () => {
                                             {errorStatus && (
                                                 <p className="text-sm text-red-600 font-semibold tracking-widest">
                                                     {currentError}
+                                                </p>
+                                            )}
+                                            {contactAdminMsg && (
+                                                <p className="text-[13px] py-1 px-2 rounded bg-green-100 text-green-600 font-bold tracking-widest">
+                                                    Thanks for registering, please contact admin for activation.
                                                 </p>
                                             )}
 
