@@ -37,6 +37,7 @@ const AdminLogin = () => {
         const { name, value } = e.target
         setRegistratinCredential({ ...registrationCredential, [name]: value })
         setErrorStatus(false);
+        setContactAdminMsg(false)
     }
     const hideShowPassword = () => {
         setEye(!eye);
@@ -131,7 +132,7 @@ const AdminLogin = () => {
         }
         try {
             const serverResponse = await apiService.postFormInfoToServer('create-auth', registrationCredential);
-            const { success, message } = serverResponse;
+            const { success, message, role } = serverResponse;
             if (success === true) {
                 toast.success(message);
                 setRegistratinCredential({
@@ -140,8 +141,7 @@ const AdminLogin = () => {
                     role: 'user',
                     admin_pin: '',
                 })
-
-                setContactAdminMsg(true)
+                if (role === 'user') setContactAdminMsg(true)
             } else {
                 toast.error(message || 'Registration failed');
             }
