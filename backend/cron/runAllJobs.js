@@ -11,7 +11,7 @@ const today = new Date();
 
   await dailyFetchFileJob();
 
-  if (today.getDate() === 2) {
+  if (today.getDate() === 17) {
     await monthlyScrapingJob();
   }
 

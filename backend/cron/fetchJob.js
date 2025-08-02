@@ -90,7 +90,7 @@ exports.monthlyScrapingJob = async () => {
     const today = new Date();
 
     // Only run this on the 17th (optional check for safety)
-    if (today.getDate() !== 2) {
+    if (today.getDate() !== 17) {
         console.log("📅 Skipping monthly job — today is not the 17th.");
         return;
     }
