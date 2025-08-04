@@ -19,4 +19,5 @@ const today = new Date();
   // await everyMinuteResearchJob();
 
   console.log("✅ All jobs completed");
+  process.exit(0);
 })();

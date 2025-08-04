@@ -171,21 +171,32 @@ const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogl
 // });
 
 // Start the Express server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+// const PORT = process.env.PORT || 3000;
+// server.listen(PORT, () => {
+//     console.log(`Server is running on http://localhost:${PORT}`);
+   
+
+//     // Push updates every 60 seconds
+//     setInterval(async () => {
+//         const data = await fetchAndSortLiveNSEData();
+//         io.emit('liveStockData', data);
+//     }, 60000);
+
+//     // Push updates every 60 seconds
+//     // setInterval(async () => {
+//     //     const data = await fetchGoogleSheets();
+//     //     io.emit('live-sheet-update', data);
+//     // }, 1000);
+// });
+
+if (process.env.NODE_ENV !== 'ci') {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    setTimeout(() => {
-    }, 1500);
 
-    // Push updates every 60 seconds
     setInterval(async () => {
-        const data = await fetchAndSortLiveNSEData();
-        io.emit('liveStockData', data);
+      const data = await fetchAndSortLiveNSEData();
+      io.emit('liveStockData', data);
     }, 60000);
-
-    // Push updates every 60 seconds
-    // setInterval(async () => {
-    //     const data = await fetchGoogleSheets();
-    //     io.emit('live-sheet-update', data);
-    // }, 1000);
-});
+  });
+}
