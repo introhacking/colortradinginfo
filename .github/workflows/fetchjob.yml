@@ -5,6 +5,9 @@ on:
     - cron: '30 17 * * *'  # 11:00 PM IST (UTC+5:30)
   workflow_dispatch:       # optional: allow manual trigger
 
+permissions:
+  contents: write  # 👈 Required for push access  
+
 jobs:
   run-fetch-job:
     runs-on: ubuntu-latest
