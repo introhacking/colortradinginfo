@@ -28,7 +28,7 @@ jobs:
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
 
-      - name: 🪵 Debug: Lists CSV files before uploading
+      - name: 🪵 List CSV files before uploading
         run: ls -la backend/uploads/csvfilefolder/
 
       - name: 📦 Upload CSV Folder as Artifact
