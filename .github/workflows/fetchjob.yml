@@ -2,8 +2,8 @@ name: Run Fetch Job
 
 on:
   schedule:
-    - cron: '30 17 * * *'  # 11:00 PM IST
-  workflow_dispatch:
+    - cron: '30 17 * * *'  # 11:00 PM IST (UTC+5:30)
+  workflow_dispatch:  # allows manual trigger
 
 jobs:
   run-job:
@@ -25,3 +25,12 @@ jobs:
       - name: 🚀 Run Fetch Job
         run: node cron/runAllJobs.js
         working-directory: ./backend
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+
+      - name: 📦 Upload CSV Folder as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched-csv-files
+          path: ./backend/uploads/csvfilefolder/
+
