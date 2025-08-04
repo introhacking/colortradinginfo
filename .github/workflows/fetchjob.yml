@@ -32,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fetched-csv-files
-          path: ./backend/uploads/csvfilefolder/
+          path: backend/uploads/csvfilefolder/
 
