@@ -2,8 +2,8 @@ name: Run Fetch Job
 
 on:
   schedule:
-    - cron: '30 17 * * *'  # 11:00 PM IST
-  workflow_dispatch:
+    - cron: '30 17 * * *'  # ⏰ 11:00 PM IST (UTC+5:30)
+  workflow_dispatch:       # 🔘 Allow manual trigger
 
 jobs:
   run-job:
@@ -36,5 +36,3 @@ jobs:
         with:
           name: fetched-csv-files
           path: backend/uploads/csvfilefolder/
-
-
