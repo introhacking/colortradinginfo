@@ -8,10 +8,9 @@ const fetch = require('node-fetch');
 const XLSX = require('xlsx');
 // const { parse } = require('csv-parse/sync');
 
-
-
-
 const yahooFinance = require('yahoo-finance2').default;
+
+yahooFinance.suppressNotices(['yahooSurvey']);
 
 exports.getNSEPrice = async (req, res) => {
     const { symbol } = req.query;
@@ -224,16 +223,30 @@ exports.addLiveNSEStockName = async (req, res) => {
 
 
 // Retry wrapper
-async function retry(fn, retries = 3, delay = 1000) {
+
+// async function retry(fn, retries = 3, delay = 1500) {
+//     for (let i = 0; i < retries; i++) {
+//         try {
+//             return await fn();
+//         } catch (err) {
+//             if (i === retries - 1) throw err;
+//             await new Promise(res => setTimeout(res, delay * (i + 1)));
+//         }
+//     }
+// }
+
+async function retry(fn, retries = 3, delay = 1500) {
     for (let i = 0; i < retries; i++) {
         try {
             return await fn();
         } catch (err) {
+            // console.warn(`⚠️ Retry ${i + 1} failed: ${err.message}`);
             if (i === retries - 1) throw err;
-            await new Promise(res => setTimeout(res, delay * (i + 1)));
+            await new Promise(res => setTimeout(res, delay * (i + 1))); // Exponential backoff
         }
     }
 }
+
 
 exports.fetchAndSortLiveNSEData = async () => {
     try {
@@ -274,7 +287,9 @@ exports.fetchAndSortLiveNSEData = async () => {
             const symbol = `${stockName.toUpperCase()}.NS`;
 
             try {
-                const data = await retry(() => yahooFinance.quote(symbol), 3);
+                // const data = await retry(() => yahooFinance.quote(symbol), 3);
+
+                const data = await retry(() => yahooFinance.quote(symbol, { timeout: 15000 }), 3);
 
                 const currentMarketPrice = data?.regularMarketPrice ?? 0;
                 const previousMarketClosePrice = data?.regularMarketPreviousClose ?? 0;
@@ -332,7 +347,9 @@ exports.fetchAndSortLiveNSEData = async () => {
                 });
 
                 // Optional: add delay between requests (e.g., 300ms)
-                await new Promise(res => setTimeout(res, 300));
+                // await new Promise(res => setTimeout(res, 500));
+                await new Promise(res => setTimeout(res, 1000)); // 1 second between requests
+
 
             } catch (err) {
                 console.error(`❌ Error fetching data for ${symbol}:`, err.message);

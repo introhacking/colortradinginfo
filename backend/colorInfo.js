@@ -43,7 +43,7 @@ app.use(cors({
     origin: process.env.FRONTEND_URL,
     methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type' , 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 module.exports.io = io;
 
@@ -150,7 +150,8 @@ app.use('/api/v1', googleFinanceRoute)
 const ResearchRoute = require('./router/researchRouter/research');
 app.use('/api/v1', ResearchRoute)
 
-const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogleSheets } = require('./controller/googleFinance/googleFinance');
+const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
+const { everyMinuteResearchJob } = require('./cron/fetchJob');
 // const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {
@@ -174,7 +175,7 @@ const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogl
 // const PORT = process.env.PORT || 3000;
 // server.listen(PORT, () => {
 //     console.log(`Server is running on http://localhost:${PORT}`);
-   
+
 
 //     // Push updates every 60 seconds
 //     setInterval(async () => {
@@ -190,13 +191,14 @@ const { fetchAndSortLiveNSEData, refreshExcel, liveExcelSheetConnect, fetchGoogl
 // });
 
 if (process.env.NODE_ENV !== 'ci') {
-  const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
 
-    setInterval(async () => {
-      const data = await fetchAndSortLiveNSEData();
-      io.emit('liveStockData', data);
-    }, 60000);
-  });
+        setInterval(async () => {
+            const data = await fetchAndSortLiveNSEData();
+            io.emit('liveStockData', data);
+        }, 60000);
+    });
+    everyMinuteResearchJob();
 }
