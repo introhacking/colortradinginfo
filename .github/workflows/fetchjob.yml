@@ -2,7 +2,7 @@ name: Run Fetch Job
 
 on:
   schedule:
-    - cron: '30 17 * * *'  # 11:00 PM IST (UTC+5:30)
+    - cron: '0 5 * * *'  # 11:00 PM IST (UTC+5:30)
   workflow_dispatch:       # optional: allow manual trigger
 
 permissions:
