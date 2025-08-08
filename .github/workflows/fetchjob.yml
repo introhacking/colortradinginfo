@@ -2,40 +2,45 @@ name: Run Fetch Job
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 11:00 PM IST (UTC+5:30)
-  workflow_dispatch:       # optional: allow manual trigger
+    - cron: '59 4 * * *'  # ⏰ Runs at 7:30 AM IST (05:00 AM UTC)
+  workflow_dispatch:       # 🖱️ Optional: allow manual trigger
 
 permissions:
-  contents: write  # 👈 Required for push access  
+  contents: write  # 📝 Required for commit and push
 
 jobs:
   run-fetch-job:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: ⬇️ Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: 🧰 Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm install
         working-directory: ./backend
 
-      - name: Run Fetch Script
+      - name: 🚀 Run Fetch Script
         run: node cron/runAllJobs.js
         working-directory: ./backend
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           NODE_ENV: ci
 
-      - name: Commit & Push Updated CSV Files
+      - name: 🕒 Show Current Time (IST)
+        run: TZ='Asia/Kolkata' date
+
+      - name: 📤 Commit & Push Updated CSV Files
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add backend/uploads/csvfilefolder/
-          git commit -m "🤖 Auto-update CSV files $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-          git push
+          git diff --cached --quiet && echo "✅ No changes to commit" || (
+            git commit -m "🤖 Auto-update CSV files $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          )
