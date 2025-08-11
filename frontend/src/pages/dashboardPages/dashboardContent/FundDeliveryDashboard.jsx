@@ -504,35 +504,65 @@ const FundDeliveryDashboard = () => {
 
     return (
         <>
-            <div className="flex gap-2 mb-3 w-full">
+            <div className="block sm:flex gap-2 mb-3 w-full">
                 {/* Sidebar Tabs */}
-                <div className='gap-2 flex flex-col w-1/6'>
+                <div className="gap-2 flex flex-col w-[95%] md:w-[20%]">
                     <div className="shadow-md p-2 rounded mt-5">
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                className={`py-2 px-4 text-sm w-full font-medium border-b-2 ${activeTab === tab.id
-                                    ? 'border-blue-500 text-white bg-blue-400 rounded'
-                                    : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
-                                    }`}
-                                onClick={() => {
-                                    setActiveTab(tab.id);
-                                    handleTypeChange(tab.key);
-                                    if (tab.onClick) tab.onClick(); // call any additional action like toggling visibility
-                                }}
-                            >
-                                {tab.title}
-                            </button>
 
-                        ))}
+                        {/* Desktop / Tablet view (tabs) */}
+                        <div className="hidden md:flex flex-col space-y-1">
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === tab.id
+                                            ? 'border-blue-500 text-white bg-blue-400 rounded'
+                                            : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
+                                        }`}
+                                    onClick={() => {
+                                        setActiveTab(tab.id);
+                                        handleTypeChange(tab.key);
+                                        if (tab.onClick) tab.onClick();
+                                    }}
+                                >
+                                    {tab.title}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Mobile view (dropdown) */}
+                        <div className="block md:hidden">
+                            <select
+                                value={activeTab}
+                                onChange={(e) => {
+                                    const selectedTab = tabs.find(t => t.id === e.target.value);
+                                    if (selectedTab) {
+                                        setActiveTab(selectedTab.id);
+                                        handleTypeChange(selectedTab.key);
+                                        if (selectedTab.onClick) selectedTab.onClick();
+                                    }
+                                }}
+                                className="w-full border border-gray-300 rounded p-2 bg-white"
+                            >
+                                {tabs.map(tab => (
+                                    <option key={tab.id} value={tab.id}>
+                                        {tab.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
+
+                    {/* Toggle Switch */}
                     <label className="mb-1 relative space-y-2 bg-gray-100 rounded p-1 cursor-pointer">
-                        <span className='ml-1 font-semibold'>{useWeight ? 'No Weight Mode' : 'Weight Mode'}</span>
+                        <span className="ml-1 font-semibold">
+                            {useWeight ? 'No Weight Mode' : 'Weight Mode'}
+                        </span>
                         <input
                             type="checkbox"
                             checked={!useWeight}
                             onChange={handleToggleWeight}
-                            className="sr-only peer" />
+                            className="sr-only peer"
+                        />
                         <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors duration-300"></div>
                         <div className="absolute left-[6px] top-[29px] w-5 h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-full transition-transform duration-300"></div>
                     </label>
@@ -540,13 +570,9 @@ const FundDeliveryDashboard = () => {
 
                 {/* Right Content Area */}
                 <div className="w-full px-3">
-                    {/* Render static component (e.g., MasterScreen) */}
                     {currentTab?.content ? (
-                        // <div>{currentTab.content}</div>
                         <div>
-                            {/* Render tab-specific content */}
                             {currentTab.content}
-                            {/* 👉 AG Grid for tabs like Daily Spurt */}
                             {isLoading && <Loading msg="Loading... please wait" />}
                             {error && <div className="text-red-500">Error: {error}</div>}
                             {noDataFoundMsg && <div className="text-gray-500">{noDataFoundMsg}</div>}
@@ -570,6 +596,7 @@ const FundDeliveryDashboard = () => {
                     )}
                 </div>
             </div>
+
 
             {showDisclaimer && <Disclaimer onClose={() => { setShowDisclaimer(false) }} onAccept={handleAcceptDisclaimer} />}
 

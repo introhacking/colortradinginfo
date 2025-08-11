@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 // import bgGroundImage from '../../../assets/images/homeBanner.png'
 import bgGroundImage from '../../../assets/images/home.jpg'
+import bgGroundImageMobile from '../../../assets/images/mobile_view.jpg'
 import Footer from './Footer'
 const Home = () => {
 
     return (
         <>
-            <div style={{ backgroundImage: `url(${bgGroundImage})` }} className='bg-[33%_50%] sm:bg-[70%_30%] relative bg-no-repeat w-full h-[90vh] bg-cover'>
+            <div style={{ backgroundImage: `url(${bgGroundImage})` }} className='hidden sm:block sm:bg-[50%_50%] relative bg-no-repeat w-full h-[90vh] bg-cover'>
                 {/* <div className='absolute bg-black/20 inset-0'>
                     <div className='relative h-full p-4'>
                         <div className='flex justify-between items-center gap-4 h-full'>
@@ -32,6 +33,9 @@ const Home = () => {
                 </div> */}
             </div>
             {/* <Footer/> */}
+
+            <div style={{ backgroundImage: `url(${bgGroundImageMobile})` }} className='sm:hidden bg-[50%_50%] relative bg-no-repeat w-full h-[90vh] bg-cover'>
+            </div>
         </>
     )
 }

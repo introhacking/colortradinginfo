@@ -594,7 +594,7 @@ const MasterScreen = () => {
 
   return (
     <div className='w-full'>
-      <div className='w-full flex justify-end mb-2 gap-2'>
+      <div className='w-full block lg:flex justify-end mb-2 gap-2'>
         <Button onClick={handleExportToExcel} children={'Export to CSV'} className={`${rowData.length > 0 ? 'button hover:bg-green-400 bg-green-500 text-white' : 'button bg-green-400 text-white hover:bg-green-400 cursor-not-allowed'}  `} />
       </div>
       {isLoading && <Loading msg='Loading... please wait' />}

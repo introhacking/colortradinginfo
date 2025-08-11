@@ -89,7 +89,7 @@ function App() {
 
               <Route element={<ProtectedRoutes requiredScreen="user-dashboard" />}>
                 <Route path="user-dashboard" element={
-                  <div className='py-8 px-6 h-[85vh]'>
+                  <div className='py-8 px-2 md:px-6 h-[85vh] overflow-auto'>
                     <FundDeliveryDashboard />
                   </div>
                 } />
