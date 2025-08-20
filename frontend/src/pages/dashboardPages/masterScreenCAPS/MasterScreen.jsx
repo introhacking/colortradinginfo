@@ -559,6 +559,7 @@ const MasterScreen = () => {
       ]);
 
     } catch (err) {
+      console.log(err)
       setError(err.message);
     } finally {
       setIsLoading(false);

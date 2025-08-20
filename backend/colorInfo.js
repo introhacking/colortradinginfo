@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const path = require('path');
 const csvRoutes = require('./router/fromURL/fromURLrouter');
+const userMiddlewareVerification = require('./middleware/userMiddlewareVerification');
 // WebSocket Setup
 const { Server } = require('socket.io');
 const server = http.createServer(app);
@@ -57,6 +58,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Start cron job
 require('./cron/fetchJob');
 
+// [ LOGIN ]
+const loginRoute = require('./router/authRouter/authRoute');
+app.use('/api/v1', loginRoute)
+
+
+app.use(userMiddlewareVerification);
 
 const largeCapRoute = require('./router/sentimentalRouter/largeCap.router');
 app.use('/api/v1', largeCapRoute)
@@ -135,10 +142,6 @@ app.get('/api/v1/csv-files', (req, res) => {
 });
 
 // [ SCRUBBING CAPS ROUTER ]
-const loginRoute = require('./router/authRouter/authRoute');
-app.use('/api/v1', loginRoute)
-
-// [ SCRUBBING CAPS ROUTER ]
 const masterRoute = require('./router/masterScreenRouter/masterRouter');
 app.use('/api/v1', masterRoute)
 
@@ -152,6 +155,7 @@ app.use('/api/v1', ResearchRoute)
 
 const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
 const { everyMinuteResearchJob } = require('./cron/fetchJob');
+
 // const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 
 // app.get('/api/v1/csv-files/small-cap', (req, res) => {

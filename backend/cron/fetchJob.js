@@ -86,28 +86,51 @@ exports.dailyFetchFileJob = async () => {
 // }
 
 
-exports.monthlyScrapingJob = async () => {
-    const today = new Date();
 
-    // Only run this on the 17th (optional check for safety)
-    if (today.getDate() !== 17) {
+// exports.monthlyScrapingJob = async () => {
+//     const today = new Date();
+
+//     // Only run this on the 17th (optional check for safety)
+//     if (today.getDate() !== 19) {
+//         console.log("📅 Skipping monthly job — today is not the 17th.");
+//         return;
+//     }
+
+//     const previousMonth = new Date();
+//     previousMonth.setMonth(previousMonth.getMonth() - 1);
+
+//     const monthName = previousMonth.toLocaleString('default', { month: 'long' });
+
+//     let announcement = `📢 Scraping all cap (Large, Mid, Small) of ${monthName}`;
+
+//     console.log(announcement);
+
+//     // If using WebSocket or socket.io:
+//     if (typeof io !== 'undefined') {
+//         io.emit('scrape-announcement', announcement);
+//     }
+
+//     // TODO: Run your scraping logic here
+//     // await scrapeAllCaps(previousMonth);
+
+//     console.log("✅ Monthly scraping job completed.");
+// };
+
+
+// fetchJob.js
+exports.monthlyScrapingJob = async (date = new Date()) => {
+    if (date.getDate() !== 17) {
         console.log("📅 Skipping monthly job — today is not the 17th.");
         return;
     }
 
-    const previousMonth = new Date();
+    const previousMonth = new Date(date);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
 
     const monthName = previousMonth.toLocaleString('default', { month: 'long' });
 
     let announcement = `📢 Scraping all cap (Large, Mid, Small) of ${monthName}`;
-
     console.log(announcement);
-
-    // If using WebSocket or socket.io:
-    if (typeof io !== 'undefined') {
-        io.emit('scrape-announcement', announcement);
-    }
 
     // TODO: Run your scraping logic here
     // await scrapeAllCaps(previousMonth);
