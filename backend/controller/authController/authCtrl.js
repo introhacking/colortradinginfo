@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.getUsers = async (req, res) => {
     try {
-        const users = await Auth.find().select('_id username role allowedScreens verify createdAt updatedAt');;
+        const users = await Auth.find().select('_id username role allowedScreens verify createdAt updatedAt');
         return res.status(200).json({ success: true, users });
     } catch (err) {
         return res.status(500).json({ success: false, message: 'Server error' });

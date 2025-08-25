@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Button from './componentLists/Button'
 import { apiService } from '../services/apiService';
 import BreadCrum from './componentLists/BreadCrum';
+import { liveDataMarque } from '../store/allStore';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Header = () => {
         window.localStorage.removeItem('loginInfo');
         navigate('/login');
     };
-    const [top20Stocks, setTop20Stocks] = useState([]);
+    // const [top20Stocks, setTop20Stocks] = useState([]);
 
 
     // const live20Data = async () => {
@@ -36,10 +37,12 @@ const Header = () => {
     // }
 
 
+    const { top20Stocks, setTop20Stocks } = liveDataMarque()
     const live20Data = async () => {
         try {
             const serverResponse = await apiService.getInfoFromServer('/google-finanace-live-data?limit=20');
             const stocks = serverResponse; // ✅ Extract the array
+            // store.setLiveData()
 
             if (Array.isArray(stocks)) {
                 setTop20Stocks(stocks);
@@ -106,6 +109,7 @@ const Header = () => {
         { label: 'Daily Spurts', path: '/daily-spurts', key: 'daily-spurts' },
         { label: 'Live Data', path: '/live-data', key: 'live-data' },
         { label: 'Research', path: '/research', key: 'research' },
+        { label: 'Tracking', path: '/tracking', key: 'tracking' },
         { label: 'Video', path: '/video', key: 'video' }
     ];
 

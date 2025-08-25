@@ -19,7 +19,28 @@ const Fundamentals = () => {
     return (
         <>
             <div className="w-[98%] mx-auto mt-6 bg-gray-50">
-                <div className='flex items-start bg-gray-50 px-4'>
+                {/* Mobile view (dropdown) */}
+                <div className="block md:hidden my-2">
+                    <select
+                        value={activeTab}
+                        onChange={(e) => {
+                            const selectedTab = tabs.find(t => t.id === e.target.value);
+                            if (selectedTab) {
+                                setActiveTab(selectedTab.id);
+                                // handleTypeChange(selectedTab.key);
+                                if (selectedTab.onClick) selectedTab.onClick();
+                            }
+                        }}
+                        className="w-full border border-gray-300 rounded p-2 bg-white"
+                    >
+                        {tabs.map(tab => (
+                            <option key={tab.id} value={tab.id}>
+                                {tab.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='hidden md:flex items-start bg-gray-50 px-4'>
                     <div className='shadow-md p-2 rounded mt-5 w-1/6 bg-white'>
                         {tabs.map((tab) => (
                             <button

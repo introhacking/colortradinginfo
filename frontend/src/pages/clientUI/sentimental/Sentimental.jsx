@@ -35,8 +35,29 @@ const Sentimental = () => {
     return (
         <>
             <div className="w-[98%] mx-auto mt-6 bg-gray-50">
-                <div className='flex items-start px-4'>
-                    <div className='flex flex-col gap-2 w-1/6'>
+                {/* Mobile view (dropdown) */}
+                <div className="block md:hidden">
+                    <select
+                        value={activeTab}
+                        onChange={(e) => {
+                            const selectedTab = tabs.find(t => t.id === e.target.value);
+                            if (selectedTab) {
+                                setActiveTab(selectedTab.id);
+                                // handleTypeChange(selectedTab.key);
+                                if (selectedTab.onClick) selectedTab.onClick();
+                            }
+                        }}
+                        className="w-full border border-gray-300 rounded p-2 bg-white"
+                    >
+                        {tabs.map(tab => (
+                            <option key={tab.id} value={tab.id}>
+                                {tab.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='flex items-start md:px-4'>
+                    <div className='hidden md:flex flex-col gap-2 w-1/6'>
                         <div className='shadow-md p-2 rounded mt-5 bg-white'>
                             {tabs.map((tab) => (
                                 <button
@@ -60,8 +81,7 @@ const Sentimental = () => {
                             <div className="absolute left-[6px] top-[29px] w-5 h-5 bg-white rounded-full shadow-md transform peer-checked:translate-x-full transition-transform duration-300"></div>
                         </label>
                     </div>
-
-                    <div className="p-4 pr-0 h-[85vh] w-full overflow-hidden">
+                    <div className="py-2 md:p-4 md:pr-0 h-[85vh] w-full overflow-hidden">
                         {/* <label className="max-w-[20%] mb-1 relative inline-flex items-center cursor-pointer">
                             <input
                                 type="checkbox"

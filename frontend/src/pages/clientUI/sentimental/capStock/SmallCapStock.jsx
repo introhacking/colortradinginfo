@@ -5,6 +5,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 // import { smallCapTableHeading } from '../../../row_Column_Config/smallCaps';
 import { apiService } from '../../../../services/apiService';
 import Loading from '../../../../Loading';
+import { useTrackingStore } from '../../../../store/allStore';
 
 
 const SmallCapStock = ({ useWeight }) => {
@@ -59,52 +60,53 @@ const SmallCapStock = ({ useWeight }) => {
     //     })));
     // }, [])
 
-    const [columnDefss] = useState([
-        { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 250 },
-        // { headerName: 'Apr-24', field: 'Apr24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'May-24', field: 'May24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Jun-24', field: 'Jun24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Jul-24', field: 'Jul24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Aug-24', field: 'Aug24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Sep-24', field: 'Sep24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Oct-24', field: 'Oct24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Nov-24', field: 'Nov24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-        { headerName: 'Dec-24', field: 'Dec24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
-    ]);
+    // const [columnDefss] = useState([
+    //     { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 250 },
+    //     // { headerName: 'Apr-24', field: 'Apr24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'May-24', field: 'May24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Jun-24', field: 'Jun24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Jul-24', field: 'Jul24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Aug-24', field: 'Aug24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Sep-24', field: 'Sep24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Oct-24', field: 'Oct24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Nov-24', field: 'Nov24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    //     { headerName: 'Dec-24', field: 'Dec24', sortable: true, filter: true, maxWidth: 100, cellStyle: params => getCellStyle(params) },
+    // ]);
+
     const defaultColDef = useMemo(() => ({
         sortable: true
     }), []);
 
 
-    const fetchLargeStockLists = async () => {
-        setIsLoading(true)
-        try {
-            const midStocklists = await apiService.getInfoFromServer('/small-cap')
-            const customData = midStocklists.map(stock => ({
-                stockName: stock.stockName,
-                // Jan24: stock.monthlyData[0],
-                // Feb24: stock.monthlyData[1],
-                // Mar24: stock.monthlyData[2],
-                // Apr24: stock.monthlyData[3],
-                May24: stock.monthlyData[0],
-                Jun24: stock.monthlyData[1],
-                Jul24: stock.monthlyData[2],
-                Aug24: stock.monthlyData[3],
-                Sep24: stock.monthlyData[4],
-                Oct24: stock.monthlyData[5],
-                Nov24: stock.monthlyData[6],
-                Dec24: stock.monthlyData[7],
-            }));
-            setSmallCapStockLists(customData);
-            setErrorMsgStatus(false)
-            setIsLoading(false)
-        } catch (err) {
-            setErrorMsgStatus(true)
-            setErrorMsg(err.message)
-            setIsLoading(false)
+    // const fetchLargeStockLists = async () => {
+    //     setIsLoading(true)
+    //     try {
+    //         const midStocklists = await apiService.getInfoFromServer('/small-cap')
+    //         const customData = midStocklists.map(stock => ({
+    //             stockName: stock.stockName,
+    //             // Jan24: stock.monthlyData[0],
+    //             // Feb24: stock.monthlyData[1],
+    //             // Mar24: stock.monthlyData[2],
+    //             // Apr24: stock.monthlyData[3],
+    //             May24: stock.monthlyData[0],
+    //             Jun24: stock.monthlyData[1],
+    //             Jul24: stock.monthlyData[2],
+    //             Aug24: stock.monthlyData[3],
+    //             Sep24: stock.monthlyData[4],
+    //             Oct24: stock.monthlyData[5],
+    //             Nov24: stock.monthlyData[6],
+    //             Dec24: stock.monthlyData[7],
+    //         }));
+    //         setSmallCapStockLists(customData);
+    //         setErrorMsgStatus(false)
+    //         setIsLoading(false)
+    //     } catch (err) {
+    //         setErrorMsgStatus(true)
+    //         setErrorMsg(err.message)
+    //         setIsLoading(false)
 
-        }
-    }
+    //     }
+    // }
 
     const getCapMergeFile = async () => {
         setIsLoading(true);
@@ -181,6 +183,18 @@ const SmallCapStock = ({ useWeight }) => {
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [
+                {
+                    maxWidth: 90,
+                    cellRenderer: (params) => (
+                        <button
+                            title='Add for Tracking'
+                            onClick={() => addTrackingRecord({ stockName: params.data.stockName })}
+                            className="py-1 px-2 text-white bg-blue-400 text-sm text-center cursor-pointer rounded"
+                        >
+                            Track
+                        </button>
+                    ),
+                },
                 { headerName: 'STOCKNAME', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
                 ...dynamicCols,
             ];
@@ -200,7 +214,8 @@ const SmallCapStock = ({ useWeight }) => {
         }
     }
 
-
+    // [ STORE ]
+    const { addTrackingRecord } = useTrackingStore()
 
 
     useEffect(() => {

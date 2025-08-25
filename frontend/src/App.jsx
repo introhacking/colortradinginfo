@@ -41,6 +41,7 @@ import Research from './pages/dashboardPages/reSearch/Research';
 import RegistrationUser from './pages/dashboardPages/userList/RegistrationUser';
 import Unauthorized from './pages/dashboardPages/Unauthorized';
 import DefaultPage from './pages/dashboardPages/DefaultPage';
+import Tracking from './pages/clientUI/tracking/Tracking';
 
 
 // WITH LAZY, SUSPENCE AND LOADING  
@@ -135,6 +136,13 @@ function App() {
                 <Route path="research" element={
                   <div className='p-4'>
                     <Research />
+                  </div>
+                } />
+              </Route>
+              <Route element={<ProtectedRoutes requiredScreen="tracking" />}>
+                <Route path="tracking" element={
+                  <div className='p-4'>
+                    <Tracking />
                   </div>
                 } />
               </Route>

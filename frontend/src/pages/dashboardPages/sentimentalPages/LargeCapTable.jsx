@@ -272,8 +272,33 @@ const LargeCapTable = () => {
                 setRowData(serverResponseData)
             }
             const dynamicCols = []
+
+            const today = new Date();
+            const currentMonth = today.toLocaleString('en-US', { month: 'short' }); // e.g., 'Jun'
+            const currentYear = String(today.getFullYear()).slice(2);              // e.g., '25'
+            const currentHeader = `${currentMonth}${currentYear} `;
+
+
             if (serverResponse.monthsHeader.length > 0) {
-                const monthlyChildren = serverResponse.monthsHeader.map((month) => ({
+                const monthlyChildren = serverResponse.monthsHeader.sort((a, b) => {
+                    // Always keep 'stockName' first
+                    if (a === 'stockName') return -1;
+                    if (b === 'stockName') return 1;
+
+                    // Put current month first
+                    if (a === currentHeader) return -1;
+                    if (b === currentHeader) return 1;
+
+                    // Parse month and year to compare
+                    const parse = (val) => {
+                        const monthAbbr = val.slice(0, 3);
+                        const year = parseInt(val.slice(3), 10);
+                        const month = new Date(`${monthAbbr} 1, 2000`).getMonth(); // Get month index
+                        return year * 12 + month;
+                    };
+
+                    return parse(a) - parse(b); // Descending order
+                }).map((month) => ({
                     headerName: month,
                     field: month.replace(/-/g, ''),
                     sortable: true,
@@ -299,7 +324,7 @@ const LargeCapTable = () => {
             }
             // Add 'Stock Name' column as the first column
             const columnDefs = [
-                { headerName: 'Stock Name', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
+                { headerName: 'STOCKNAME', field: 'stockName', sortable: true, filter: true, maxWidth: 150 },
                 ...dynamicCols,
             ];
 

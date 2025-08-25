@@ -62,6 +62,9 @@ require('./cron/fetchJob');
 const loginRoute = require('./router/authRouter/authRoute');
 app.use('/api/v1', loginRoute)
 
+// [ GOOGLE FINANCE ]
+const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
+app.use('/api/v1', googleFinanceRoute)
 
 app.use(userMiddlewareVerification);
 
@@ -146,15 +149,17 @@ const masterRoute = require('./router/masterScreenRouter/masterRouter');
 app.use('/api/v1', masterRoute)
 
 // [ GOOGLE FINANCE ]
-const googleFinanceRoute = require('./router/googleFinanceRouter/googleFinanceRouter');
-app.use('/api/v1', googleFinanceRoute)
-
-// [ GOOGLE FINANCE ]
 const ResearchRoute = require('./router/researchRouter/research');
 app.use('/api/v1', ResearchRoute)
 
+// [ GOOGLE FINANCE ]
 const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
 const { everyMinuteResearchJob } = require('./cron/fetchJob');
+
+// [ TRACKING ]
+const TrackingRoute = require('./router/trackingRouter/trackingRouter');
+const { getUserTrackingList } = require('./controller/tracking/tracking.Ctrl');
+app.use('/api/v1', TrackingRoute)
 
 // const { getNSELiveData } = require('./controller/googleFinance/googleFinance');
 
@@ -201,6 +206,7 @@ if (process.env.NODE_ENV !== 'ci') {
 
         setInterval(async () => {
             const data = await fetchAndSortLiveNSEData();
+            // await getUserTrackingList()
             io.emit('liveStockData', data);
         }, 60000);
     });
