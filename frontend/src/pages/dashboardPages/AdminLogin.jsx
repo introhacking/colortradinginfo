@@ -146,7 +146,7 @@ const AdminLogin = () => {
                 toast.error(message || 'Registration failed');
             }
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Something went wrong. Please try again.';
+            const errorMsg = err.data?.message || 'Something went wrong. Please try again.';
             toast.error(errorMsg);
         }
     }

@@ -18,6 +18,10 @@ exports.getUserTrackingList = async (req, res) => {
             return res.status(404).json({ error: "No tracking list found" });
         }
 
+        // const collectAllSymbolsInArray = trackingData.trackingList;
+
+
+
         // ✅ Collect all stock names with `.NS` suffix
         const symbols = trackingData.trackingList.map((item) => `${item.stockName}.NS`);
 
@@ -39,6 +43,13 @@ exports.getUserTrackingList = async (req, res) => {
             success: true,
             trackingList: mergedList,
         });
+
+
+
+        // return res.status(200).json({
+        //     success: true,
+        //     collectAllSymbolsInArray,
+        // });
     } catch (err) {
         console.error("Server error:", err);
         return res.status(500).json({ success: false, message: "Server error" });

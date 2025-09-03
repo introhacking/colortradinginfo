@@ -154,7 +154,7 @@ app.use('/api/v1', ResearchRoute)
 
 // [ GOOGLE FINANCE ]
 const { fetchAndSortLiveNSEData } = require('./controller/googleFinance/googleFinance');
-const { everyMinuteResearchJob } = require('./cron/fetchJob');
+const { everyMinuteResearchJob, trackingListsJobEveryMin } = require('./cron/fetchJob');
 
 // [ TRACKING ]
 const TrackingRoute = require('./router/trackingRouter/trackingRouter');
@@ -211,4 +211,5 @@ if (process.env.NODE_ENV !== 'ci') {
         }, 60000);
     });
     everyMinuteResearchJob();
+    // trackingListsJobEveryMin();
 }

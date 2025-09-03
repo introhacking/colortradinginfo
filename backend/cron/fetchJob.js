@@ -4,6 +4,8 @@ const readerFileService = require('../services/fileReadingServices');
 const { io } = require('../colorInfo');
 const yahooFinance = require('yahoo-finance2').default;
 const researchModel = require('../model/research/reSearchModel');
+const trackingModel = require('../model/tracking/tracking.model');
+const { getUserTrackingList } = require('../controller/tracking/tracking.Ctrl');
 
 
 // exports.dailyFetchFileJob = async () => {
@@ -152,7 +154,7 @@ exports.everyMinuteResearchJob = async () => {
         });
 
         if (!allItems || allItems.length === 0) {
-            console.log("📉 No active research items left to update.");
+            // console.log("📉 No active research items left to update.");
             return; // exit early
         }
 
@@ -220,3 +222,14 @@ exports.everyMinuteResearchJob = async () => {
     });
 }
 
+
+// [ TRACKING ]
+exports.trackingListsJobEveryMin = async () => {
+    cron.schedule('* * * * * ', async () => {
+        console.log("🔄 Running Tracking data updater...");
+
+        // ✅ Find tracking list for this user
+        const trackingData = await getUserTrackingList()
+        console.log(trackingData)
+    })
+}
